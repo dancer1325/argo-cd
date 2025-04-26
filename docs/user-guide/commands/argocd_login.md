@@ -1,4 +1,4 @@
-# `argocd login` Command Reference
+# `argocd login`
 
 ## `argocd login SERVER [flags]`
 
