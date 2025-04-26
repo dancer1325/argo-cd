@@ -1,29 +1,17 @@
 # `argocd login` Command Reference
 
-## argocd login
+## `argocd login SERVER [flags]`
 
-Log in to Argo CD
-
-### Synopsis
-
-Log in to Argo CD
-
-```
-argocd login SERVER [flags]
-```
+* log in | Argo CD
 
 ### Examples
 
-```
-# Login to Argo CD using a username and password
-argocd login cd.argoproj.io
-
-# Login to Argo CD using SSO
-argocd login cd.argoproj.io --sso
-
-# Configure direct access using Kubernetes API server
-argocd login cd.argoproj.io --core
-```
+* `argocd login cd.argoproj.io`
+  * login | Argo CD -- via -- username & password
+* `argocd login cd.argoproj.io --sso`
+  * login | Argo CD -- via -- SSO 
+* `argocd login cd.argoproj.io --core`
+  * login | Argo CD -- via -- Kubernetes API server
 
 ### Options
 
@@ -38,7 +26,7 @@ argocd login cd.argoproj.io --core
       --username string      The username of an account to authenticate
 ```
 
-### Options inherited from parent commands
+### Options -- inherited from -- PARENT commands
 
 ```
       --auth-token string               Authentication token
@@ -68,5 +56,5 @@ argocd login cd.argoproj.io --core
 
 ### SEE ALSO
 
-* [argocd](argocd.md)	 - argocd controls a Argo CD server
-
+* [argocd](argocd.md)
+  * argocd -- controls an -- Argo CD server
