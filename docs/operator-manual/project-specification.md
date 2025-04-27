@@ -1,6 +1,6 @@
 # Project Specification
 
-The following describes all the available fields of a Project:
+* Project's AVAILABLE fields 
 
 ```yaml
 {!docs/operator-manual/project.yaml!}
