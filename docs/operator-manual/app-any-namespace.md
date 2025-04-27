@@ -73,12 +73,21 @@ kubectl apply -k examples/k8s-rbac/argocd-server-applications/
 !!! note
     At some later point in time, we may make this cluster role part of the default installation manifests.
 
-### Allowing additional namespaces in an AppProject
+### Allowing ADDITIONAL namespaces | AppProject
 
-Any user with Kubernetes access to the Argo CD control plane's namespace (`argocd`), especially those with permissions to create or update `Applications` in a declarative way, is to be considered an Argo CD admin.
+* Argo CD admin
+  * := user / 
+    * Kubernetes access | Argo CD control plane's namespace (`argocd`)
+    * permissions -- to -- create OR update `Applications` / declaratively 
 
-This prevented unprivileged Argo CD users from declaratively creating or managing `Applications` in the past. Those users were constrained to using the API instead, subject to Argo CD RBAC which ensures only `Applications` in allowed `AppProjects` were created.
+* unprivileged Argo CD users
+  * if they want to create or manage `Applications` 
+    * ❌NOT declaratively ❌ 
+    * use the API
+      * Reason: 🧠subject -- to -- Argo CD RBAC🧠
+        * -> ONLY can create `Applications` | ALLOWED `AppProjects`
 
+* TODO:
 For an `Application` to be created outside the `argocd` namespace, the `AppProject` referred to in the `Application`'s `.spec.project` field must include the `Application`'s namespace in its `.spec.sourceNamespaces` field.
 
 For example, consider the two following (incomplete) `AppProject` specs:
@@ -107,7 +116,8 @@ spec:
   - namespace-two
 ```
 
-In order for an Application to set `.spec.project` to `project-one`, it would have to be created in either namespace `namespace-one` or `argocd`. Likewise, in order for an Application to set `.spec.project` to `project-two`, it would have to be created in either namespace `namespace-two` or `argocd`.
+In order for an Application to set `.spec.project` to `project-one`, it would have to be created in either namespace `namespace-one` or `argocd`. 
+Likewise, in order for an Application to set `.spec.project` to `project-two`, it would have to be created in either namespace `namespace-two` or `argocd`.
 
 If an Application in `namespace-two` would set their `.spec.project` to `project-one` or an Application in `namespace-one` would set their `.spec.project` to `project-two`, Argo CD would consider this as a permission violation and refuse to reconcile the Application.
 
