@@ -77,12 +77,12 @@ argocd app create APPNAME [flags]
       --nameprefix string                          Kustomize nameprefix
       --namesuffix string                          Kustomize namesuffix
   -p, --parameter stringArray                      set a parameter override (e.g. -p guestbook=image=example/guestbook:latest)
-      --path string                                Path in repository to the app directory, ignored if a file is set
+      --path string                                | repository, path -- to the -- app directory.   if a file is set -> ignored
       --plugin-env stringArray                     Additional plugin envs
       --project string                             Application project name
       --ref string                                 Ref is reference to another source within sources field
       --release-name string                        Helm release-name
-      --repo string                                Repository URL, ignored if a file is set
+      --repo string                                Repository URL . if a file is set -> ignored 
       --revision string                            The tracking source branch, tag, commit or Helm chart version the application will sync to
       --revision-history-limit int                 How many items to keep in revision history (default 10)
       --self-heal                                  Set self healing when sync is automated
