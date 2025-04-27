@@ -14,19 +14,20 @@
 
 ## 1. Install Argo CD
 
-```bash
-kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-```
-* ⚠️if you install Argo CD | DIFFERENT namespace -> update the https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml's namespace reference⚠️
-  * see `ClusterRoleBinding` resources
+*
+    ```bash
+    kubectl create namespace argocd
+    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+    ```
+  * ⚠️if you install Argo CD | DIFFERENT namespace -> update the https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml's namespace reference⚠️
+    * see `ClusterRoleBinding` resources
 
-* ⚠️if you are NOT interested in UI, SSO & multi-cluster features -> install ONLY the Argo CD [core components](operator-manual/core.md#installing) ⚠️ 
-  * requirements
-    * self-signed certificate
-      * follow [these instructions](operator-manual/tls.md)
-      * configure the client
-      * use `--insecure`
+  * ⚠️if you are NOT interested in UI, SSO & multi-cluster features -> install ONLY the Argo CD [core components](operator-manual/core.md#installing) ⚠️ 
+    * requirements
+      * self-signed certificate
+        * follow [these instructions](operator-manual/tls.md)
+        * configure the client
+        * use `--insecure`
 
 * `kubectl config set-context --current --namespace=argocd`
   * set CURRENT namespace
@@ -49,7 +50,7 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
     brew install argocd
     ```
 
-## 3. Access The Argo CD API Server
+## 3. Access Argo CD API Server
 
 * Argo CD API server
   * ❌by default, NOT exposed -- with an -- external IP❌
@@ -93,7 +94,7 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 
 ## 5. Register A Cluster -- to -- Deploy Apps 
 
-* OPTIONAL
+* 👀OPTIONAL 👀
 * registers a cluster's credentials | Argo CD
 * use cases
   * deploy | EXTERNAL cluster 
@@ -119,9 +120,7 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 
 ## 6. Create An Application -- from A -- Git Repository
 
-* TODO:
-* An example repository containing a guestbook application is available at
-[https://github.com/argoproj/argocd-example-apps.git](https://github.com/argoproj/argocd-example-apps.git) to demonstrate how Argo CD works.
+* _Example:_ [sample git repository](https://github.com/argoproj/argocd-example-apps.git)
 
 ### Creating Apps Via CLI
 
@@ -199,12 +198,8 @@ events, and assessed health status.
 
 ### Syncing via UI
 
-On the Applications page, click on *Sync* button of the guestbook application:
+* steps
+  * | Applications page, click "Sync" of the guestbook application
+      ![guestbook app](assets/guestbook-app.png)
+  * | panel opened, click on "Synchronize"
 
-![guestbook app](assets/guestbook-app.png)
-
-A panel will be opened and then, click on *Synchronize* button.
-
-You can see more details by clicking at the guestbook application:
-
-![view app](assets/guestbook-tree.png)
