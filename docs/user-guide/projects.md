@@ -5,6 +5,7 @@
     * grouping logically applications
   * use cases
     * Argo CD -- is used by -- MULTIPLE teams
+      * _Example:_ DIFFERENT access level | namespaces / teams
   * features
     * restrict what may be deployed
       * Reason: 🧠 Git source repositories🧠
@@ -42,15 +43,15 @@
 
 ### Creating Projects
 
-* TODO:
-Additional projects can be created to give separate teams different levels of access to namespaces.
-The following command creates a new project `myproject` which can deploy applications to namespace
-`mynamespace` of cluster `https://kubernetes.default.svc`. 
-The permitted Git source repository is set to `https://github.com/argoproj/argocd-example-apps.git` repository.
-
-```bash
-argocd proj create myproject -d https://kubernetes.default.svc,mynamespace -s https://github.com/argoproj/argocd-example-apps.git
-```
+* `argocd proj create projectName`
+  * _Example:_ 
+  
+    ```bash
+    # `myproject`   projectName
+    # -d      deploy | cluster,namespaceName    -- https://kubernetes.default.svc == cluster &  mynamespace == namespace  
+    # -s      permitted Git source repository  
+    argocd proj create myproject -d https://kubernetes.default.svc,mynamespace -s https://github.com/argoproj/argocd-example-apps.git
+    ```
 
 ### Managing Projects
 
