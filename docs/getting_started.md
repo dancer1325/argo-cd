@@ -8,6 +8,10 @@
 * Have a [kubeconfig](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) file
   * by default location,
     * `~/.kube/config`
+* ways to run a cluster locally
+  * -- via -- [kind](https://kind.sigs.k8s.io/) 
+    * `kind create cluster`
+  * TODO: OTHERS
 * CoreDNS
   * | microk8s,
     * if you want to enable -> `microk8s enable dns && microk8s stop && microk8s start`
@@ -122,7 +126,7 @@
 
 * _Example:_ [sample git repository](https://github.com/argoproj/argocd-example-apps.git)
 
-### Creating Apps Via CLI
+### Creating Apps -- via -- CLI
 
 First we need to set the current namespace to argocd running the following command:
 
@@ -136,7 +140,7 @@ Create the example guestbook application with the following command:
 argocd app create guestbook --repo https://github.com/argoproj/argocd-example-apps.git --path guestbook --dest-server https://kubernetes.default.svc --dest-namespace default
 ```
 
-### Creating Apps Via UI
+### Creating Apps -- via -- UI
 
 Open a browser to the Argo CD external UI, and login by visiting the IP/hostname in a browser and use the credentials set in step 4.
 
