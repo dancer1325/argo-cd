@@ -2,7 +2,7 @@
 
 ## argocd app sync
 
-Sync an application to its target state
+* application -- is sync to -- its target state
 
 ```
 argocd app sync [APPNAME... | -l selector | --project project-name] [flags]
