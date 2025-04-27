@@ -92,9 +92,17 @@
 
 * `argocd login <ARGOCD_SERVER>` 
   * enter `admin` & PREVIOUS password
-  * if [Argo CD API server is NOT DIRECTLY accessible](#3-access-the-argo-cd-api-server) -> ways to access 
-    1) add `--port-forward-namespace argocd` flag | EVERY CLI command; or 
-    2) `export ARGOCD_OPTS='--port-forward-namespace argocd'`
+  * if [Argo CD API server is DIRECTLY accessible](#3-access-the-argo-cd-api-server) -- by --
+    * service type LoadBalancer -> TODO: How?
+    * Ingress -> TODO: How?
+    * Port Forwarding -> `argocd login localhost:8080`
+  * if [Argo CD API server is ❌NOT❌ DIRECTLY accessible](#3-access-the-argo-cd-api-server) 
+    * -> ways to access 
+      1) add `--port-forward-namespace argocd` flag | EVERY CLI command; or 
+      2) `export ARGOCD_OPTS='--port-forward-namespace argocd'`
+    * Problems:
+      * Problem1: "FATA[0000] dial tcp: lookup cd.argoproj.io: no such host"
+        * Solution: TODO:
 
 ## 5. Register A Cluster -- to -- Deploy Apps 
 
@@ -128,48 +136,42 @@
 
 ### Creating Apps -- via -- CLI
 
-First we need to set the current namespace to argocd running the following command:
+* `kubectl config set-context --current --namespace=argocd`
+  * set "argocd" -- as -- CURRENT namespace
 
-```bash
-kubectl config set-context --current --namespace=argocd
-```
-
-Create the example guestbook application with the following command:
-
-```bash
-argocd app create guestbook --repo https://github.com/argoproj/argocd-example-apps.git --path guestbook --dest-server https://kubernetes.default.svc --dest-namespace default
-```
+* `argocd app create guestbook --repo https://github.com/dancer1325/argocd-example-apps.git --path guestbook --dest-server https://kubernetes.default.svc --dest-namespace default`
+  * create the example guestbook application
+  * Problems:
+    * Problem1: "FATA[0000] Argo CD server address unspecified"
+      * Solution: ⚠️[log PREVIOUSLY](#3-access-argo-cd-api-server)⚠️ 
 
 ### Creating Apps -- via -- UI
 
-Open a browser to the Argo CD external UI, and login by visiting the IP/hostname in a browser and use the credentials set in step 4.
+* | browser,
+  * "argocd-server'sIP:argocd-server'sport"
+    * if you [exposed it](#3-access-argo-cd-api-server) -- by --
+      * service type LoadBalancer -> TODO: How?
+      * Ingress -> TODO: How?
+      * Port Forwarding -> "localhost:8080"
+  * [pass admin credentials](#4-login----via----cli)
+  * | Applications, click **+ New App** button
+    
+    ![+ new app button](assets/new-app.png)
+  * | NEW panel opened
+    * 's general
 
-After logging in, click the **+ New App** button as shown below:
+      ![app information](assets/app-ui-information.png)
+    * 's source
 
-![+ new app button](assets/new-app.png)
+      ![connect repo](assets/connect-repo.png)
 
-Give your app the name `guestbook`, use the project `default`, and leave the sync policy as `Manual`:
+    * 's destination
 
-![app information](assets/app-ui-information.png)
-
-Connect the [https://github.com/argoproj/argocd-example-apps.git](https://github.com/argoproj/argocd-example-apps.git) repo to Argo CD by setting repository url to the github repo url, leave revision as `HEAD`, and set the path to `guestbook`:
-
-![connect repo](assets/connect-repo.png)
-
-For **Destination**, set cluster URL to `https://kubernetes.default.svc` (or `in-cluster` for cluster name) and namespace to `default`:
-
-![destination](assets/destination.png)
-
-After filling out the information above, click **Create** at the top of the UI to create the `guestbook` application:
-
-![destination](assets/create-app.png)
-
+      ![destination](assets/destination.png)
 
 ## 7. Sync (Deploy) The Application
 
 ### Syncing via CLI
-
-Once the guestbook application is created, you can now view its status:
 
 ```bash
 $ argocd app get guestbook
@@ -189,18 +191,21 @@ apps   Deployment  default    guestbook-ui  OutOfSync  Missing
        Service     default    guestbook-ui  OutOfSync  Missing
 ```
 
-The application status is initially in `OutOfSync` state since the application has yet to be
-deployed, and no Kubernetes resources have been created. To sync (deploy) the application, run:
+* application status
+  * ⚠️INITIALLY, `OutOfSync` ⚠️
+    * Reason: 🧠 
+      * application has to be deployed
+      * NO Kubernetes resources have been created 🧠
 
-```bash
-argocd app sync guestbook
-```
+* `argocd app sync [APPNAME... | -l selector | --project project-name]` 
+    ```bash
+    argocd app sync guestbook
+    ```
+  * how does it work?
+    * from the repository -- retrieves the -- manifests 
+    * performs a `kubectl apply` of the manifests
 
-This command retrieves the manifests from the repository and performs a `kubectl apply` of the
-manifests. The guestbook app is now running and you can now view its resource components, logs,
-events, and assessed health status.
-
-### Syncing via UI
+### Syncing -- via -- UI
 
 * steps
   * | Applications page, click "Sync" of the guestbook application
