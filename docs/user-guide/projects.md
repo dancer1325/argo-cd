@@ -1,38 +1,52 @@
 ## Projects
 
-Projects provide a logical grouping of applications, which is useful when Argo CD is used by multiple
-teams. Projects provide the following features:
+* Projects
+  * allows
+    * grouping logically applications
+  * use cases
+    * Argo CD -- is used by -- MULTIPLE teams
+  * features
+    * restrict what may be deployed
+      * Reason: 🧠 Git source repositories🧠
+    * restrict | apps -- may be -- deployed
+      * destination clusters & namespaces
+    * restrict what kinds of objects may be deployed
+      * _Example:_ RBAC, CRDs, DaemonSets, NetworkPolicy, ...
+    * defining project roles -- to provide -- application RBAC
+      * -- bound to -- OIDC groups &/OR JWT tokens
 
-* restrict what may be deployed (trusted Git source repositories)
-* restrict where apps may be deployed to (destination clusters and namespaces)
-* restrict what kinds of objects may or may not be deployed (e.g. RBAC, CRDs, DaemonSets, NetworkPolicy etc...)
-* defining project roles to provide application RBAC (bound to OIDC groups and/or JWT tokens)
+### Default Project
 
-### The Default Project
-
-Every application belongs to a single project. If unspecified, an application belongs to the
-`default` project, which is created automatically and by default, permits deployments from any
-source repo, to any cluster, and all resource Kinds. The default project can be modified, but not
-deleted. When initially created, it's specification is configured to be the most permissive:
-
-```yaml
-spec:
-  sourceRepos:
-  - '*'
-  destinations:
-  - namespace: '*'
-    server: '*'
-  clusterResourceWhitelist:
-  - group: '*'
-    kind: '*'
-```
+* ⚠️ALL application -- belongs to -- 1! project ⚠️
+* `default` project
+  * use cases
+    * if unspecified -> an application -- belongs to the -- default project
+  * created AUTOMATICALLY / 
+    * ORIGINALLY, MOST permissive
+        ```yaml
+        spec:
+        sourceRepos:
+        - '*'
+        destinations:
+        - namespace: '*'
+            server: '*'
+        clusterResourceWhitelist:
+        - group: '*'
+            kind: '*'
+        ```
+  * allows
+    * from ANY source repo -- deployments to -- ANY cluster
+    * ALL resource Kinds 
+    * being modified
+      * ❌NOT deleted ❌
 
 ### Creating Projects
 
+* TODO:
 Additional projects can be created to give separate teams different levels of access to namespaces.
 The following command creates a new project `myproject` which can deploy applications to namespace
-`mynamespace` of cluster `https://kubernetes.default.svc`. The permitted Git source repository is
-set to `https://github.com/argoproj/argocd-example-apps.git` repository.
+`mynamespace` of cluster `https://kubernetes.default.svc`. 
+The permitted Git source repository is set to `https://github.com/argoproj/argocd-example-apps.git` repository.
 
 ```bash
 argocd proj create myproject -d https://kubernetes.default.svc,mynamespace -s https://github.com/argoproj/argocd-example-apps.git
@@ -211,31 +225,34 @@ argocd app get $APP --auth-token $JWT
 
 ## Configuring RBAC With Projects
 
-The project Roles allows configuring RBAC rules scoped to the project. The following sample
-project provides read-only permissions on project applications to any member of `my-oidc-group` group.
+* project Roles
+  * allows
+    * configuring RBAC rules / ⚠️project-scope ⚠️
 
-*AppProject example:*
+* _Example:_ TODO: add | SOME project
+    ```yaml
+    apiVersion: argoproj.io/v1alpha1
+    kind: AppProject
+    metadata:
+      name: my-project
+      namespace: argocd
+    spec:
+      roles:
+      # A role which provides read-only access -- to -- ALL applications | project
+      - name: read-only
+        description: Read-only privileges to my-project
+        policies:
+        - p, proj:my-project:read-only, applications, get, my-project/*, allow
+        groups:
+        - my-oidc-group
+    ```
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: AppProject
-metadata:
-  name: my-project
-  namespace: argocd
-spec:
-  roles:
-  # A role which provides read-only access to all applications in the project
-  - name: read-only
-    description: Read-only privileges to my-project
-    policies:
-    - p, proj:my-project:read-only, applications, get, my-project/*, allow
-    groups:
-    - my-oidc-group
-```
+* ways to configure the policy
+  * `argocd proj role` 
+  * | UI, project details page  
 
-You can use `argocd proj role` CLI commands or project details page in the user interface to configure the policy.
-Note that each project role policy rule must be scoped to that project only. Use the `argocd-rbac-cm` ConfigMap described in
-[RBAC](../operator-manual/rbac.md) documentation if you want to configure cross project RBAC rules.
+* if you want to configure CROSS project RBAC rules -> use `argocd-rbac-cm` ConfigMap
+  * see [RBAC](../operator-manual/rbac.md) documentation 
 
 ## Configuring Global Projects (v1.8)
 
