@@ -2,13 +2,17 @@
 
 ## Introduction
 
-The ApplicationSet controller is a [Kubernetes controller](https://kubernetes.io/docs/concepts/architecture/controller/) that adds support for an `ApplicationSet` [CustomResourceDefinition](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/) (CRD). This controller/CRD enables both automation and greater flexibility managing [Argo CD](../../index.md) Applications across a large number of clusters and within monorepos, plus it makes self-service usage possible on multitenant Kubernetes clusters.
+* ApplicationSet controller
+  * == [Kubernetes controller](https://kubernetes.io/docs/concepts/architecture/controller/) / adds support -- for an -- `ApplicationSet` [CRD](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/)  
+
+* TODO: This controller/CRD enables both automation and greater flexibility managing [Argo CD](../../index.md) Applications across a large number of clusters and within monorepos, plus it makes self-service usage possible on multitenant Kubernetes clusters.
 
 The ApplicationSet controller works alongside an existing [Argo CD installation](../../index.md). Argo CD is a declarative, GitOps continuous delivery tool, which allows developers to define and control deployment of Kubernetes application resources from within their existing Git workflow.
 
 Starting with Argo CD v2.3, the ApplicationSet controller is bundled with Argo CD.
 
-The ApplicationSet controller, supplements Argo CD by adding additional features in support of cluster-administrator-focused scenarios. The `ApplicationSet` controller provides:
+The ApplicationSet controller, supplements Argo CD by adding additional features in support of cluster-administrator-focused scenarios. 
+The `ApplicationSet` controller provides:
 
 - The ability to use a single Kubernetes manifest to target multiple Kubernetes clusters with Argo CD
 - The ability to use a single Kubernetes manifest to deploy multiple applications from one or multiple Git repositories with Argo CD
@@ -20,38 +24,39 @@ The ApplicationSet controller, supplements Argo CD by adding additional features
 
 ## The ApplicationSet resource
 
-This example defines a new `guestbook` resource of kind `ApplicationSet`:
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: guestbook
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-  - list:
-      elements:
-      - cluster: engineering-dev
-        url: https://1.2.3.4
-      - cluster: engineering-prod
-        url: https://2.4.6.8
-      - cluster: finance-preprod
-        url: https://9.8.7.6
-  template:
+* _Example:_ generators + templates -- to create -- Argo CD Applications
+    ```yaml
+    apiVersion: argoproj.io/v1alpha1
+    kind: ApplicationSet
     metadata:
-      name: '{{.cluster}}-guestbook'
+      name: guestbook
     spec:
-      project: my-project
-      source:
-        repoURL: https://github.com/infra-team/cluster-deployments.git
-        targetRevision: HEAD
-        path: guestbook/{{.cluster}}
-      destination:
-        server: '{{.url}}'
-        namespace: guestbook
-```
+      goTemplate: true
+      goTemplateOptions: ["missingkey=error"]
+      generators:
+      - list:
+          elements:
+          - cluster: engineering-dev
+            url: https://1.2.3.4
+          - cluster: engineering-prod
+            url: https://2.4.6.8
+          - cluster: finance-preprod
+            url: https://9.8.7.6
+      template:
+        metadata:
+          name: '{{.cluster}}-guestbook'
+        spec:
+          project: my-project
+          source:
+            repoURL: https://github.com/infra-team/cluster-deployments.git
+            targetRevision: HEAD
+            path: guestbook/{{.cluster}}
+          destination:
+            server: '{{.url}}'
+            namespace: guestbook
+    ```
 
+* TODO:
 In this example, we want to deploy our `guestbook` application (with the Kubernetes resources for this application coming from Git, since this is GitOps) to a list of Kubernetes clusters (with the list of target clusters defined in the List items element of the `ApplicationSet` resource).
 
 While there are multiple types of *generators* that are available to use with the `ApplicationSet` resource, this example uses the List generator, which simply contains a fixed, literal list of clusters to target. This list of clusters will be the clusters upon which Argo CD deploys the `guestbook` application resources, once the ApplicationSet controller has processed the `ApplicationSet` resource.
