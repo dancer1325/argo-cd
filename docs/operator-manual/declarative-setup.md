@@ -1,46 +1,58 @@
 # Declarative Setup
 
-Argo CD applications, projects and settings can be defined declaratively using Kubernetes manifests. These can be updated using `kubectl apply`, without needing to touch the `argocd` command-line tool.
+* goal
+  * 💡define declaratively 💡, -- via -- Kubernetes manifests (== -- via -- `kubectl apply`),
+    * Argo CD applications,
+    * Argo CD projects
+    * Argo CD settings
 
 ## Quick Reference
 
-All resources, including `Application` and `AppProject` specs, have to be installed in the Argo CD namespace (by default `argocd`).
+* ⚠️install Argo CD's CRD (`Application` & `AppProject`) | Argo CD namespace (by default, `argocd`)⚠️ 
 
 ### Atomic configuration
 
 | Sample File                                                           | Resource Name                                                                      | Kind      | Description                                                                          |
 |-----------------------------------------------------------------------|------------------------------------------------------------------------------------|-----------|--------------------------------------------------------------------------------------|
 | [`argocd-cm.yaml`](argocd-cm-yaml.md)                                 | argocd-cm                                                                          | ConfigMap | General Argo CD configuration                                                        |
-| [`argocd-repositories.yaml`](argocd-repositories-yaml.md)             | my-private-repo / istio-helm-repo / private-helm-repo / private-repo               | Secrets   | Sample repository connection details                                                 |
-| [`argocd-repo-creds.yaml`](argocd-repo-creds-yaml.md)                    | argoproj-https-creds / argoproj-ssh-creds / github-creds / github-enterprise-creds | Secrets   | Sample repository credential templates                                               |
+| [`argocd-repositories.yaml`](argocd-repositories-yaml.md)             | my-private-repo / istio-helm-repo / private-helm-repo / private-repo               | Secrets   | SAMPLE repository connection details                                                 |
+| [`argocd-repo-creds.yaml`](argocd-repo-creds-yaml.md)                    | argoproj-https-creds / argoproj-ssh-creds / github-creds / github-enterprise-creds | Secrets   | SAMPLE repository credential templates                                               |
 | [`argocd-cmd-params-cm.yaml`](argocd-cmd-params-cm-yaml.md)           | argocd-cmd-params-cm                                                               | ConfigMap | Argo CD env variables configuration                                                  |
-| [`argocd-secret.yaml`](argocd-secret-yaml.md)                         | argocd-secret                                                                      | Secret    | User Passwords, Certificates (deprecated), Signing Key, Dex secrets, Webhook secrets |
+| [`argocd-secret.yaml`](argocd-secret-yaml.md)                         | argocd-secret                                                                      | Secret    | User Passwords <br/> Certificates (⚠️deprecated⚠️) <br/> Signing Key <br/> Dex secrets <br/> Webhook secrets |
 | [`argocd-rbac-cm.yaml`](argocd-rbac-cm-yaml.md)                       | argocd-rbac-cm                                                                     | ConfigMap | RBAC Configuration                                                                   |
-| [`argocd-tls-certs-cm.yaml`](argocd-tls-certs-cm-yaml.md)             | argocd-tls-certs-cm                                                                | ConfigMap | Custom TLS certificates for connecting Git repositories via HTTPS (v1.2 and later)   |
-| [`argocd-ssh-known-hosts-cm.yaml`](argocd-ssh-known-hosts-cm-yaml.md) | argocd-ssh-known-hosts-cm                                                          | ConfigMap | SSH known hosts data for connecting Git repositories via SSH (v1.2 and later)        |
+| [`argocd-tls-certs-cm.yaml`](argocd-tls-certs-cm-yaml.md)             | argocd-tls-certs-cm                                                                | ConfigMap | Custom TLS certificates -- for connecting, via HTTPS (v1.2+), -- Git repositories    |
+| [`argocd-ssh-known-hosts-cm.yaml`](argocd-ssh-known-hosts-cm-yaml.md) | argocd-ssh-known-hosts-cm                                                          | ConfigMap | SSH known hosts data -- for connecting, via SSH (v1.2+), -- Git repositories         |
 
-For each specific kind of ConfigMap and Secret resource, there is only a single supported resource name (as listed in the above table) - if you need to merge things you need to do it before creating them.
+* ⚠️1! ALLOWED resource name (PREVIOUS table) / EACH specific kind of ConfigMap & Secret resource ⚠️
+  * if you need to merge things -> BEFORE creating them, do it 
 
-!!!warning "A note about ConfigMap resources"
-    Be sure to annotate your ConfigMap resources using the label `app.kubernetes.io/part-of: argocd`, otherwise Argo CD will not be able to use them.
+* ⚠️ConfigMap resources -> MUST be annotated -- by -- `app.kubernetes.io/part-of: argocd` label ⚠️ 
+  * Reason: 🧠OTHERWISE, Argo CD -- will NOT be able to -- use them🧠
 
-### Multiple configuration objects
+### MULTIPLE configuration objects
 
 | Sample File                                                      | Kind        | Description              |
 |------------------------------------------------------------------|-------------|--------------------------|
-| [`application.yaml`](../user-guide/application-specification.md) | Application | Example application spec |
-| [`project.yaml`](./project-specification.md)                     | AppProject  | Example project spec     |
+| [`application.yaml`](../user-guide/application-specification.md)                                        | Application | _Example_ application spec |
+| [`project.yaml`](./project-specification.md)                     | AppProject  | _Example_ project spec     |
 | -                                                                | Secret      | Repository credentials   |
 
-For `Application` and `AppProject` resources, the name of the resource equals the name of the application or project within Argo CD. This also means that application and project names are unique within a given Argo CD installation - you cannot have the same application name for two different applications.
+* `Application`'s name 
+  * == applicationName | Argo CD
+  * UNIQUE | Argo CD installation
+* `AppProject`'s name
+  * == projectName | Argo CD
+  * UNIQUE | Argo CD installation 
 
 ## Applications
 
+* TODO:
 The Application CRD is the Kubernetes resource object representing a deployed application instance
 in an environment. It is defined by two key pieces of information:
 
 * `source` reference to the desired state in Git (repository, revision, path, environment)
-* `destination` reference to the target cluster and namespace. For the cluster one of server or name can be used, but not both (which will result in an error). Under the hood when the server is missing, it is calculated based on the name and used for any operations.
+* `destination` reference to the target cluster and namespace. For the cluster one of server or name can be used, but not both (which will result in an error). 
+  * Under the hood when the server is missing, it is calculated based on the name and used for any operations.
 
 A minimal Application spec is as follows:
 
@@ -92,22 +104,22 @@ This allows you to declaratively manage a group of apps that can be deployed and
 
 See [cluster bootstrapping](cluster-bootstrapping.md).
 
-## Projects
+## Projects -- `AppProject` --
 
-The AppProject CRD is the Kubernetes resource object representing a logical grouping of applications.
-It is defined by the following key pieces of information:
+* `AppProject`
+  * := CRD /
+    * == logical grouping of applications
+  * `spec`
+    * `.sourceRepos`
+      * == repositories | project's applications -- pull -- manifests from
+    * `.destinations`
+      * == clusters & namespaces | project's applications -- can -- deploy into
+        * ⚠️if you include namespace | Argo CD is installed -> Applications have admin-level access⚠️  
+          * see [RBAC access](rbac.md)
+    * `.roles`
+      * == entitieS / define access -- to -- project's resources
 
-* `sourceRepos` reference to the repositories that applications within the project can pull manifests from.
-* `destinations` reference to clusters and namespaces that applications within the project can deploy into.
-* `roles` list of entities with definitions of their access to resources within the project.
-
-!!!warning "Projects which can deploy to the Argo CD namespace grant admin access"
-    If a Project's `destinations` configuration allows deploying to the namespace in which Argo CD is installed, then
-    Applications under that project have admin-level access. [RBAC access](https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/)
-    to admin-level Projects should be carefully restricted, and push access to allowed `sourceRepos` should be limited
-    to only admins.
-
-An example spec is as follows:
+* _Example:_ TODO: Create it
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -1153,27 +1165,26 @@ Both `resource.includeEventLabelKeys` and `resource.excludeEventLabelKeys` suppo
 * SSO configuration details: [SSO](./user-management/index.md)
 * RBAC configuration details: [RBAC](./rbac.md)
 
-## Manage Argo CD Using Argo CD
+## Manage Argo CD -- via -- Argo CD
 
-Argo CD is able to manage itself since all settings are represented by Kubernetes manifests. The suggested way is to create [Kustomize](https://github.com/kubernetes-sigs/kustomize)
-based application which uses base Argo CD manifests from [https://github.com/argoproj/argo-cd](https://github.com/argoproj/argo-cd/tree/stable/manifests) and apply required changes on top.
-
-Example of `kustomization.yaml`:
-
-```yaml
-# additional resources like ingress rules, cluster and repository secrets.
-resources:
-- github.com/argoproj/argo-cd//manifests/cluster-install?ref=stable
-- clusters-secrets.yaml
-- repos-secrets.yaml
-
-# changes to config maps
-patches:
-- path: overlays/argo-cd-cm.yaml
-```
-
-The live example of self managed Argo CD config is available at [https://cd.apps.argoproj.io](https://cd.apps.argoproj.io) and with configuration
-stored at [argoproj/argoproj-deployments](https://github.com/argoproj/argoproj-deployments/tree/master/argocd).
-
-!!! note
-    You will need to sign-in using your GitHub account to get access to [https://cd.apps.argoproj.io](https://cd.apps.argoproj.io)
+* 💡Argo CD -- is able to -- manage itself 💡
+  * Reason: 🧠ALL settings -- are represented by -- Kubernetes manifests 🧠
+  * recommended way
+    * create [Kustomize-based applications](https://github.com/kubernetes-sigs/kustomize) / use [Argo CD-base manifests](https://github.com/argoproj/argo-cd/tree/stable/manifests)
+      * _Example:_ TODO: Create example to test
+          ```yaml, title="kustomization.yaml"
+          # additional resources like ingress rules, cluster and repository secrets.
+          resources:
+          - github.com/argoproj/argo-cd//manifests/cluster-install?ref=stable
+          - clusters-secrets.yaml
+          - repos-secrets.yaml
+          
+          # changes to config maps
+          patches:
+          - path: overlays/argo-cd-cm.yaml
+          ```
+    * apply required changes | them
+  * _Live Examples:_ [here](https://cd.apps.argoproj.io)
+    * requirements
+      * sign-in -- via -- your GitHub account
+    * [configuration](https://github.com/argoproj/argoproj-deployments/tree/master/argocd)
