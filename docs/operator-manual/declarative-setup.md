@@ -44,7 +44,7 @@
   * == projectName | Argo CD
   * UNIQUE | Argo CD installation 
 
-## Applications
+## Applications -- `Application` --
 
 * TODO:
 The Application CRD is the Kubernetes resource object representing a deployed application instance
