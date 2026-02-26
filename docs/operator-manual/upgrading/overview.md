@@ -1,9 +1,12 @@
 # Overview
 
-> [!NOTE]
-> This section contains information on upgrading Argo CD. Before upgrading please make sure to read details about
-> the breaking changes between Argo CD versions.
+* goal
+  * how to upgrade Argo CD
 
+* BEFORE upgrading Argo CD
+  * read breaking changes BETWEEN Argo CD versions
+
+TODO:
 Argo CD uses semver-like versioning that ensures the following rules:
 
 - The patch release does not introduce any breaking changes. So if you are upgrading from v1.5.1 to v1.5.3

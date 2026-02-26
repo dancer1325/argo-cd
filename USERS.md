@@ -1,9 +1,7 @@
 ## Who uses Argo CD?
 
-As the Argo Community grows, we'd like to keep track of our users. Please send a
-PR with your organization name if you are using Argo CD.
-
-Currently, the following organizations are **officially** using Argo CD:
+* goal
+  * Official organizations / use Argo CD
 
 1. [100ms](https://www.100ms.ai/)
 1. [127Labs](https://127labs.com/)
