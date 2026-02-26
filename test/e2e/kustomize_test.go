@@ -4,23 +4,24 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/argoproj/gitops-engine/pkg/health"
-	. "github.com/argoproj/gitops-engine/pkg/sync/common"
+	"github.com/argoproj/argo-cd/gitops-engine/pkg/health"
+	. "github.com/argoproj/argo-cd/gitops-engine/pkg/sync/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	. "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
-	"github.com/argoproj/argo-cd/v2/test/e2e/fixture"
-	. "github.com/argoproj/argo-cd/v2/test/e2e/fixture/app"
-	"github.com/argoproj/argo-cd/v2/util/errors"
+	. "github.com/argoproj/argo-cd/v3/pkg/apis/application/v1alpha1"
+	"github.com/argoproj/argo-cd/v3/test/e2e/fixture"
+	. "github.com/argoproj/argo-cd/v3/test/e2e/fixture/app"
+	"github.com/argoproj/argo-cd/v3/util/errors"
 )
 
 func TestKustomize2AppSource(t *testing.T) {
+	ctx := Given(t)
 	patchLabelMatchesFor := func(kind string) func(app *Application) {
-		return func(app *Application) {
+		return func(_ *Application) {
 			name := "k2-patched-guestbook-ui-deploy1"
 			labelValue, err := fixture.Run(
-				"", "kubectl", "-n="+fixture.DeploymentNamespace(),
+				"", "kubectl", "-n="+ctx.DeploymentNamespace(),
 				"get", kind, name,
 				"-ojsonpath={.metadata.labels.patched-by}")
 			require.NoError(t, err)
@@ -28,7 +29,7 @@ func TestKustomize2AppSource(t *testing.T) {
 		}
 	}
 
-	Given(t).
+	ctx.
 		Path(guestbookPath).
 		NamePrefix("k2-").
 		NameSuffix("-deploy1").
@@ -145,7 +146,7 @@ func TestKustomizeBuildOptionsLoadRestrictor(t *testing.T) {
 	Given(t).
 		Path(guestbookPath).
 		And(func() {
-			errors.FailOnErr(fixture.Run("", "kubectl", "patch", "cm", "argocd-cm",
+			errors.NewHandler(t).FailOnErr(fixture.Run("", "kubectl", "patch", "cm", "argocd-cm",
 				"-n", fixture.TestNamespace(),
 				"-p", `{ "data": { "kustomize.buildOptions": "--load-restrictor LoadRestrictionsNone" } }`))
 		}).
@@ -159,7 +160,7 @@ func TestKustomizeBuildOptionsLoadRestrictor(t *testing.T) {
 		Expect(SyncStatusIs(SyncStatusCodeSynced)).
 		Given().
 		And(func() {
-			errors.FailOnErr(fixture.Run("", "kubectl", "patch", "cm", "argocd-cm",
+			errors.NewHandler(t).FailOnErr(fixture.Run("", "kubectl", "patch", "cm", "argocd-cm",
 				"-n", fixture.TestNamespace(),
 				"-p", `{ "data": { "kustomize.buildOptions": "" } }`))
 		})
@@ -181,13 +182,14 @@ func TestKustomizeImages(t *testing.T) {
 
 // make sure we we can invoke the CLI to replace replicas and actual deployment is set to correct value
 func TestKustomizeReplicas2AppSource(t *testing.T) {
+	ctx := Given(t)
 	deploymentName := "guestbook-ui"
 	deploymentReplicas := 2
 	checkReplicasFor := func(kind string) func(app *Application) {
-		return func(app *Application) {
+		return func(_ *Application) {
 			name := deploymentName
 			replicas, err := fixture.Run(
-				"", "kubectl", "-n="+fixture.DeploymentNamespace(),
+				"", "kubectl", "-n="+ctx.DeploymentNamespace(),
 				"get", kind, name,
 				"-ojsonpath={.spec.replicas}")
 			require.NoError(t, err)
@@ -195,7 +197,7 @@ func TestKustomizeReplicas2AppSource(t *testing.T) {
 		}
 	}
 
-	Given(t).
+	ctx.
 		Path("guestbook").
 		When().
 		CreateApp().
@@ -285,4 +287,90 @@ func TestKustomizeUnsetOverrideDeployment(t *testing.T) {
 		And(func(app *Application) {
 			assert.Nil(t, app.Spec.Source.Kustomize)
 		})
+}
+
+// make sure kube-version gets passed down to resources
+func TestKustomizeKubeVersion(t *testing.T) {
+	ctx := Given(t)
+	ctx.Path("kustomize-kube-version").
+		And(func() {
+			errors.NewHandler(t).FailOnErr(fixture.Run("", "kubectl", "patch", "cm", "argocd-cm",
+				"-n", fixture.TestNamespace(),
+				"-p", `{ "data": { "kustomize.buildOptions": "--enable-helm" } }`))
+		}).
+		When().
+		CreateApp().
+		Sync().
+		Then().
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		And(func(_ *Application) {
+			kubeVersion := errors.NewHandler(t).FailOnErr(fixture.Run(".", "kubectl", "-n", ctx.DeploymentNamespace(), "get", "cm", "my-map",
+				"-o", "jsonpath={.data.kubeVersion}")).(string)
+			// Capabilities.KubeVersion defaults to 1.9.0, we assume here you are running a later version
+			assert.LessOrEqual(t, fixture.GetVersions(t).ServerVersion.Format("v%s.%s"), kubeVersion)
+		}).
+		When().
+		// Make sure override works.
+		AppSet("--kustomize-kube-version", "999.999.999").
+		Sync().
+		Then().
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		And(func(_ *Application) {
+			assert.Equal(t, "v999.999.999", errors.NewHandler(t).FailOnErr(fixture.Run(".", "kubectl", "-n", ctx.DeploymentNamespace(), "get", "cm", "my-map",
+				"-o", "jsonpath={.data.kubeVersion}")).(string))
+		})
+}
+
+// make sure api versions gets passed down to resources
+func TestKustomizeApiVersions(t *testing.T) {
+	ctx := Given(t)
+	ctx.Path("kustomize-api-versions").
+		And(func() {
+			errors.NewHandler(t).FailOnErr(fixture.Run("", "kubectl", "patch", "cm", "argocd-cm",
+				"-n", fixture.TestNamespace(),
+				"-p", `{ "data": { "kustomize.buildOptions": "--enable-helm" } }`))
+		}).
+		When().
+		CreateApp().
+		Sync().
+		Then().
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		And(func(_ *Application) {
+			apiVersions := errors.NewHandler(t).FailOnErr(fixture.Run(".", "kubectl", "-n", ctx.DeploymentNamespace(), "get", "cm", "my-map",
+				"-o", "jsonpath={.data.apiVersions}")).(string)
+			// The v1 API shouldn't be going anywhere.
+			assert.Contains(t, apiVersions, "v1")
+		}).
+		When().
+		// Make sure override works.
+		AppSet("--kustomize-api-versions", "v1/MyTestResource").
+		Sync().
+		Then().
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		And(func(_ *Application) {
+			apiVersions := errors.NewHandler(t).FailOnErr(fixture.Run(".", "kubectl", "-n", ctx.DeploymentNamespace(), "get", "cm", "my-map",
+				"-o", "jsonpath={.data.apiVersions}")).(string)
+			assert.Contains(t, apiVersions, "v1/MyTestResource")
+		})
+}
+
+func TestKustomizeNamespaceOverride(t *testing.T) {
+	Given(t).
+		Path("kustomize-kube-version").
+		And(func() {
+			errors.NewHandler(t).FailOnErr(fixture.Run("", "kubectl", "patch", "cm", "argocd-cm",
+				"-n", fixture.TestNamespace(),
+				"-p", `{ "data": { "kustomize.buildOptions": "--enable-helm" } }`))
+		}).
+		When().
+		CreateApp().
+		Sync().
+		Then().
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		When().
+		AppSet("--kustomize-namespace", "does-not-exist").
+		Then().
+		// The app should stay in synced status as per https://github.com/kubernetes-sigs/kustomize/pull/5940
+		// the transformer will not update a helm generated namespace.
+		Expect(SyncStatusIs(SyncStatusCodeSynced))
 }

@@ -22,9 +22,23 @@
     ```bash
     kubectl create namespace argocd
     kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+    # TODO: check why it's recommended NOW
+    # kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
     ```
   * ⚠️if you install Argo CD | DIFFERENT namespace -> update the https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml's namespace reference⚠️
     * see `ClusterRoleBinding` resources
+
+
+> [!NOTE]
+> **Why `--server-side --force-conflicts`?**
+>
+> The `--server-side` flag is required because some Argo CD CRDs (like ApplicationSet) exceed the 262KB annotation size limit imposed by client-side `kubectl apply`. Server-side apply avoids this limitation by not storing the `last-applied-configuration` annotation.
+>
+> The `--force-conflicts` flag allows the apply operation to take ownership of fields that may have been previously managed by other tools (such as Helm or a previous `kubectl apply`). This is safe for fresh installs and necessary for upgrades. Note that any custom modifications you've made to fields that are defined in the Argo CD manifests (like `affinity`, `env`, or `probes`) will be overwritten. However, fields not specified in the manifests (like `resources` limits/requests or `tolerations`) will be preserved.
+
+> [!WARNING]
+> The installation manifests include `ClusterRoleBinding` resources that reference `argocd` namespace. If you are installing Argo CD into a different
+> namespace then make sure to update the namespace reference.
 
   * ⚠️if you are NOT interested in UI, SSO & multi-cluster features -> install ONLY the Argo CD [core components](operator-manual/core.md#installing) ⚠️ 
     * requirements
@@ -32,6 +46,13 @@
         * follow [these instructions](operator-manual/tls.md)
         * configure the client
         * use `--insecure`
+
+This default installation will have a self-signed certificate and cannot be accessed without a bit of extra work.
+Do one of:
+
+* Follow the [instructions to configure a certificate](operator-manual/tls.md) (and ensure that the client OS trusts it).
+* Configure the client OS to trust the self signed certificate.
+* Use the --insecure flag on all Argo CD CLI operations in this guide.
 
 * `kubectl config set-context --current --namespace=argocd`
   * set CURRENT namespace
@@ -44,6 +65,9 @@
     * password stored | Kubernetes secret `argocd-redis` 
     * key `auth` | namespace / Argo CD is installed
 
+* TODO: 
+> If you are running Argo CD on Docker Desktop or another local Kubernetes environment, refer to the [Running Argo CD Locally](developer-guide/running-locally.md) guide for the full setup instructions and configuration steps tailored for local clusters.
+
 ## 2. Download Argo CD CLI
 
 * ways
@@ -54,10 +78,10 @@
     brew install argocd
     ```
 
-## 3. Access Argo CD API Server
+## 3. Access Argo CD
 
-* Argo CD API server
-  * ❌by default, NOT exposed -- with an -- external IP❌
+* Argo CD
+  * ❌by default, NOT exposed outside the cluster❌
 
 ### ways to expose
 #### Service Type Load Balancer
@@ -66,6 +90,11 @@
     ```bash
     kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
     ```
+After a short wait, your cloud provider will assign an external IP address to the service. You can retrieve this IP with:
+
+```bash
+kubectl get svc argocd-server -n argocd -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'
+```
 
 #### Ingress
 * [here](operator-manual/ingress.md)
@@ -90,6 +119,15 @@
       * delete `argocd-initial-admin-secret`
     * if a NEW admin password MUST be re-generated -> it will be re-created -- by Argo CD, -- on demand  
 
+TODO:
+> [!WARNING]
+> You should delete the `argocd-initial-admin-secret` from the Argo CD
+> namespace once you changed the password. The secret serves no other
+> purpose than to store the initially generated password in clear and can
+> safely be deleted at any time. It will be re-created on demand by Argo CD
+> if a new admin password must be re-generated.
+
+
 * `argocd login <ARGOCD_SERVER>` 
   * enter `admin` & PREVIOUS password
   * if [Argo CD API server is DIRECTLY accessible](#3-access-the-argo-cd-api-server) -- by --
@@ -103,16 +141,13 @@
     * Problems:
       * Problem1: "FATA[0000] dial tcp: lookup cd.argoproj.io: no such host"
         * Solution: TODO:
-
 ## 5. Register A Cluster -- to -- Deploy Apps 
-
 * 👀OPTIONAL 👀
 * registers a cluster's credentials | Argo CD
 * use cases
   * deploy | EXTERNAL cluster 
 * if you deploy INTERNALLY (== SAME cluster | Argo CD runs) -> 
   * https://kubernetes.default.svc == application's K8s API server address
-
 * steps
   * `kubectl config get-contexts -o name`
     * list ALL clusters contexts | your CURRENT kubeconfig
@@ -123,16 +158,17 @@
       * bound -- to an -- admin-level ClusterRole
       * uses
         * by Argo CD, -- to -- perform Argo CD's management tasks (_Example:_ deploy/monitoring)
-
 * `argocd-manager-role` role
   * `create`, `update`, `patch`, `delete` privileges -- can be -- modified | limited set of namespaces, groups, kinds
   * required to work Argo CD,
     * | cluster-scope,
       * `get`, `list`, `watch` privileges  
-
 ## 6. Create An Application -- from A -- Git Repository
 
 * _Example:_ [sample git repository](https://github.com/argoproj/argocd-example-apps.git)
+
+TODO:
+> The following example application may only be compatible with AMD64 architecture. If you are running on a different architecture (such as ARM64 or ARMv7), you may encounter issues with dependencies or container images that are not built for your platform. Consider verifying the compatibility of the application or building architecture-specific images if necessary.
 
 ### Creating Apps -- via -- CLI
 

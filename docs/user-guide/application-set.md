@@ -16,6 +16,12 @@
 * Argo CD Applications
   * 👀are templated -- from -- [generators](../operator-manual/applicationset/generators.md) 👀
 
+* TODO: 
+> [!WARNING]
+> Be aware of the [security implications](../operator-manual/applicationset/Security.md) before allowing developers to
+> create Applications via ApplicationSets.
+
+
 * _Example:_ `ApplicationSet` resource / Argo CD Application -- targeted, via list generator, to -- MULTIPLE clusters
   * TODO: use it
     ```yaml
