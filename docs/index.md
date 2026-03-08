@@ -14,6 +14,7 @@
 ## Architecture
 
 ![Argo CD Architecture](assets/argocd_architecture.png)
+TODO:
 
 Argo CD is implemented as a Kubernetes controller which continuously monitors running applications
 and compares the current, live state against the desired target state (as specified in the Git repo).

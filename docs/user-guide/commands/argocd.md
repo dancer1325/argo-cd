@@ -2,7 +2,8 @@
 
 ## argocd
 
-argocd controls a Argo CD server
+* allows
+  * controlling a Argo CD server
 
 ```
 argocd [flags]

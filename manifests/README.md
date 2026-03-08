@@ -1,34 +1,63 @@
 # Argo CD Installation Manifests
 
-Four sets of installation manifests are provided:
+## common installationS
+### -- via -- 1! step
 
-## Normal Installation:
+* [install.yaml](install.yaml)
+  * standard Argo CD installation
+  * requirements
+    * cluster-admin access
+      * Reason: 🧠manifest contains `ClusterRole`🧠
+  * uses
+    * deploy applications | 
+      * SAME cluster / Argo CD runs
+        * by default
+      * external clusters
+        * specify [inputted credentials](/docs/operator-manual/cluster-management.md)
+        * external cluster ==     != cluster / Argo CD runs
 
-* [install.yaml](install.yaml) - Standard Argo CD installation with cluster-admin access. Use this
-  manifest set if you plan to use Argo CD to deploy applications in the same cluster that Argo CD runs
-  in (i.e. kubernetes.default.svc). Will still be able to deploy to external clusters with inputted
-  credentials.
+* steps
+  * `kubectl apply -f install.yaml`
 
-* [namespace-install.yaml](namespace-install.yaml) - Installation of Argo CD which requires only
-  namespace level privileges (does not need cluster roles). Use this manifest set if you do not
-  need Argo CD to deploy applications in the same cluster that Argo CD runs in, and will rely solely
-  on inputted cluster credentials. An example of using this set of manifests is if you run several
-  Argo CD instances for different teams, where each instance will be deploying applications to
-  external clusters. Will still be possible to deploy to the same cluster (kubernetes.default.svc)
-  with inputted credentials (i.e. `argocd cluster add <CONTEXT> --in-cluster --namespace <YOUR NAMESPACE>`).
+### -- via -- 2 steps
 
-> [!NOTE]
-> Argo CD CRDs are not included into [namespace-install.yaml](namespace-install.yaml).
-> and have to be installed separately. The CRD manifests are located in [manifests/crds](./crds) directory.
-> Use the following command to install them:
-> ```bash
-> kubectl apply -k https://github.com/argoproj/argo-cd/manifests/crds\?ref\=stable
-> ```
+* [namespace-install.yaml](namespace-install.yaml) 
+  * ❌NOT include ArgoCD CRDs❌
+  * requirements
+    * namespace level privileges
+      * == ❌NOT need cluster roles❌
+      * Reason: 🧠manifest contains `Role`🧠
+  * uses
+    * deploy applications |
+      * SAME cluster / Argo CD runs
+        * requirements
+          * specify [inputted credentials](/docs/operator-manual/cluster-management.md) 
+      * external clusters
+        * external cluster ==     != cluster / Argo CD runs
+        * specify [inputted credentials](/docs/operator-manual/cluster-management.md)
+  * use cases
+    * run >1 Argo CD instances / 
+      * DIFFERENT teams
+      * EACH instance deploy applications -- to -- external clusters
 
-## High Availability:
+* steps
+  * `kubectl apply -f manifests/crds`
+  * `kubectl apply -n someNameSpace -f namespace-install.yaml`
 
-* [ha/install.yaml](ha/install.yaml) - the same as install.yaml but with multiple replicas for
-  supported components.
+## High Availability
 
-* [ha/namespace-install.yaml](ha/namespace-install.yaml) - the same as namespace-install.yaml but
-  with multiple replicas for supported components.
+* [ha/install.yaml](ha/install.yaml)
+  * == [install.yaml](install.yaml) + MULTIPLE replicas / supported components
+    * MULTIPLE replicas 
+      * `spec.replicas` | `kind: StatefulSet`
+      * `spec.replicas` | `kind: Deployment`
+
+* [ha/namespace-install.yaml](ha/namespace-install.yaml) 
+  * == [namespace-install.yaml](namespace-install.yaml) + MULTIPLE replicas / supported components
+    * MULTIPLE replicas
+      * `spec.replicas` | `kind: StatefulSet`
+      * `spec.replicas` | `kind: Deployment`
+
+## Core installation
+* [manifest](core-install.yaml)
+* [guide](/docs/operator-manual/core.md)

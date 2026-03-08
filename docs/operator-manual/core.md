@@ -2,67 +2,60 @@
 
 ## Introduction
 
-Argo CD Core is a different installation that runs Argo CD in headless
-mode. With this installation, you will have a fully functional GitOps
-engine capable of getting the desired state from Git repositories and
-applying it in Kubernetes.
-
-The following groups of features won't be available in this
-installation:
-
-- Argo CD RBAC model
-- Argo CD API
-- Argo CD Notification Controller
-- OIDC based authentication
-
-The following features will be partially available (see the
-[usage](#using) section below for more details):
-
-- Argo CD Web UI
-- Argo CD CLI
-- Multi-tenancy (strictly GitOps based on git push permissions)
-
-A few use-cases that justify running Argo CD Core are:
-
-- As a cluster admin, I want to rely on Kubernetes RBAC only.
-- As a devops engineer, I don't want to learn a new API or depend on
-  another CLI to automate my deployments. I want to rely on the
-  Kubernetes API only.
-- As a cluster admin, I don't want to provide Argo CD UI or Argo CD
-  CLI to developers.
+* Argo CD Core
+  * == runs Argo CD / headless mode
+  * features / 
+    * AVAILABLE
+      * GitOps functionality
+    * NOT AVAILABLE
+      - Argo CD RBAC model
+      - Argo CD API
+      - Argo CD Notification Controller
+      - OIDC based authentication
+    * [partially available](#using)
+      - Argo CD Web UI
+      - Argo CD CLI
+      - Multi-tenancy (strictly GitOps based on git push permissions)
+  * use cases
+    - ONLY rely on 
+      - Kubernetes RBAC
+      - Kubernetes API
+    - NOT provide to developers
+      - Argo CD UI
+      - Argo CD CLI 
+  * audience
+    * cluster admin
 
 ## Architecture
 
-Because Argo CD is designed with a component based architecture in
-mind, it is possible to have a more minimalist installation. In this
-case fewer components are installed and yet the main GitOps
-functionality remains operational.
-
-In the diagram below, the Core box, shows the components that will be
-installed while opting for Argo CD Core:
+* install fewer components
 
 ![Argo CD Core](../assets/argocd-core-components.png)
 
-Note that even if the Argo CD controller can run without Redis, it
-isn't recommended. The Argo CD controller uses Redis as an important
-caching mechanism reducing the load on Kube API and in Git. For this
-reason, Redis is also included in this installation method.
+* Redis
+  * STILL included here
+  * it can be uninstalled
+    * ❌NOT recommended❌
+      * Reason:🧠reduce the load |
+        * Kube API
+        * Git🧠
+    * Reason:🧠Argo CD controller can run WITHOUT Redis🧠
+  * uses
+    * as caching mechanism -- by -- Argo CD controller
 
 ## Installing
 
-Argo CD Core can be installed by applying a single manifest file that
-contains all the required resources.
+* steps
 
-Example:
-
-```
-export ARGOCD_VERSION=<desired argo cd release version (e.g. v2.7.0)>
-kubectl create namespace argocd
-kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/$ARGOCD_VERSION/manifests/core-install.yaml
-```
+  ```
+  export ARGOCD_VERSION=<desired argo cd release version (e.g. v2.7.0)>
+  kubectl create namespace argocd
+  kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/$ARGOCD_VERSION/manifests/core-install.yaml
+  ```
 
 ## Using
 
+TODO: 
 Once Argo CD Core is installed, users will be able to interact with it
 by relying on GitOps. The available Kubernetes resources will be the
 `Application` and the `ApplicationSet` CRDs. By using those resources,

@@ -37,61 +37,37 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-* TODO:
-The `--server-side --force-conflicts` flags are required due to CRD size limitations
-> **Why `--server-side --force-conflicts`?**
->
-> The `--server-side` flag is required because some Argo CD CRDs (like ApplicationSet) exceed the 262KB annotation size limit imposed by client-side `kubectl apply`
-> Server-side apply avoids this limitation by not storing the `last-applied-configuration` annotation.
->
-> The `--force-conflicts` flag allows the apply operation to take ownership of fields that may have been previously managed by other tools (such as Helm or a previous `kubectl apply`). This is safe for fresh installs and necessary for upgrades. Note that any custom modifications you've made to fields that are defined in the Argo CD manifests (like `affinity`, `env`, or `probes`) will be overwritten. However, fields not specified in the manifests (like `resources` limits/requests or `tolerations`) will be preserved.
+* `--server-side`
+  * [here](https://kubernetes.io/docs/reference/using-api/server-side-apply/)
+* `last-applied-configuration`
+  * ['s size < 256kb](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/api/validation/objectmeta.go#L36)
+* `--force-conflicts`
+  * [here](https://kubernetes.io/docs/reference/using-api/server-side-apply/)
 
+* ⚠️if you install Argo CD | DIFFERENT namespace -> update `ClusterRoleBinding.subjects.namespace` | [install.yaml](/manifests/install.yaml) ⚠️
 
-
-* ⚠️if you install Argo CD | DIFFERENT namespace -> update the https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml's namespace reference⚠️
-  * see `ClusterRoleBinding` resources
-
-> [!WARNING]
-> The installation manifests include `ClusterRoleBinding` resources that reference `argocd` namespace. If you are installing Argo CD into a different
-> namespace then make sure to update the namespace reference.
-
-* ⚠️if you are NOT interested in UI, SSO & multi-cluster features -> install ONLY the Argo CD [core components](operator-manual/core.md#installing) ⚠️
+* ⚠️if you are NOT interested in UI, SSO & multi-cluster features -> install ONLY the Argo CD [core components](/docs/operator-manual/core.md#installing) ⚠️
   * requirements
     * self-signed certificate
-      * follow [these instructions](operator-manual/tls.md)
+      * follow [these instructions](/docs/operator-manual/tls.md)
       * configure the client
       * use `--insecure`
 
-This default installation will have a self-signed certificate and cannot be accessed without a bit of extra work.
-Do one of:
-
-* Follow the [instructions to configure a certificate](operator-manual/tls.md) (and ensure that the client OS trusts it).
-* Configure the client OS to trust the self signed certificate.
-* Use the --insecure flag on all Argo CD CLI operations in this guide.
-
 * `kubectl config set-context --current --namespace=argocd`
+  * TODO: check kubectl context
   * set CURRENT namespace
 
 * `argocd login --core`
-  * [configure](./user-guide/commands/argocd_login.md) CLI access
+  * [configure](../../user-guide/commands/argocd_login.md) CLI access
 
 * Redis' default installation
   * -- is using -- password authentication /
     * password stored | Kubernetes secret `argocd-redis`
     * key `auth` | namespace / Argo CD is installed
 
-* TODO:
-> If you are running Argo CD on Docker Desktop or another local Kubernetes environment, refer to the [Running Argo CD Locally](developer-guide/running-locally.md) guide for the full setup instructions and configuration steps tailored for local clusters.
-
 ## 2. Download Argo CD CLI
 
-* ways
-  * [latest Argo CD version](https://github.com/argoproj/argo-cd/releases/latest)
-    * see [CLI installation documentation](cli_installation.md)
-  * | Mac, Linux & WSL Homebrew
-    ```bash
-    brew install argocd
-    ```
+* [here](../../cli_installation.md)
 
 ## 3. Access Argo CD
 
@@ -156,6 +132,7 @@ TODO:
     * Problems:
       * Problem1: "FATA[0000] dial tcp: lookup cd.argoproj.io: no such host"
         * Solution: TODO:
+
 ## 5. Register A Cluster -- to -- Deploy Apps
 * 👀OPTIONAL 👀
 * registers a cluster's credentials | Argo CD
@@ -178,6 +155,7 @@ TODO:
   * required to work Argo CD,
     * | cluster-scope,
       * `get`, `list`, `watch` privileges
+
 ## 6. Create An Application -- from A -- Git Repository
 
 * _Example:_ [sample git repository](https://github.com/argoproj/argocd-example-apps.git)

@@ -1,6 +1,11 @@
 # Overview
 
-This guide is for administrators and operators wanting to install and configure Argo CD for other developers.
+* audience
+  * cluster administrators
+  * operators
 
-> [!NOTE]
-> Please make sure you've completed the [getting started guide](../getting_started.md).
+* goal
+  * how to install & configure Argo CD -- for -- other developers
+
+* requirements
+  * [getting started guide](../getting_started.md)

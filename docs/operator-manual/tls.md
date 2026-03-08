@@ -1,30 +1,43 @@
 # TLS configuration
 
-Argo CD provides three inbound TLS endpoints that can be configured:
-
-* The user-facing endpoint of the `argocd-server` workload, which serves the UI
-  and the API
-* The endpoint of the `argocd-repo-server`, which is accessed by `argocd-server`
-  and `argocd-application-controller` workloads to request repository
-  operations.
-* The endpoint of the `argocd-dex-server`, which is accessed by `argocd-server`
-  to handle OIDC authentication.
-
-By default, and without further configuration, these endpoints will be
-set up to use an automatically generated, self-signed certificate. However,
-most users will want to explicitly configure the certificates for these TLS
-endpoints, possibly using automated means such as `cert-manager` or using
-their own dedicated Certificate Authority.
+* Argo CD
+  * provides
+    * 3 inbound TLS endpoints / 
+      * can
+        * be configured
+        * by default, use a certificate
+          * self-signed
+          * AUTOMATICALLY generated
+          * if you want to configure -> you can do it 
+            * _Examples:_ TODO: cert-manager OR dedicated Certificate Authority
+      * are
+        * user-facing endpoint of the `argocd-server` workload
+          * serves the 
+            * UI
+            * API
+        * endpoint of the `argocd-repo-server`
+          * uses
+            * by `argocd-server`
+            * by `argocd-application-controller` workloads
+          * allows
+            * request repository operations
+        * endpoint of the `argocd-dex-server`
+          * uses
+            * by `argocd-server`
+          * allows
+            * handle OIDC authentication
 
 ## TLS Configuration Quick Reference
 
 ### Certificate Configuration Overview
 
-| Component | Secret Name | Hot Reload | Default Cert | Required SAN Entries |
-|-----------|-------------|------------|---------------|---------------------|
-| `argocd-server` | `argocd-server-tls` | ✅ Yes | Self-signed | External hostname (e.g., `argocd.example.com`) |
-| `argocd-repo-server` | `argocd-repo-server-tls` | ❌ Restart required | Self-signed | `DNS:argocd-repo-server`, `DNS:argocd-repo-server.argocd.svc` |
-| `argocd-dex-server` | `argocd-dex-server-tls` | ❌ Restart required | Self-signed | `DNS:argocd-dex-server`, `DNS:argocd-dex-server.argocd.svc` |
+TODO:
+
+| Component            | Secret Name              | Hot Reload         | Default Cert   | Required SAN Entries                                          |
+|----------------------|--------------------------|--------------------|----------------|---------------------------------------------------------------|
+| `argocd-server`      | `argocd-server-tls`      | ✅ Yes              | Self-signed    | External hostname (e.g., `argocd.example.com`)                |
+| `argocd-repo-server` | `argocd-repo-server-tls` | ❌ Restart required | Self-signed    | `DNS:argocd-repo-server`, `DNS:argocd-repo-server.argocd.svc` |
+| `argocd-dex-server`  | `argocd-dex-server-tls`  | ❌ Restart required | Self-signed    | `DNS:argocd-dex-server`, `DNS:argocd-dex-server.argocd.svc`   |
 
 ### Inter-Component TLS
 

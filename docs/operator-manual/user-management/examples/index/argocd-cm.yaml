@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # 1. create NEW user
+  # add alice additional local user
+  #   apiKey - allows generating API keys
+  #   login - allows to login using UI
+  accounts.alice: apiKey, login
+
+  # disable alice
+  # User is enabled by default
+  accounts.alice.enabled: "false"
+
+  # 2. disable admin user
+  admin.enabled: "false"
