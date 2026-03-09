@@ -1,40 +1,46 @@
-The notification services represent integration with services such as slack, email or custom webhook. Services are configured in `argocd-notifications-cm` ConfigMap
-using `service.<type>.(<custom-name>)` keys and might reference sensitive data from `argocd-notifications-secret` Secret. Following example demonstrates slack
-service configuration:
-
-```yaml
-  service.slack: |
-    token: $slack-token
-```
-
-
-The `slack` indicates that service sends slack notification; name is missing and defaults to `slack`.
+* notification services 
+  * == 💡integration -- with -- [services](#service-types)💡
+  * how to configure?
+    * | "argocd-notifications-cm" ConfigMap,
+      * add
+        * key == `data.service.<type>.(<custom-name>)`
+          * `(<custom-name>)`
+            * OPTIONAL
+            * [here](#custom-names)
+        * value could refer -- to -- "argocd-notifications-secret" Secret entries
+    * _Examples:_ [here](../examples/argocd-notifications-cm.yaml)
 
 ## Sensitive Data
 
-Sensitive data like authentication tokens should be stored in `<secret-name>` Secret and can be referenced in
-service configuration using `$<secret-key>` format. For example `$slack-token` referencing value of key `slack-token` in
-`<secret-name>` Secret.
+* _Example of sensitive data:_ authentication tokens
+
+* if it's stored | `<secret-name>` secret & you want to interpolate -> use `$<secret-key>`
+  * _Example:_ [secret](../examples/argocd-notifications-secret.yaml) & [configMap](../examples/argocd-notifications-cm.yaml)
 
 ## Custom Names
 
-Service custom names allow configuring two instances of the same service type.
+* allows
+  * configuring MULTIPLE instances -- of the -- SAME service type
 
-```yaml
-  service.slack.workspace1: |
-    token: $slack-token-workspace1
-  service.slack.workspace2: |
-    token: $slack-token-workspace2
-```
+* _Examples:_
+  * _Example1:_ [here](../examples/argocd-notifications-cm.yaml)
+  * _Example2:_
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    notifications.argoproj.io/subscribe.on-sync-succeeded.workspace1: my-channel
-    notifications.argoproj.io/subscribe.on-sync-succeeded.workspace2: my-channel
-```
+    ```yaml
+      service.slack.workspace1: |
+        token: $slack-token-workspace1
+      service.slack.workspace2: |
+        token: $slack-token-workspace2
+    ```
+
+    ```yaml
+    apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      annotations:
+        notifications.argoproj.io/subscribe.on-sync-succeeded.workspace1: my-channel
+        notifications.argoproj.io/subscribe.on-sync-succeeded.workspace2: my-channel
+    ```
 
 ## Service Types
 
@@ -47,8 +53,11 @@ metadata:
 * [Grafana](./grafana.md)
 * [Webhook](./webhook.md)
 * [Telegram](./telegram.md)
-* [Teams (Office 365 Connectors)](./teams.md) - Legacy service (deprecated, retires March 31, 2026)
-* [Teams Workflows](./teams-workflows.md) - Recommended replacement for Office 365 Connectors
+* [Teams (Office 365 Connectors)](./teams.md)
+  * Legacy service
+    * replace -- by -- [Teams Workflows](teams-workflows.md)
+  * | March 31, 2026, retires 
+* [Teams Workflows](./teams-workflows.md)
 * [Google Chat](./googlechat.md)
 * [Rocket.Chat](./rocketchat.md)
 * [Pushover](./pushover.md)

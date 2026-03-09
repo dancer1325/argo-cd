@@ -1,0 +1,2 @@
+p, example-user, applications, get, */app-namespace/*, allow
+p, example-user, logs, get, example-project/app-namespace/my-app, allow

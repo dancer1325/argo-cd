@@ -5,9 +5,11 @@ metadata:
 data:
   # Triggers define the condition when the notification should be sent and list of templates required to generate the message
   # Recipients can subscribe to the trigger and specify the required message template and destination notification service.
+  # trigger.on-sync-status-unknown    ==  application sync status changes -- to -- `Unknown`
+  # send:                             ==  notification templates reference
   trigger.on-sync-status-unknown: |
     - when: app.status.sync.status == 'Unknown'
-      send: [my-custom-template]
+      send: [my-custom-template]  
 
   # Optional 'oncePer' property ensure that notification is sent only once per specified field value
   # E.g. following is triggered once per sync revision
@@ -15,6 +17,16 @@ data:
     - when: app.status.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
       oncePer: app.status.sync.revision
       send: [app-sync-succeeded]
+
+  # conditions bundles
+  #   _Example:_ ALL stages of sync status operation
+  trigger.sync-operation-change: |
+    - when: app.status?.operationState.phase in ['Succeeded']
+      send: [github-commit-status]
+    - when: app.status?.operationState.phase in ['Running']
+      send: [github-commit-status]
+    - when: app.status?.operationState.phase in ['Error', 'Failed']
+      send: [app-sync-failed, github-commit-status]
 
   # Templates are used to generate the notification template message
   template.my-custom-template: |
@@ -40,6 +52,11 @@ data:
   defaultTriggers: |
     - on-sync-status-unknown
 
+  # defaultTriggers.(<optional-custom-name>)
+  defaultTriggers.mattermost: |
+    - on-sync-running
+    - on-sync-succeeded
+
   # Notification services are used to deliver message.
   # Service definition might reference values from argocd-notifications-secret Secret using $my-key format
   # Service format key is: service.<type>.<optional-custom-name>
@@ -50,6 +67,7 @@ data:
     icon: <override-icon> # optional icon for the message (supports both emoij and url notation)
 
   #  Slack based notifier with name mattermost
+  # service.<type>.(<custom-name>)
   service.slack.mattermost: |
     apiURL: https://my-mattermost-url.com/api
     token: $slack-token

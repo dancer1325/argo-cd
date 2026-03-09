@@ -1,27 +1,44 @@
 # Applications in any namespace
 
-> [!WARNING]
-> Please read this documentation carefully before you enable this feature. Misconfiguration could lead to potential security issues.
+* ⚠️take care enabling it⚠️
+  * Reason:🧠Misconfiguration -> could lead -- to -- potential security issues🧠
 
 ## Introduction
 
-As of version 2.5, Argo CD supports managing `Application` resources in namespaces other than the control plane's namespace (which is usually `argocd`), but this feature has to be explicitly enabled and configured appropriately.
+* requirements
+  * Argo CD v2.5+
+  * enable & configure -- by the -- Argo CD administrator
 
-Argo CD administrators can define a certain set of namespaces where `Application` resources may be created, updated and reconciled in. However, applications in these additional namespaces will only be allowed to use certain `AppProjects`, as configured by the Argo CD administrators. This allows ordinary Argo CD users (e.g. application teams) to use patterns like declarative management of `Application` resources, implementing app-of-apps and others without the risk of a privilege escalation through usage of other `AppProjects` that would exceed the permissions granted to the application teams.
+* goal
+  * manage `Application` resources | namespaces / != control plane's namespace
 
-Some manual steps will need to be performed by the Argo CD administrator in order to enable this feature.
+* control plane's namespace
+  * "argocd": default name 
 
-One additional advantage of adopting applications in any namespace is to allow end-users to configure notifications for their Argo CD application in the namespace where Argo CD application is running in. See notifications [namespace based configuration](notifications/index.md#namespace-based-configuration) page for more information.
+* define applications | ADDITIONAL namespaces
+  * restrictions
+    * ⚠️ONLY can use certain `AppProjects` / configured -- by the -- Argo CD administrators⚠️
+  * 👀enable👀
+    * ordinary Argo CD users
+      * can use patterns
+        * _Example:_ [declarative](declarative-setup.md) management of `Application` resources / 
+          * NO risk of privilege escalation
+      * TODO: can configure notifications 
+for their Argo CD application in the namespace where Argo CD application is running in
+* See notifications [namespace based configuration](notifications/index.md#namespace-based-configuration)
 
 ## Prerequisites
 
 ### Cluster-scoped Argo CD installation
 
-This feature can only be enabled and used when your Argo CD is installed as a cluster-wide instance, so it has permissions to list and manipulate resources on a cluster scope. It will not work with an Argo CD installed in namespace-scoped mode.
+This feature can only be enabled and used when your Argo CD is installed as a cluster-wide instance, so it has permissions to list and manipulate resources on a cluster scope
+* It will not work with an Argo CD installed in namespace-scoped mode.
 
 ### Switch resource tracking method
 
-Also, while technically not necessary, it is strongly suggested that you switch the application tracking method from the default `label` setting to either `annotation` or `annotation+label`. The reasoning for this is, that application names will be a composite of the namespace's name and the name of the `Application`, and this can easily exceed the 63 characters length limit imposed on label values. Annotations have a notably greater length limit.
+Also, while technically not necessary, it is strongly suggested that you switch the application tracking method from the default `label` setting to either `annotation` or `annotation+label`
+* The reasoning for this is, that application names will be a composite of the namespace's name and the name of the `Application`, and this can easily exceed the 63 characters length limit imposed on label values
+* Annotations have a notably greater length limit.
 
 To enable annotation based resource tracking, refer to the documentation about [resource tracking methods](../user-guide/resource_tracking.md)
 

@@ -1,64 +1,50 @@
 # Notifications Overview
 
-Argo CD Notifications continuously monitors Argo CD applications and provides a flexible way to notify
-users about important changes in the application state. Using a flexible mechanism of
-[triggers](triggers.md) and [templates](templates.md) you can configure when the notification should be sent as
-well as notification content. Argo CD Notifications includes the [catalog](catalog.md) of useful triggers and templates.
-So you can just use them instead of reinventing new ones.
+* Argo CD Notifications 
+  * continuously monitors Argo CD applications
+  * allows
+    * notify users -- about -- important application state's changes / customizable
+      * [triggers](triggers.md)
+        * == when to send the notification
+      * [templates](templates.md)
+        * == notification content 
+  * provide
+    * [catalog](catalog.md) 
+      * == common triggers & templates / reuse them
 
 ## Getting Started
 
-* Install Triggers and Templates from the catalog
-
-    ```bash
-    kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/notifications_catalog/install.yaml
-    ```
-
-* Add email username and password token to the `argocd-notifications-secret` secret
-
-    ```bash
-    EMAIL_USER=<your-username>
-    PASSWORD=<your-password>
-    
-    kubectl apply -n argocd -f - << EOF
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: argocd-notifications-secret
-    stringData:
-      email-username: $EMAIL_USER
-      email-password: $PASSWORD
-    type: Opaque
-    EOF
-    ```
-
-* Register email notification service
-
-    ```bash
-    kubectl patch cm argocd-notifications-cm -n argocd --type merge -p '{"data": {"service.email.gmail": "{ username: $email-username, password: $email-password, host: smtp.gmail.com, port: 465, from: $email-username }" }}'
-    ```
-
-* Subscribe to notifications by adding the `notifications.argoproj.io/subscribe.on-sync-succeeded.slack` annotation to the Argo CD application or project:
-
-    ```bash
-    kubectl patch app <my-app> -n argocd -p '{"metadata": {"annotations": {"notifications.argoproj.io/subscribe.on-sync-succeeded.slack":"<my-channel>"}}}' --type merge
-    ```
-
-Try syncing an application to get notified when the sync is completed.
+* steps
+  * [install Catalog's Triggers & Templates](catalog.md#how-to-install)
+  * | "argocd-notifications-secret" Secret,
+    * add sensitive information
+  * | "argocd-notifications-cm" ConfigMap,
+    * configure notification service
+  * | Argo CD application OR ArgoCD project,  
+    * add TODO: what's the structure `notifications.argoproj.io/subscribe.on-sync-succeeded.slack` annotation
+  * sync the ArgoCD Application
+    * check email notified
 
 ## Namespace based configuration
 
-A common installation method for Argo CD Notifications is to install it in a dedicated namespace to manage a whole cluster. In this case, the administrator is the only
-person who can configure notifications in that namespace generally. However, in some cases, it is required to allow end-users to configure notifications
-for their Argo CD applications. For example, the end-user can configure notifications for their Argo CD application in the namespace where they have access to and their Argo CD application is running in.
+TODO: 
+A common installation method for Argo CD Notifications is to install it in a dedicated namespace to manage a whole cluster
+* In this case, the administrator is the only
+person who can configure notifications in that namespace generally
+* However, in some cases, it is required to allow end-users to configure notifications
+for their Argo CD applications
+* For example, the end-user can configure notifications for their Argo CD application in the namespace where they have access to and their Argo CD application is running in.
 
-This feature is based on applications in any namespace. See [applications in any namespace](../app-any-namespace.md) page for more information.
+This feature is based on applications in any namespace
+* See [applications in any namespace](../app-any-namespace.md) page for more information.
 
 In order to enable this feature, the Argo CD administrator must reconfigure the argocd-notification-controller workloads to add  `--application-namespaces` and `--self-service-notification-enabled` parameters to the container's startup command.
-`--application-namespaces` controls the list of namespaces that Argo CD applications are in. `--self-service-notification-enabled` turns on this feature.
+`--application-namespaces` controls the list of namespaces that Argo CD applications are in
+* `--self-service-notification-enabled` turns on this feature.
 
 The startup parameters for both can also be conveniently set up and kept in sync by specifying
-the `application.namespaces` and `notificationscontroller.selfservice.enabled` in the argocd-cmd-params-cm ConfigMap instead of changing the manifests for the respective workloads. For example:
+the `application.namespaces` and `notificationscontroller.selfservice.enabled` in the argocd-cmd-params-cm ConfigMap instead of changing the manifests for the respective workloads
+* For example:
 
 ```yaml
 apiVersion: v1

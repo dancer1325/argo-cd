@@ -1,10 +1,20 @@
 # Triggers and Templates Catalog
-## Getting Started
+
+* [Kubernetes manifest](/notifications_catalog/install.yaml)
+
+## how to install?
 * Install Triggers and Templates from the catalog
   ```bash
   kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/notifications_catalog/install.yaml
+  
+  # if you get kubectl errors -> use
+  # kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/notifications_catalog/install.yaml
   ```
+
 ## Triggers
+
+TODO:
+
 |          NAME          |                          DESCRIPTION                          |                      TEMPLATE                       |
 |------------------------|---------------------------------------------------------------|-----------------------------------------------------|
 | on-created             | Application is created.                                       | [app-created](#app-created)                         |

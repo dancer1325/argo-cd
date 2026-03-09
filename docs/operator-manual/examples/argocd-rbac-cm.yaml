@@ -30,9 +30,15 @@ data:
     p, role:tester, projects, *, *, allow
     g, my-org:team-qa, role:tester
 
-  # policy.default is the name of the default role which Argo CD will falls back to, when
-  # authorizing API requests (optional). If omitted or empty, users may be still be able to login,
-  # but will see no apps, projects, etc...
+  # policy.default
+  #   == default role name / Argo CD will falls back to | authenticated user has NO specific role
+  #   can NOT be blocked -- by a -- `deny` rule
+  #   OPTIONAL
+  #     if it's omitted OR empty -> users
+  #       STILL can login
+  #       NO see apps, projects, etc...
+  #   recommendations
+  #     create a NEW `role:authenticated` / minimum set of permissions
   policy.default: role:readonly
 
   # scopes controls which OIDC scopes to examine during rbac enforcement (in addition to `sub` scope).

@@ -2,6 +2,8 @@ The notification template is used to generate the notification content and is co
 the [html/template](https://golang.org/pkg/html/template/) golang package and allows customization of the notification message.
 Templates are meant to be reusable and can be referenced by multiple triggers.
 
+* Typically, each template is responsible for generating a service-specific notification part.
+
 The following template is used to notify the user about application sync status.
 
 ```yaml

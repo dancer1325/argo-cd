@@ -1,0 +1,2 @@
+p, example-user, applications, get, *, allow
+p, example-user, logs, get, example-project/my-app, allow

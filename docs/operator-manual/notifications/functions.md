@@ -1,5 +1,5 @@
 ### **time**
-Time related functions.
+TODO: Time related functions.
 
 <hr>
 **`time.Now() Time`**

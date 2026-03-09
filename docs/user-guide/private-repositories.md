@@ -63,6 +63,7 @@ Then, connect the repository using any non-empty string as username and the acce
 
 ### TLS Client Certificates for HTTPS repositories
 
+TODO: 
 If your repository server requires you to use TLS client certificates for authentication, you can configure Argo CD repositories to make use of them. For this purpose, `--tls-client-cert-path` and `--tls-client-cert-key-path` switches to the `argocd repo add` command can be used to specify the files on your local system containing client certificate and the corresponding key, respectively:
 
 ```
