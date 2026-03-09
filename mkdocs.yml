@@ -208,7 +208,7 @@ nav:
   - Notification subscriptions: user-guide/subscriptions.md
   - user-guide/annotations-and-labels.md
   - Command Reference: user-guide/commands/argocd.md
-  - Application Specification Reference: user-guide/application-specification.md
+  - Application Specification Reference: operator-manual/examples/application.yaml
 - Developer Guide:
   - developer-guide/index.md
   - Development Environment: developer-guide/development-environment.md

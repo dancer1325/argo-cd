@@ -11,17 +11,23 @@
   * see [Introduction](index.md)
   * if you want to filter -> use [Post Selector](Generators-Post-Selector.md)
 
+* parameters
+  * == key/value pairs 
+    * | template rendering, substituted -- into the -- ApplicationSet resource's `template:` section  
+
 * built-in generators:
   - [List generator](Generators-List.md)
     - allows you to
       - target Argo CD Applications -- , based on fixed list of key/value pairs, to -- clusters 
+      - generate -- , based on a fixed list of cluster name/URL values, -- parameters
   - [Cluster generator](Generators-Cluster.md)
     - allows you to
-      - target Argo CD Applications -- , based on list of clusters / (defined | Argo CD & managed by Argo CD), to -- clusters 
+      - target Argo CD Applications -- , based on list of clusters / (defined | Argo CD & managed by Argo CD), to -- clusters
   - [Git generator](Generators-Git.md)
     - allows you to
-      - create Applications -- based on -- Git repository's 
+      - create Applications OR generate parameters -- based on -- Git repository's 
         - files OR
+          - _Example:_ files / contains json values -> parsed & converted | template parameters
         - directory structure
   - [Matrix generator](Generators-Matrix.md)
     - uses

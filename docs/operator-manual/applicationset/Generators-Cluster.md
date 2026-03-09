@@ -1,6 +1,9 @@
 # Cluster Generator
 
-In Argo CD, managed clusters [are stored within Secrets](../declarative-setup.md#clusters) in the Argo CD namespace. The ApplicationSet controller uses those same Secrets to generate parameters to identify and target available clusters.
+* managed clusters 
+  * are stored | ArgoCD namespace's [secrets](../declarative-setup.md#clusters)
+
+* TODO: The ApplicationSet controller uses those same Secrets to generate parameters to identify and target available clusters.
 
 For each cluster registered with Argo CD, the Cluster generator produces parameters based on the list of items found within the cluster secret.
 

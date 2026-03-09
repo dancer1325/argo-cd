@@ -47,4 +47,4 @@ See [Declarative Setup - Skipping Cluster Reconciliation](./declarative-setup.md
   * ❌can NOT be removed❌
   * if you want to disable the `in-cluster` configuration -> | "argocd-cm" ConfigMap,
     * set `.data.cluster.inClusterEnabled: "false"`
-    * _Example of "argocd-cm": [here](./argocd-cm-yaml.md)
+    * _Example of "argocd-cm": [here](examples/argocd-cm.yaml)

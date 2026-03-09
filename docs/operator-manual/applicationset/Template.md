@@ -1,13 +1,21 @@
 # Templates
 
-The template fields of the ApplicationSet `spec` are used to generate Argo CD `Application` resources.
+* goal
+  * ApplicationSet's `spec.template`
 
-ApplicationSet is using [fasttemplate](https://github.com/valyala/fasttemplate) but will be soon deprecated in favor of Go Template. 
+* allows
+  * 👀generating Argo CD `Application` resources👀
+    * generation -- thanks to -- 
+      * RIGHT NOW
+        * [fasttemplate](https://github.com/valyala/fasttemplate)
+      * FUTURE
+        * [Go Template](GoTemplate.md) 
 
 ## Template fields
 
-An Argo CD Application is created by combining the parameters from the generator with fields of the template (via `{{values}}`), and from that a concrete `Application` resource is produced and applied to the cluster.
+* combine: generator's parameters + template's fields (-- via -- `{{values}}`)
 
+TODO:
 Here is the template subfield from a Cluster generator:
 
 ```yaml
@@ -139,49 +147,6 @@ Example:
 
 The `templatePatch` feature enables advanced templating, with support for `json` and `yaml`.
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: guestbook
-spec:
-  goTemplate: true
-  generators:
-  - list:
-      elements:
-        - cluster: engineering-dev
-          url: https://kubernetes.default.svc
-          autoSync: true
-          prune: true
-          valueFiles:
-            - values.large.yaml
-            - values.debug.yaml
-  template:
-    metadata:
-      name: '{{ .nameNormalized }}-deployment'
-    spec:
-      project: "default"
-      source:
-        repoURL: https://github.com/infra-team/cluster-deployments.git
-        targetRevision: HEAD
-        path: guestbook/{{ .nameNormalized }}
-      destination:
-        server: '{{ .server }}'
-        namespace: guestbook
-  templatePatch: |
-    spec:
-      source:
-        helm:
-          valueFiles:
-          {{- range $valueFile := .valueFiles }}
-            - {{ $valueFile }}
-          {{- end }}
-    {{- if .autoSync }}
-      syncPolicy:
-        automated:
-          prune: {{ .prune }}
-    {{- end }}
-```
 
 > [!IMPORTANT]
 > `templatePatch` only works when [go templating](../applicationset/GoTemplate.md) is enabled.

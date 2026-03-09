@@ -5,9 +5,11 @@
   * FULL access to the system
   * recommendations
     * use ONLY | initial configuration
-    * AFTERWARDS, switch to 
-      * local users OR
-      * SSO integration
+    * AFTERWARD, switch to some user management
+
+* ways to manage users
+  * [local users & passwords](#local-usersaccounts)
+  * [SSO](#sso)
 
 ## Local users/accounts
 
@@ -84,6 +86,7 @@
 
 ### Failed logins rate limiting
 
+TODO: 
 Argo CD rejects login attempts after too many failed in order to prevent password brute-forcing.
 The following environments variables are available to control throttling settings:
 
@@ -107,17 +110,27 @@ If set to 0 then limit is disabled
 
 ## SSO
 
-* ways to configure SSO
-  * [Dex](#dex)
-  * [Existing OIDC provider](#existing-oidc-provider) - use this if you already have an OIDC provider which you are using (e.g.
-    [Okta](okta.md), [OneLogin](onelogin.md), [Auth0](auth0.md), [Microsoft](microsoft.md), [Keycloak](keycloak.md),
-    [Google (G Suite)](google.md)), where you manage your users, groups, and memberships.
+### ways to configure
 
-### [Dex](https://github.com/dexidp/dex)
+* OIDC providers
+  * allows
+    * manage your
+      * users
+      * groups
+      * memberships
+  * supported
+    * [Okta](okta.md)
+    * [OneLogin](onelogin.md)
+    * [Auth0](auth0.md)
+    * [Microsoft](microsoft.md)
+    * [Keycloak](keycloak.md)
+    * [Google (G Suite)](google.md)
 
-* Dex
-  * == OIDC provider
-  * 👀embedded & bundled | ArgoCd👀
+#### Dex 
+
+* [Dex](https://github.com/dexidp/dex)
+  * == OIDC provider / 
+    * 👀embedded & bundled | ArgoCd👀
   * allows
     * delegating authentication -- to an -- external identity provider
       * supported one
@@ -133,103 +146,25 @@ If set to 0 then limit is disabled
       * _Example:_ ability to map GitHub organizations & teams -- to -- OIDC groups claims
     * if groups can NOT be included | IDToken -> fetch user information -- from the -- external identity provider
 
+##### steps to configure
+* | identity provider,
+  * register the application 
+    * callback address endpoint: "/api/dex/callback"
+    * you receive: 
+      * OAuth2 client ID
+      * OAuth2 client secret
+* | Argo CD "argocd-cm" Configmap,
+  * add OAuth2 client ID & OAuth2 client secret
 
+##### OIDC Configuration + DEX
 
-* SSO configuration of Argo CD requires
-editing the `argocd-cm` ConfigMap with
-[Dex connector](https://dexidp.io/docs/connectors/) settings.
-
-This document describes how to configure Argo CD SSO using GitHub (OAuth2) as an example, but the
-steps should be similar for other identity providers.
-
-#### 1
-* Register the application in the identity provider
-
-In GitHub, register a new application
-* The callback address should be the `/api/dex/callback`
-endpoint of your Argo CD URL (e.g
-* `https://argocd.example.com/api/dex/callback`).
-
-![Register OAuth App](../../assets/register-app.png "Register OAuth App")
-
-After registering the app, you will receive an OAuth2 client ID and secret
-* These values will be
-inputted into the Argo CD configmap.
-
-![OAuth2 Client Config](../../assets/oauth2-config.png "OAuth2 Client Config")
-
-#### 2
-* Configure Argo CD for SSO
-
-Edit the argocd-cm configmap:
-
-```bash
-kubectl edit configmap argocd-cm -n argocd
-```
-
-* In the `url` key, input the base URL of Argo CD
-* In this example, it is `https://argocd.example.com`
-* (Optional): If Argo CD should be accessible via multiple base URLs you may
-  specify any additional base URLs via the `additionalUrls` key.
-* In the `dex.config` key, add the `github` connector to the `connectors` sub field
-* See Dex's
-  [GitHub connector](https://github.com/dexidp/website/blob/main/content/docs/connectors/github.md)
-  documentation for explanation of the fields
-* A minimal config should populate the clientID,
-  clientSecret generated in Step 1.
-* You will very likely want to restrict logins to one or more GitHub organization
-* In the
-  `connectors.config.orgs` list, add one or more GitHub organizations
-* Any member of the org will
-  then be able to login to Argo CD to perform management tasks.
-
-```yaml
-data:
-  url: https://argocd.example.com
-
-  dex.config: |
-    connectors:
-      # GitHub example
-      - type: github
-        id: github
-        name: GitHub
-        config:
-          clientID: aabbccddeeff00112233
-          clientSecret: $dex.github.clientSecret # Alternatively $<some_K8S_secret>:dex.github.clientSecret
-          orgs:
-          - name: your-github-org
-
-      # GitHub enterprise example
-      - type: github
-        id: acme-github
-        name: Acme GitHub
-        config:
-          hostName: github.acme.example.com
-          clientID: abcdefghijklmnopqrst
-          clientSecret: $dex.acme.clientSecret  # Alternatively $<some_K8S_secret>:dex.acme.clientSecret
-          orgs:
-          - name: your-github-org
-```
-
-After saving, the changes should take effect automatically.
-
-NOTES:
-
-* There is no need to set `redirectURI` in the `connectors.config` as shown in the dex documentation.
-  Argo CD will automatically use the correct `redirectURI` for any OAuth2 connectors, to match the
-  correct external callback URL (e.g
-* `https://argocd.example.com/api/dex/callback`)
-* By default, `Secret` keys such as `dex.acme.clientSecret` will be looked up in `argocd-secret`
-* If you want to use another secret, (`some_K8S_secret` in the example above), it *must* have the label `app.kubernetes.io/part-of: argocd`.
-
-### OIDC Configuration with DEX
-
+TODO: 
 Dex can be used for OIDC authentication instead of ArgoCD directly
 * This provides a separate set of
 features such as fetching information from the `UserInfo` endpoint and
 [federated tokens](https://dexidp.io/docs/custom-scopes-claims-clients/#cross-client-trust-and-authorized-party)
 
-#### Configuration:
+##### Configuration:
 * In the `argocd-cm` ConfigMap add the `OIDC` connector to the `connectors` sub field inside `dex.config`.
 See Dex's [OIDC connect documentation](https://dexidp.io/docs/connectors/oidc/) to see what other
 configuration options might be useful
@@ -256,7 +191,7 @@ data:
           clientSecret: $dex.oidc.clientSecret
 ```
 
-#### Requesting additional ID token claims
+##### Requesting additional ID token claims
 
 By default Dex only retrieves the profile and email scopes
 * In order to retrieve more claims you
@@ -290,7 +225,7 @@ data:
 > Because group information is only refreshed at authentication time just adding or removing an account from a group will not change a user's membership until they reauthenticate
 * Depending on your organization's needs this could be a security risk and could be mitigated by changing the authentication token's lifetime.
 
-#### Retrieving claims that are not in the token
+##### Retrieving claims that are not in the token
 
 When an Idp does not or cannot support certain claims in an IDToken they can be retrieved separately using
 the UserInfo endpoint
@@ -320,7 +255,7 @@ data:
           getUserInfo: true
 ```
 
-## Existing OIDC Provider
+#### OIDC Provider DIRECTLY
 
 To configure Argo CD to delegate authentication to your existing OIDC provider, add the OAuth2
 configuration to the `argocd-cm` ConfigMap under the `oidc.config` key:
@@ -379,7 +314,7 @@ data:
 > (e.g
 * https://argocd.example.com/auth/callback).
 
-### Requesting additional ID token claims
+##### Requesting additional ID token claims
 
 Not all OIDC providers support a special `groups` scope
 * E.g
@@ -414,7 +349,7 @@ For a simple case this can be:
     requestedIDTokenClaims: {"groups": {"essential": true}}
 ```
 
-### Retrieving group claims when not in the token
+##### Retrieving group claims when not in the token
 
 Some OIDC providers don't return the group information for a user in the ID token, even if explicitly requested using the `requestedIDTokenClaims` setting (Okta for example)
 * They instead provide the groups on the user info endpoint
@@ -429,7 +364,7 @@ oidc.config: |
 
 **Note: If you omit the `userInfoCacheExpiration` setting or if it's greater than the expiration of the ID token, the argocd-server will cache group information as long as the ID token is valid!**
 
-### Configuring a custom logout URL for your OIDC provider
+##### Configuring a custom logout URL for your OIDC provider
 
 Optionally, if your OIDC provider exposes a logout API and you wish to configure a custom logout URL for the purposes of invalidating 
 any active session post logout, you can do so by specifying it as follows:
@@ -457,7 +392,7 @@ You are not required to specify a logoutRedirectURL as this is automatically gen
 > [!NOTE]
 > The post logout redirect URI may need to be whitelisted against your OIDC provider's client settings for ArgoCD.
 
-### Configuring a custom root CA certificate for communicating with the OIDC provider
+##### Configuring a custom root CA certificate for communicating with the OIDC provider
 
 If your OIDC provider is setup with a certificate which is not signed by one of the well known certificate authorities
 you can provide a custom certificate which will be used in verifying the OIDC provider's TLS certificate when
@@ -475,9 +410,6 @@ Add a `rootCA` to your `oidc.config` which contains the PEM encoded root certifi
       -----END CERTIFICATE-----
 ```
 
-
-## SSO Further Reading
-
 ### Sensitive Data and SSO Client Secrets
 
 `argocd-secret` can be used to store sensitive data which can be referenced by ArgoCD
@@ -488,7 +420,7 @@ Add a `rootCA` to your `oidc.config` which contains the PEM encoded root certifi
 - Otherwise, look for a key in the k8s secret named `argocd-secret`
 * 
 
-#### Example
+##### Example
 
 SSO `clientSecret` can thus be stored as a Kubernetes secret with the following manifests
 
@@ -532,7 +464,7 @@ data:
   ...
 ```
 
-#### Alternative
+##### Alternative
 
 If you want to store sensitive data in **another** Kubernetes `Secret`, instead of `argocd-secret`
 * ArgoCD knows to check the keys under `data` in your Kubernetes `Secret` for a corresponding key whenever a value in a configmap or secret starts with `$`, then your Kubernetes `Secret` name and `:` (colon).
@@ -542,7 +474,7 @@ Syntax: `$<k8s_secret_name>:<a_key_in_that_k8s_secret>`
 > [!NOTE]
 > Secret must have label `app.kubernetes.io/part-of: argocd`
 
-##### Example
+###### Example
 
 `another-secret`:
 ```yaml

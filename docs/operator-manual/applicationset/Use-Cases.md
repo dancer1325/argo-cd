@@ -1,4 +1,4 @@
-# Use cases supported by the ApplicationSet controller
+# Use cases / supported -- by the -- ApplicationSet controller
 
 With the concept of generators, the ApplicationSet controller provides a powerful set of tools to automate the templating and modification of Argo CD Applications. Generators produce template parameter data from a variety of sources, including Argo CD clusters and Git repositories, supporting and enabling new use cases.
 
@@ -36,8 +36,11 @@ See the [generators section](Generators.md) for details on each of the generator
 
 ## Use case: monorepos
 
-In the *monorepo use case*, Kubernetes cluster administrators manage the entire state of a single Kubernetes cluster from a single Git repository.
+* monorepo
+  * == MULTIPLE Argo CD Application resources / defined | 1! Git repository
+    * _Example:_ Kubernetes cluster entire state managed -- from -- 1! Git repository
 
+TODO: 
 Manifest changes merged into the Git repository should automatically deploy to the cluster.
 
 ![Monorepo diagram](../../assets/applicationset/Use-Cases/Monorepos.png)

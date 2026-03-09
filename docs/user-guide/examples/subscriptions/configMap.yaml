@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+data:
+  # Contains centrally managed global application subscriptions
+  subscriptions: |
+    # subscription -- for -- "on-sync-status-unknown" trigger notifications
+    - recipients:
+      - slack:test2
+      - email:test@gmail.com
+      triggers:
+      - on-sync-status-unknown
+    
+    # subscription -- for -- "on-sync-status-unknown" trigger notifications / 
+    #   applications have labels test=true
+    - recipients:
+      - slack:test3
+      selector: test=true
+      triggers:
+      - on-sync-status-unknown

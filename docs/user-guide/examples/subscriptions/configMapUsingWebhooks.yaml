@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+data:
+  service.webhook.<webhook-name>: |
+    (snip)
+  subscriptions: |
+    - recipients:
+      - <webhook-name>
+      triggers:
+      - on-sync-status-unknown

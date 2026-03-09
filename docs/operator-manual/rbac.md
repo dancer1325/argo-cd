@@ -7,7 +7,7 @@ Once SSO or local users are configured, additional RBAC roles can be defined, an
 
 There are two main components where RBAC configuration can be defined:
 
-- The global RBAC config map (see [argo-rbac-cm.yaml](argocd-rbac-cm-yaml.md))
+- The global RBAC config map (see [argo-rbac-cm.yaml](examples/argocd-rbac-cm.yaml))
 - The [AppProject's roles](../user-guide/projects.md#project-roles)
 
 ## Basic Built-in Roles
@@ -34,7 +34,7 @@ When a user is authenticated in Argo CD, it will be granted the role specified i
 
 Enabling anonymous access to the Argo CD instance allows users to assume the default role permissions specified by `policy.default` **without being authenticated**.
 
-The anonymous access to Argo CD can be enabled using the `users.anonymous.enabled` field in `argocd-cm` (see [argocd-cm.yaml](argocd-cm-yaml.md)).
+The anonymous access to Argo CD can be enabled using the `users.anonymous.enabled` field in `argocd-cm` (see [argocd-cm.yaml](examples/argocd-cm.yaml)).
 
 > [!WARNING]
 > When enabling anonymous access, consider creating a new default role and assigning it to the default policies

@@ -1,10 +1,14 @@
 # Metrics
 
-Argo CD exposes different sets of Prometheus metrics per server.
+* Argo CD
+  * exposes Prometheus metrics / server
 
 ## Application Controller Metrics
 
-Metrics about applications. Scraped at the `argocd-metrics:8082/metrics` endpoint.
+* [application controller](architecture.md#application-controller)
+* Application Controller Metrics
+  * display applications metrics
+  * scraped | "argocd-metrics:8082/metrics" endpoint
 
 | Metric                                            |   Type    | Description                                                                                                                                 |
 | ------------------------------------------------- | :-------: | ------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -68,6 +72,7 @@ Metrics about applications. Scraped at the `argocd-metrics:8082/metrics` endpoin
 
 ### Metrics Cache Expiration
 
+TODO: 
 If you use Argo CD with many application and project creation and deletion,
 the metrics page will keep in cache your application and project's history.
 If you are having issues because of a large number of metrics cardinality due

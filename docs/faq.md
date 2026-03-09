@@ -1,6 +1,6 @@
 # FAQ
 
-## I've deleted/corrupted my repo and can't delete my app.
+## I've deleted/corrupted my repo and can NOT delete my app.
 
 Argo CD can't delete an app if it cannot generate manifests. You need to either:
 
@@ -47,41 +47,39 @@ providers:
 
 ## I forgot the admin password, how do I reset it?
 
-For Argo CD v1.8 and earlier, the initial password is set to the name of the server pod, as
-per [the getting started guide](getting_started.md). For Argo CD v1.9 and later, the initial password is available from
-a secret named `argocd-initial-admin-secret`.
+* | Argo CD v1.8-,
+  * initial password == argocd-server pod name
+* | Argo CD v1.9+,
+  * initial password is AVAILABLE | `argocd-initial-admin-secret` secret
 
-To change the password, edit the `argocd-secret` secret and update the `admin.password` field with a new bcrypt hash.
+* ways
+  * APPROACH1: 
+    * steps to change the password
+      * `argocd account bcrypt --password <YOUR-PASSWORD-HERE>`
+        * generate a bcrypt hash -- for -- the admin password
+      * edit the `argocd-secret` secret and update the `admin.password` field with a new bcrypt hash.
 
-> [!NOTE]
-> **Generating a bcrypt hash**
->
-> Use the following command to generate a bcrypt hash for `admin.password`
-> 
-> ```shell
-> argocd account bcrypt --password <YOUR-PASSWORD-HERE>
-> ```
+        ```bash
+        # bcrypt(password)=$2a$10$rRyBsGSHK6.uc8fntPwVIuLVHgsAhAX7TcdrqW/RADU0uh7CaChLa
+        kubectl -n argocd patch secret argocd-secret \
+          -p '{"stringData": {
+            "admin.password": "$2a$10$rRyBsGSHK6.uc8fntPwVIuLVHgsAhAX7TcdrqW/RADU0uh7CaChLa",
+            "admin.passwordMtime": "'$(date +%FT%T%Z)'"
+          }}'
+        ```
 
-To apply the new password hash, use the following command (replacing the hash with your own):
-
-```bash
-# bcrypt(password)=$2a$10$rRyBsGSHK6.uc8fntPwVIuLVHgsAhAX7TcdrqW/RADU0uh7CaChLa
-kubectl -n argocd patch secret argocd-secret \
-  -p '{"stringData": {
-    "admin.password": "$2a$10$rRyBsGSHK6.uc8fntPwVIuLVHgsAhAX7TcdrqW/RADU0uh7CaChLa",
-    "admin.passwordMtime": "'$(date +%FT%T%Z)'"
-  }}'
-```
-
-Another option is to delete both the `admin.password` and `admin.passwordMtime` keys and restart argocd-server. This
-will generate a new password as per [the getting started guide](getting_started.md), so either to the name of the pod
-(Argo CD 1.8 and earlier)
-or a randomly generated password stored in a secret (Argo CD 1.9 and later).
+  * APPROACH2: 
+    * | "argocd-secret", delete
+      * `admin.password` key
+      * `admin.passwordMtime` key
+    * restart argocd-server
+      * -> generate NEW admin initial password
+    * `argocd admin initial-password -n argocd`
+      * retrieve it
 
 ## How to disable admin user?
 
-Add `admin.enabled: "false"` to the `argocd-cm` ConfigMap
-(see [user management](./operator-manual/user-management/index.md)).
+* [here](./operator-manual/user-management/index.md#disable-admin-user)
 
 ## Argo CD cannot deploy Helm Chart based applications without internet access, how can I solve it?
 
@@ -311,7 +309,7 @@ Argo CD default installation is now configured to automatically enable Redis aut
 If for some reason authenticated Redis does not work for you and you want to use non-authenticated Redis, here are the steps:
 
 1. You need to have your own Redis installation.
-2. Configure Argo CD to use your own Redis instance, as shown in the [example configuration](operator-manual/argocd-cmd-params-cm-yaml.md).
+2. Configure Argo CD to use your own Redis instance, as shown in the [example configuration](operator-manual/examples/argocd-cmd-params-cm.yaml).
 3. If you already installed Redis shipped with Argo CD, you also need to clean up the existing components:
 
     * When HA Redis is used:

@@ -1,109 +1,117 @@
 # Authentication and Authorization
 
-This document describes how authentication (authn) and authorization
-(authz) are implemented in Argo CD. There is a clear distinction in
-the code base of when and how these two security concepts are
-enforced.
+* separated | code base
 
 ## Logical layers
 
-The diagram below suggests 4 different logical layers (represented by
-4 boxes: HTTP, gRPC, AuthN and AuthZ) inside Argo CD API server that
-collaborate to provide authentication and authorization. 
-
-- **HTTP**: The HTTP layer groups the *logical elements* that
-  collaborate to handle HTTP requests. Every incoming request reaches
-  the same HTTP server at the same port (8080). This server will
-  analyze the request headers and dispatch to the proper internal
-  server: gRPC or standard HTTP.
-
-- **gRPC**: The [gRPC][4] layer groups the logical elements responsible for
-  the gRPC implementation.
-
-- **AuthN**: The AuthN represents the layer responsible for
-  authentication.
-
-- **AuthZ**: The AuthZ represents the layer responsible for
-  authorization.
+* | Argo CD API server, 
+  * 4 DIFFERENT logical layers
+    - **HTTP**
+      - groups the *logical elements* / handle HTTP requests
+      - 1! HTTP server / 
+        - port: 8080
+        - dispatch -- , based on request headers, to the -- proper server
+          - gRPC
+          - standard HTTP
+    - [**gRPC**](https://grpc.io/)
+      - groups the logical elements / responsible for: gRPC implementation
+    - **AuthN**
+      - responsible for: authentication
+    - **AuthZ**
+      - responsible for: authorization
 
 ![Argo CD Architecture](../../assets/argocd-arch-authn-authz.jpg)
 
 ## Logical elements
 
-The logical elements (identified by numbers) can represent an object,
-a function or a component in the code base. Note that this particular
-distinction is not represented in the diagram.
+* | PREVIOUS diagram,
+  * identified -- by -- numbers
 
-Incoming requests can reach Argo CD API server from the web UI as well
-as from the `argocd` CLI. The responsibility of the represented
-elements are described below with their respective numbers:
+* ALLOWED types
+  * code base's 
+    * object
+    * function
+    * component
 
-1. **Cmux**: Uses the [cmux][1] library to provide a connection
-   multiplexer capability making it possible to use the same port to
-   handle standard HTTP as well as gRPC requests. It is responsible
-   for inspecting incoming requests and dispatch to appropriate
-   internal servers. If the request version is `http1.x` it will
-   delegate to the *http mux*. If the request version is `http2` and
-   has the header `content-type: application/grpc`, it will delegate
-   to the *gRPC Server*.
+1. [**Cmux**](https://github.com/soheilhy/cmux)
+   * == library /
+     * provide a 
+       * connection / multiplexer capability 
+     * allows
+       * | 1 port, handle
+         * standard HTTP requests
+         * gRPC requests
+     * responsible for
+       * dispatch incoming requests -- , based on request headers, to the -- proper server
+         * if the request version = `http1.x` -> dispatch -- to the -- *http mux*
+         * if the request version = `http2` & contains the header `content-type: application/grpc` -> delegate -- to the -- *gRPC Server*
 
-1. **HTTP mux**: A [standard HTTP multiplexer][8] that will handle non
-   gRPC requests. It is responsible for serving a unified [REST
-   API][3] to the web UI exposing all gRPC and non-gRPC services.
+1. **HTTP mux**
+   * == [standard HTTP multiplexer](https://pkg.go.dev/net/http#ServeMux) / handle NON gRPC requests
+     * responsible for 
+       * serving a unified REST API 
+         * -- to the -- web UI
+         * == expose ALL gRPC & non-gRPC services
 
-1. **gRPC-gateway**: Uses the [grpc-gateway][2] library to translate
-   internal gRPC services and expose them as a [REST API][3]. The
-   great majority of API services in Argo CD are implemented in gRPC.
-   The grpc-gateway makes it possible to access gRPC services from the
-   web UI.
+1. **gRPC-gateway**
+   * == [grpc-gateway library](https://github.com/grpc-ecosystem/grpc-gateway) /
+     * translate internal gRPC services
+     * expose internal gRPC services -- as a -- REST API
+       * -> being accessible | Web UI
+   * MOST Argo CD'S API services
+     * implemented in gRPC
 
-1. **Server**: The internal gRPC Server responsible for handling gRPC
-   requests.
+1. **gRPC Server**
+   * == internal gRPC Server
+     * responsible for
+       * handling gRPC requests
 
-1. **AuthN**: Is responsible for invoking the authentication logic. It
-   is registered as a gRPC interceptor which will automatically
-   trigger for every gRPC request.
+1. **AuthN**
+   * registered -- as a -- gRPC interceptor
+     * Reason:🧠triggered / EACH gRPC request🧠 
+   * responsible for
+     * invoking the authentication logic
 
-1. **Session Manager**: Is the object responsible for managing Argo CD
-   API server session. It provides the functionality to verify the
-   validity of the authentication token provided in the request.
-   Depending on how Argo CD is configured it may or may not delegate
-   to an external AuthN provider to verify the token.
+1. **Session Manager**
+   * == object 
+     * responsible for
+       * managing Argo CD API server session
+         * == validate the authentication token / provided | request
+         * if Argo CD is configured -- to -- use an external AuthN provider -> delegate the validation to it
 
-1. **AuthN Provider**: Describes the component that can be plugged in
-   Argo CD API server to provide the authentication functionality such
-   as the login and the token verification process.
+1. **AuthN Provider**
+   * == pluggable component /
+     * provide
+       * authentication functionality  
+         * _Examples:_login, token verification process
+   * [MORE](../../operator-manual/user-management/index.md)
 
-1. **Service Method**: represents the method implementing the business
-   logic (core functionality) requested. An example of business logic
-   is: `List Applications`. Service methods are also responsible for
-   invoking the [RBAC][7] enforcement function to validate if the
-   authenticated user has permission to execute this method.
+1. **Service Method**
+   * == method / 
+     * implement the business logic (core functionality) requested
+       * _Example of business logic:_ `List Applications` 
+     * responsible for
+       * validate -- , by invoking the RBAC enforcement function, -- if the authenticated user has permission to execute this method
 
-1. **RBAC**: Is a collection of functions to provide the capability to
-   verify if the user has permission to execute a specific action in
-   Argo CD. It does so by validating the incoming request action
-   against predefined [RBAC][7] rules that can be configured in Argo CD
-   API server as well as in Argo CD `Project` CRD.
+1. **RBAC**
+   * == functions /
+     * verify if the user has permission -- to -- execute a specific action | Argo CD
+       * validate the incoming request action vs predefined RBAC rules
+   * RBAC rules
+     * ways to be configured
+       * | Argo CD API server
+       * | Argo CD `Project` CRD
 
-1. **Casbin**: Uses the [Casbin][5] library to enforce [RBAC][7] rules.
+1. [**Casbin**](https://casbin.org/)
+   * == library / enforce RBAC rules
 
-1. **AuthN Middleware**: Is an [HTTP Middleware][6] configured to
-   invoke the logic to verify the token for HTTP services that are not
-   implemented as gRPC and requires authentication.
+1. **AuthN Middleware**
+   * == [HTTP Middleware](https://go.dev/wiki/LearnServerProgramming#middleware)
+   * uses
+     * verify the token -- for -- HTTP services / NOT implemented as gRPC
 
-1. **HTTP Handler**: represents the http handlers responsible for
-   invoking the business logic (core functionality) requested. An
-   example of business logic is: `List Applications`. Http handlers
-   are also responsible for invoking the [RBAC][7] enforcement function to
-   validate if the authenticated user has permission to execute this
-   business logic.
-
-[1]: https://github.com/soheilhy/cmux
-[2]: https://github.com/grpc-ecosystem/grpc-gateway
-[3]: https://en.wikipedia.org/wiki/Representational_state_transfer
-[4]: https://grpc.io/
-[5]: https://casbin.org/
-[6]: https://go.dev/wiki/LearnServerProgramming#middleware
-[7]: https://en.wikipedia.org/wiki/Role-based_access_control
-[8]: https://pkg.go.dev/net/http#ServeMux
+1. **HTTP Handler**
+   * responsible for
+     * invoking the business logic (core functionality) requested
+       * _Example:_ `List Applications`
+     * validate -- , by invoking the RBAC enforcement function, -- if the authenticated user has permission to execute this business logic

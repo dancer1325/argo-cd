@@ -12,16 +12,16 @@
 
 ### Atomic configuration
 
-| Sample File                                                           | Resource Name                                                                      | Kind      | Description                                                                          |
-|-----------------------------------------------------------------------|------------------------------------------------------------------------------------|-----------|--------------------------------------------------------------------------------------|
-| [`argocd-cm.yaml`](argocd-cm-yaml.md)                                 | argocd-cm                                                                          | ConfigMap | General Argo CD configuration                                                        |
-| [`argocd-repositories.yaml`](argocd-repositories-yaml.md)             | my-private-repo / istio-helm-repo / private-helm-repo / private-repo               | Secrets   | SAMPLE repository connection details                                                 |
-| [`argocd-repo-creds.yaml`](argocd-repo-creds-yaml.md)                    | argoproj-https-creds / argoproj-ssh-creds / github-creds / github-enterprise-creds | Secrets   | SAMPLE repository credential templates                                               |
-| [`argocd-cmd-params-cm.yaml`](argocd-cmd-params-cm-yaml.md)           | argocd-cmd-params-cm                                                               | ConfigMap | Argo CD env variables configuration                                                  |
-| [`argocd-secret.yaml`](argocd-secret-yaml.md)                         | argocd-secret                                                                      | Secret    | User Passwords <br/> Certificates (⚠️deprecated⚠️) <br/> Signing Key <br/> Dex secrets <br/> Webhook secrets |
-| [`argocd-rbac-cm.yaml`](argocd-rbac-cm-yaml.md)                       | argocd-rbac-cm                                                                     | ConfigMap | RBAC Configuration                                                                   |
-| [`argocd-tls-certs-cm.yaml`](argocd-tls-certs-cm-yaml.md)             | argocd-tls-certs-cm                                                                | ConfigMap | Custom TLS certificates -- for connecting, via HTTPS (v1.2+), -- Git repositories    |
-| [`argocd-ssh-known-hosts-cm.yaml`](argocd-ssh-known-hosts-cm-yaml.md) | argocd-ssh-known-hosts-cm                                                          | ConfigMap | SSH known hosts data -- for connecting, via SSH (v1.2+), -- Git repositories         |
+| Sample File                                                          | Resource Name                                                                      | Kind      | Description                                                                          |
+|----------------------------------------------------------------------|------------------------------------------------------------------------------------|-----------|--------------------------------------------------------------------------------------|
+| [`argocd-cm.yaml`](examples/argocd-cm.yaml)                       | argocd-cm                                                                          | ConfigMap | General Argo CD configuration                                                        |
+| [`argocd-repositories.yaml`](examples/argocd-repositories.yaml)            | my-private-repo / istio-helm-repo / private-helm-repo / private-repo               | Secrets   | SAMPLE repository connection details                                                 |
+| [`argocd-repo-creds.yaml`](examples/argocd-repo-creds.yaml)                | argoproj-https-creds / argoproj-ssh-creds / github-creds / github-enterprise-creds | Secrets   | SAMPLE repository credential templates                                               |
+| [`argocd-cmd-params-cm.yaml`](examples/argocd-cmd-params-cm.yaml)          | argocd-cmd-params-cm                                                               | ConfigMap | Argo CD env variables configuration                                                  |
+| [`argocd-secret.yaml`](examples/argocd-secret.yaml)                        | argocd-secret                                                                      | Secret    | User Passwords <br/> Certificates (⚠️deprecated⚠️) <br/> Signing Key <br/> Dex secrets <br/> Webhook secrets |
+| [`argocd-rbac-cm.yaml`](examples/argocd-rbac-cm.yaml)                      | argocd-rbac-cm                                                                     | ConfigMap | RBAC Configuration                                                                   |
+| [`argocd-tls-certs-cm.yaml`](examples/argocd-tls-certs-cm.yaml)            | argocd-tls-certs-cm                                                                | ConfigMap | Custom TLS certificates -- for connecting, via HTTPS (v1.2+), -- Git repositories    |
+| [`argocd-ssh-known-hosts-cm.yaml`](examples/argocd-ssh-known-hosts-cm.yaml) | argocd-ssh-known-hosts-cm                                                          | ConfigMap | SSH known hosts data -- for connecting, via SSH (v1.2+), -- Git repositories         |
 
 * ⚠️1! ALLOWED resource name (PREVIOUS table) / EACH specific kind of ConfigMap & Secret resource ⚠️
   * if you need to merge things -> BEFORE creating them, do it 
@@ -31,11 +31,11 @@
 
 ### MULTIPLE configuration objects
 
-| Sample File                                                      | Kind        | Description              |
-|------------------------------------------------------------------|-------------|--------------------------|
-| [`application.yaml`](../user-guide/application-specification.md) | Application | Example application spec |
-| [`project.yaml`](./project-specification.md)                     | AppProject  | Example project spec     |
-| [`argocd-repositories.yaml`](./argocd-repositories-yaml.md)                                                                | Secret      | Repository credentials   |
+| Sample File                                                     | Kind        | Description              |
+|-----------------------------------------------------------------|-------------|--------------------------|
+| [`application.yaml`](examples/application.yaml)                 | Application | Example application spec |
+| [`project.yaml`](examples/project.yaml)                         | AppProject  | Example project spec     |
+| [`argocd-repositories.yaml`](examples/argocd-repositories.yaml) | Secret      | Repository credentials   |
 
 * `Application`'s name 
   * == applicationName | Argo CD
@@ -46,60 +46,33 @@
 
 ## Applications -- `Application` --
 
-* TODO:
-The Application CRD is the Kubernetes resource object representing a deployed application instance
-in an environment. It is defined by two key pieces of information:
+* Application CRD
+  * == Kubernetes resource object / 
+    * represent a deployed application instance | environment
+    * `spec.source`
+      * == desired state | Git (repository, revision, path, environment)
+    * `spec.destination`
+      * == target cluster & namespace
+        * restrictions 
+          * | cluster, specify `.server` OR `.name`
+            * ❌BUT, NOT BOTH❌
+              * Reason: 🧠it causes an error🧠 
+            * if you specify `.name` -> used / ANY operations
+    * `metadata.finalizers`
+      * perform [app deletion](../user-guide/app_deletion.md#deletion-finalizer)
 
-* `source` reference to the desired state in Git (repository, revision, path, environment)
-* `destination` reference to the target cluster and namespace. For the cluster one of server or name can be used, but not both (which will result in an error). 
-  * Under the hood when the server is missing, it is calculated based on the name and used for any operations.
 
-A minimal Application spec is as follows:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: guestbook
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: https://github.com/argoproj/argocd-example-apps.git
-    targetRevision: HEAD
-    path: guestbook
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: guestbook
-```
-
-See [application.yaml](application.yaml) for additional fields. As long as you have completed the first step of [Getting Started](../getting_started.md#1-install-argo-cd), you can apply this with `kubectl apply -n argocd -f application.yaml` and Argo CD will start deploying the guestbook application.
-
-> [!NOTE]
-> The namespace must match the namespace of your Argo CD instance - typically this is `argocd`.
-
-> [!NOTE]
-> When creating an application from a Helm repository, the `chart` attribute must be specified instead of the `path` attribute within `spec.source`.
-
-```yaml
-spec:
-  project: default
-  source:
-    repoURL: https://argoproj.github.io/argo-helm
-    chart: argo
-```
-
-> [!WARNING]
-> Without the `resources-finalizer.argocd.argoproj.io` finalizer, deleting an application will not delete the resources it manages. To perform a cascading delete, you must add the finalizer. See [App Deletion](../user-guide/app_deletion.md#about-the-deletion-finalizer).
-
-```yaml
-metadata:
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-```
+* ways to deploy
+  * -- via -- kubectl
+    * `kubectl apply -n namespaceWhereLivesArgoCD -f pathToApplicationFile.yaml`
+  * -- via -- [helm](../user-guide/helm.md)
+    * | "Application.yaml",
+      * replace `spec.source.path` -- by -- `spec.source.chart` 
+      * modify `spec.source.repoURL`
 
 ### App of Apps
 
+* TODO:
 You can create an app that creates other apps, which in turn can create other apps.
 This allows you to declaratively manage a group of apps that can be deployed and configured in concert.
 
@@ -1447,8 +1420,8 @@ Both `resource.includeEventLabelKeys` and `resource.excludeEventLabelKeys` suppo
 
 ## SSO & RBAC
 
-* SSO configuration details: [SSO](./user-management/index.md)
-* RBAC configuration details: [RBAC](./rbac.md)
+* [SSO](./user-management/index.md)
+* [RBAC](./rbac.md)
 
 ## Manage Argo CD -- via -- Argo CD
 

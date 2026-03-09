@@ -1,30 +1,35 @@
 # UI Extensions
 
-Argo CD web user interface can be extended with additional UI elements. Extensions should be delivered as a javascript file
-in the `argocd-server` Pods that are placed in the `/tmp/extensions` directory and starts with `extension` prefix ( matches to `^extension(.*)\.js$` regex ).
+* == extend -- with -- ADDITIONAL UI elements / 
+  * delivered -- as a -- "extensionSOMETHINGELSE.js" | "argocd-server" pods | "/tmp/extensions" directory
+    * naming follow `^extension(.*)\.js$` regex
 
-```
-/tmp/extensions
-├── example1
-│   └── extension-1.js
-└── example2
-    └── extension-2.js
-```
+    ```
+    /tmp/extensions
+    ├── example1
+    │   └── extension-1.js
+    └── example2
+        └── extension-2.js
+    ```
 
-Extensions are loaded during initial page rendering and should register themselves using API exposed in the `extensionsAPI` global variable. (See
-corresponding extension type details for additional information).
+  * loaded | initial page rendering
+  * register themselves -- via -- API / exposed | `extensionsAPI` global variable
+* provide
+  * React component /
+    * responsible for: rendering the UI element
+    * ❌NOT bundle the React library❌
+    * should use the `react` global variable
+      * _Example:_ if you are using webpack 
 
-The extension should provide a React component that is responsible for rendering the UI element. Extension should not bundle the React library.
-Instead extension should use the `react` global variable. You can leverage `externals` setting if you are using webpack:
-
-```js
-externals: {
-  react: "React";
-}
-```
+        ```js
+        externals: {
+        react: "React";
+        }
+        ```
 
 ## Resource Tab Extensions
 
+TODO: 
 Resource Tab extensions is an extension that provides an additional tab for the resource sliding panel at the Argo CD Application details page.
 
 The resource tab extension should be registered using the `extensionsAPI.registerResourceExtension` method:
@@ -65,7 +70,8 @@ Below is an example of a resource tab extension:
 
 ## System Level Extensions
 
-Argo CD allows you to add new items to the sidebar that will be displayed as a new page with a custom component when clicked. The system level extension should be registered using the `extensionsAPI.registerSystemLevelExtension` method:
+Argo CD allows you to add new items to the sidebar that will be displayed as a new page with a custom component when clicked
+* The system level extension should be registered using the `extensionsAPI.registerSystemLevelExtension` method:
 
 ```typescript
 registerSystemLevelExtension(component: ExtensionComponent, title: string, options: {icon?: string})
@@ -98,7 +104,9 @@ Make sure to use 'argoproj.io'/'Application' as group/kind and an extension will
 
 ## Application Status Panel Extensions
 
-The status panel is the bar at the top of the application view where the sync status is displayed. Argo CD allows you to add new items to the status panel of an application. The extension should be registered using the `extensionsAPI.registerStatusPanelExtension` method:
+The status panel is the bar at the top of the application view where the sync status is displayed
+* Argo CD allows you to add new items to the status panel of an application
+* The extension should be registered using the `extensionsAPI.registerStatusPanelExtension` method:
 
 ```typescript
 registerStatusPanelExtension(component: StatusPanelExtensionComponent, title: string, id: string, flyout?: ExtensionComponent)
@@ -125,7 +133,9 @@ Below is an example of a simple extension:
 
 ### Flyout widget
 
-It is also possible to add an optional flyout widget to your extension. It can be opened by calling `openFlyout()` from your extension's component. Your flyout component will then be rendered in a sliding panel, similar to the panel that opens when clicking on `History and rollback`.
+It is also possible to add an optional flyout widget to your extension
+* It can be opened by calling `openFlyout()` from your extension's component
+* Your flyout component will then be rendered in a sliding panel, similar to the panel that opens when clicking on `History and rollback`.
 
 Below is an example of an extension using the flyout widget:
 
@@ -159,7 +169,8 @@ Below is an example of an extension using the flyout widget:
 
 ## Top Bar Action Menu Extensions
 
-The top bar panel is the action menu at the top of the application view where the action buttons are displayed like Details, Sync, Refresh. Argo CD allows you to add new button to the top bar action menu of an application.
+The top bar panel is the action menu at the top of the application view where the action buttons are displayed like Details, Sync, Refresh
+* Argo CD allows you to add new button to the top bar action menu of an application.
 When the extension button is clicked, the custom widget will be rendered in a flyout panel.
 
 The extension should be registered using the `extensionsAPI.registerTopBarActionMenuExt` method:
@@ -223,7 +234,9 @@ Below is an example of a simple extension with a flyout widget:
 
 ## App View Extensions
 
-App View extensions allow you to create a new Application Details View for an application. This view would be selectable alongside the other views like the Node Tree, Pod, and Network views. When the extension's icon is clicked, the extension's component is rendered as the main content of the application view.
+App View extensions allow you to create a new Application Details View for an application
+* This view would be selectable alongside the other views like the Node Tree, Pod, and Network views
+* When the extension's icon is clicked, the extension's component is rendered as the main content of the application view.
 
 Register this extension through the `extensionsAPI.registerAppViewExtension` method.
 

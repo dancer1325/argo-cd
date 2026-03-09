@@ -446,7 +446,7 @@ You can customize this interval per ApplicationSet using
 > and directory lists from Git. Therefore, the Git generator is
 > affected by the Repo Server's Revision Cache Expiration setting
 > (see the description of the `timeout.reconciliation` parameter in
-> [argocd-cm.yaml](../argocd-cm-yaml.md/#:~:text=timeout.reconciliation%3A)).
+> [argocd-cm.yaml](../examples/argocd-cm.yaml/#:~:text=timeout.reconciliation%3A)).
 > If this value exceeds the configured Git Polling Interval, the
 > Git generator might not see files or directories from new commits
 > until the previous cache entry expires.
@@ -546,4 +546,4 @@ If your [ApplicationSets](index.md) uses a repository where you need credentials
 ApplicationSet project field is templated (i.e. the `project` field of the ApplicationSet contains `{{ ... }}`), you need to add the repository as a "non project scoped" repository.  
 - When doing that through the UI, set this to a **blank** value in the dropdown menu.
 - When doing that through the CLI, make sure you **DO NOT** supply the parameter `--project` ([argocd repo add docs](../../user-guide/commands/argocd_repo_add.md))
-- When doing that declaratively, make sure you **DO NOT** have `project:` defined under `stringData:` ([complete yaml example](../argocd-repositories-yaml.md))
+- When doing that declaratively, make sure you **DO NOT** have `project:` defined under `stringData:` ([complete yaml example](../examples/argocd-repositories.yaml))

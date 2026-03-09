@@ -386,7 +386,7 @@ extension.config: |
 In the example above, all requests sent to
 `http://extension-name.com:8080` will have an additional
 `Authorization` header. The value of this header will be the one from
-the [argocd-secret](../../operator-manual/argocd-secret-yaml.md) with
+the [argocd-secret](../../operator-manual/examples/argocd-secret.yaml) with
 key `some-extension.authorization.header`
 
 [1]: https://github.com/argoproj/argoproj/blob/master/community/feature-status.md

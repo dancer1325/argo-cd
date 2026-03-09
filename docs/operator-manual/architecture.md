@@ -2,6 +2,16 @@
 
 ![Argo CD Architecture](../assets/argocd_architecture.png)
 
+* Argo CD
+  * == ⭐️Kubernetes controller⭐️ / 
+    * CONTINUOUSLY monitors running applications
+    * compares the current, live state vs desired target state (== | Git repo)
+      * `OutOfSync` == deployed application's status / 's live state != target state
+        * if it's `OutOfSync` -> Argo CD reports & visualizes the differences
+      * if you modify the target state -> AUTOMATICALLY reflected | specified target environments
+  * provide
+    * facilities to AUTOMATICALLY OR MANUALLY sync the live state -- & -- desired target state
+
 ## Components
 
 * goal

@@ -18,6 +18,7 @@
     * application deployment (specifying the target environment) & lifecycle management are
       * automated
       * auditable
+    * developers can define & control the deployment of Kubernetes application resources -- from -- Git workflow
 
 ![Argo CD UI](docs/assets/argocd-ui.gif)
 

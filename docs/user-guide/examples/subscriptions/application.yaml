@@ -1,0 +1,10 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    # subscribe 2 slack channels | succeed synchronization of the Argo CD application
+    # `notifications.argoproj.io/subscribe.<triggerName>.<notificationServiceName>: <recipientListCommaSeparated>`
+    #   <triggerName>                   on-sync-succeeded
+    #   <notificationServiceName>       slack
+    #   <recipientListCommaSeparated>   my-channel1;my-channel2
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: my-channel1;my-channel2

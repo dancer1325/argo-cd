@@ -4,60 +4,29 @@
   * people / want to build third-party integrations OR contribute | Argo CD 
     * != Argo CD user
 
-TODO: 
 ## Preface
-#### Understand the [Code Contribution Guide](code-contributions.md)
-#### Understand the [Code Contribution Preface](submit-your-pr.md#preface)
-    
-## Contributing to Argo CD documentation
+* [Code Contribution Guide](code-contributions.md)
+* [Code Contribution Preface](submit-your-pr.md#preface)
 
-This guide will help you get started quickly with contributing documentation changes, performing the minimum setup you'll need.   
-For backend and frontend contributions, that require a full building-testing-running-locally cycle, please refer to [Contributing to Argo CD backend and frontend ](index.md#contributing-to-argo-cd-backend-and-frontend) 
+## Contributing to Argo CD documentation 
 
-### Fork and clone Argo CD repository
-- [Fork and clone Argo CD repository](development-environment.md#fork-and-clone-the-repository)
-
-### Submit your PR
-- [Before submitting a PR](submit-your-pr.md#before-submitting-a-pr)
-- [Choose a correct title for your PR](submit-your-pr.md#title-of-the-pr)
-- [Perform the PR template checklist](submit-your-pr.md#pr-template-checklist)
+* steps
+  * Fork & clone Argo CD repository
+  * [Submit your PR](submit-your-pr.md) | this repo
 
 ## Contributing to Argo CD Notifications documentation
 
-This guide will help you get started quickly with contributing documentation changes, performing the minimum setup you'll need.
-The notifications docs are located in [notifications-engine](https://github.com/argoproj/notifications-engine) Git repository and require 2 pull requests: one for the `notifications-engine` repo and one for the `argo-cd` repo.
-For backend and frontend contributions, that require a full building-testing-running-locally cycle, please refer to [Contributing to Argo CD backend and frontend ](index.md#contributing-to-argo-cd-backend-and-frontend) 
-
-### Fork and clone Argo CD repository
-- [Fork and clone Argo CD repository](development-environment.md#fork-and-clone-the-repository)
-
-### Submit your PR to notifications-engine
-- [Before submitting a PR](submit-your-pr.md#before-submitting-a-pr)
-- [Choose a correct title for your PR](submit-your-pr.md#title-of-the-pr)
-- [Perform the PR template checklist](submit-your-pr.md#pr-template-checklist)
-
-### Install Go on your machine
-- [Install Go](development-environment.md#install-go)
-
-### Submit your PR to argo-cd
-- [Contributing to notifications-engine](dependencies.md#notifications-engine-githubcomargoprojnotifications-engine)
-- [Before submitting a PR](submit-your-pr.md#before-submitting-a-pr)
-- [Choose a correct title for your PR](submit-your-pr.md#title-of-the-pr)
-- [Perform the PR template checklist](submit-your-pr.md#pr-template-checklist)
+* steps
+  * Fork & clone Argo CD repository
+  * [Submit your PR](submit-your-pr.md) | ["notifications-engine" repo](https://github.com/argoproj/notifications-engine)
+  * [Install Go](development-environment.md#install-go)
+  * [Submit your PR](submit-your-pr.md) | this repo
 
 ## Contributing to Argo CD backend and frontend 
 
-This guide will help you set up your build & test environment, so that you can start developing and testing bug fixes and feature enhancements without having to make too much effort in setting up a local toolchain.
+* [set up your development environment](development-environment.md)
 
-As is the case with the development process, this document is under constant change. If you notice any error, or if you think this document is out-of-date, or if you think it is missing something: Feel free to submit a PR or submit a bug to our GitHub issue tracker.
-
-### Set up your development environment
-- [Install required tools (Git, Go, Docker, etc)](development-environment.md#install-required-tools)
-- [Install and start a local K8s cluster (Kind, Minikube or K3d)](development-environment.md#install-a-local-k8s-cluster)
-- [Fork and clone Argo CD repository](development-environment.md#fork-and-clone-the-repository)
-- [Install additional required development tools](development-environment.md#install-additional-required-development-tools)
-- [Install latest Argo CD on your local cluster](development-environment.md#install-latest-argo-cd-on-your-local-cluster)
-
+TODO:
 ### Set up a development toolchain (local or virtualized)
 - [Understand the differences between the toolchains](toolchain-guide.md#local-vs-virtualized-toolchain)
 - Choose a development toolchain
@@ -74,19 +43,10 @@ As is the case with the development process, this document is under constant cha
 - [Run e2e tests](development-cycle.md#run-end-to-end-tests)
 - How to contribute to documentation: [build and run documentation site](docs-site.md) on your machine for manual testing
 
-### Run and debug Argo CD locally
-- [Run Argo CD on your machine for manual testing](running-locally.md)
-- [Debug Argo CD in an IDE on your machine](debugging-locally.md)
+- [Run Argo CD | your machine](running-locally.md)
+- [Debug Argo CD | your machine](debugging-locally.md)
   
-### Submit your PR
-- [Before submitting a PR](submit-your-pr.md#before-submitting-a-pr)
-- [Understand the Continuous Integration process](submit-your-pr.md#continuous-integration-process)
-- [Choose a correct title for your PR](submit-your-pr.md#title-of-the-pr)
-- [Perform the PR template checklist](submit-your-pr.md#pr-template-checklist)
-- [Understand the CI automated builds & tests](submit-your-pr.md#automated-builds-tests)
-- [Understand & make sure your PR meets the CI code test coverage requirements](submit-your-pr.md#code-test-coverage)
-
-Need help? Start with the [Contributors FAQ](faq.md)
+* [Submit your PR](submit-your-pr.md)
 
 ## Contributing to Argo CD dependencies
 - [Contributing to argo-ui](dependencies.md#argo-ui-components-githubcomargoprojargo-ui)

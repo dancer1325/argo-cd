@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - cluster: engineering-dev
+            url: https://kubernetes.default.svc
+            autoSync: true
+            prune: true
+            valueFiles:
+              - values.large.yaml
+              - values.debug.yaml
+  template:
+    metadata:
+      name: '{{ .nameNormalized }}-deployment'
+    spec:
+      project: "default"
+      source:
+        repoURL: https://github.com/infra-team/cluster-deployments.git
+        targetRevision: HEAD
+        path: guestbook/{{ .nameNormalized }}
+      destination:
+        server: '{{ .server }}'
+        namespace: guestbook
+  templatePatch: |
+    spec:
+      source:
+        helm:
+          valueFiles:
+          {{- range $valueFile := .valueFiles }}
+            - {{ $valueFile }}
+          {{- end }}
+    {{- if .autoSync }}
+      syncPolicy:
+        automated:
+          prune: {{ .prune }}
+    {{- end }}

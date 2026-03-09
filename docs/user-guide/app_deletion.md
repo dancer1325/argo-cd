@@ -1,66 +1,63 @@
 # App Deletion
 
-Apps can be deleted with or without a cascade option. A **cascade delete**, deletes both the app and its resources, rather than only the app.
+* types of Apps deletion
+  * non-cascade option
+  * cascade option, OR
+    * == delete app + its resources
 
-## Deletion Using `argocd`
+* depend -- on -- [deletion finalizer](#deletion-finalizer)
 
-To perform a non-cascade delete:
+## -- via --  `argocd`
 
-```bash
-argocd app delete APPNAME --cascade=false
-```
+* `argocd app delete APPNAME --cascade=false`
+  * non-cascade deletion
 
-To perform a cascade delete:
+* cascade deletion
+  * ways
+    * `argocd app delete APPNAME --cascade`
+    * `argocd app delete APPNAME`
+    * `argocd app delete APPNAME --propagation-policy <foreground|background>`
+      * set the propagation policy
 
-```bash
-argocd app delete APPNAME --cascade
-```
+## -- via -- `kubectl`
 
-or
+* non-cascade deletion 
 
-```bash
-argocd app delete APPNAME
-```
+    ```bash
+    # unset the finalizer
+    kubectl patch app APPNAME  -p '{"metadata": {"finalizers": null}}' --type merge
+  
+    kubectl delete app APPNAME
+    ```
 
-## Deletion Using `kubectl`
+* cascade deletion 
 
-To perform a non-cascade delete, make sure the finalizer is unset and then delete the app:
+    ```bash
+    # set the finalizer
+    kubectl patch app APPNAME  -p '{"metadata": {"finalizers": ["resources-finalizer.argocd.argoproj.io"]}}' --type merge
+    
+    kubectl delete app APPNAME
+    ```
 
-```bash
-kubectl patch app APPNAME  -p '{"metadata": {"finalizers": null}}' --type merge
-kubectl delete app APPNAME
-```
+## Deletion Finalizer
 
-To perform a cascade delete set the finalizer, e.g. using `kubectl patch`:
+* allows
+  * if it's specified -> performing a cascading delete
 
-```bash
-kubectl patch app APPNAME  -p '{"metadata": {"finalizers": ["resources-finalizer.argocd.argoproj.io"]}}' --type merge
-kubectl delete app APPNAME
-```
+* requirements
+  * implement [App of Apps pattern](../operator-manual/cluster-bootstrapping.md#cascading-deletion)
 
-## About The Deletion Finalizer
+* types of cascade deletion
+  * [foreground cascading deletion](https://kubernetes.io/docs/concepts/architecture/garbage-collection/#foreground-deletion)
+    * steps
+      * | `metadata.finalizers`, set `resources-finalizer.argocd.argoproj.io`
+  * [background cascading deletion](https://kubernetes.io/docs/concepts/architecture/garbage-collection/#background-deletion) 
+    * steps
+      * | `metadata.finalizers`, set `resources-finalizer.argocd.argoproj.io/background`
 
-```yaml
-metadata:
-  finalizers:
-    # The default behaviour is foreground cascading deletion
-    - resources-finalizer.argocd.argoproj.io
-    # Alternatively, you can use background cascading deletion
-    # - resources-finalizer.argocd.argoproj.io/background
-```
+## | UI
 
-When deleting an Application with this finalizer, the Argo CD application controller will perform a cascading delete of the Application's resources.
-
-Adding the finalizer enables cascading deletes when implementing [the App of Apps pattern](../operator-manual/cluster-bootstrapping.md#cascading-deletion).
-
-The default propagation policy for cascading deletion is [foreground cascading deletion](https://kubernetes.io/docs/concepts/architecture/garbage-collection/#foreground-deletion).
-Argo CD performs [background cascading deletion](https://kubernetes.io/docs/concepts/architecture/garbage-collection/#background-deletion) when `resources-finalizer.argocd.argoproj.io/background` is set.
-
-When you invoke `argocd app delete` with `--cascade`, the finalizer is added automatically.
-You can set the propagation policy with `--propagation-policy <foreground|background>`.
-
-## Deleting Applications in the UI
-
+TODO:
 Argo CD provides a consistent deletion experience across different views in the UI. When deleting applications, you can access the delete functionality from:
 
 - **Applications List View**: The main applications page showing all applications
