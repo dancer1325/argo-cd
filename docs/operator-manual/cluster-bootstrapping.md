@@ -1,90 +1,46 @@
 # Cluster Bootstrapping
 
-This guide is for operators who have already installed Argo CD, and have a new cluster and are looking to install many apps in that cluster.
+* requirements
+  * install ArgoCD
 
-There's no one particular pattern to solve this problem, e.g. you could write a script to create your apps, or you could even manually create them.
+* goal
+  * how to install MANY apps | that cluster?
+    * approaches
+      * MANUALLY create EACH app
+      * write a script / create EACH app
+      * [ApplicationSet](#application-sets--cluster-labels)
+        * 👀recommended one👀
+      * [App of Apps pattern](#app-of-apps-pattern-alternative)
 
-Our recommendation is to look at [ApplicationSets](./applicationset/index.md) and more specifically the [cluster generator](./applicationset/Generators-Cluster.md) which can handle most typical scenarios.
+* audience
+  * operators 
 
-## Application Sets and cluster labels (recommended)
+## Application Sets + cluster labels
 
-Following the [Declaratively setup guide](declarative-setup.md) you can create a cluster and assign it several labels.
+* [ApplicationSets](./applicationset/index.md) / [generator cluster](applicationset/Generators-Cluster.md)
+* == create a cluster + assign it SEVERAL labels
 
 Example
 
-```yaml
-apiVersion: v1
-data:
-  [...snip..]
-kind: Secret
-metadata:
-  annotations:
-    managed-by: argocd.argoproj.io
-  labels:
-    argocd.argoproj.io/secret-type: cluster
-    cloud: gcp
-    department: billing
-    env: qa
-    region: eu
-    type: workload
-  name: cluster-qa-eu-example
-  namespace: argocd
-```
+TODO: 
+Then as soon as you add the cluster to Argo CD, 
+any application set that uses these labels will deploy the respective applications.
 
-Then as soon as you add the cluster to Argo CD, any application set that uses these labels will deploy the respective applications.
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: eu-only-appset
-  namespace: argocd
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-  - matrix:
-      generators:
-        - git:
-            repoURL: <a git repo>
-            revision: HEAD
-            directories:
-            - path: my-eu-apps/*
-        - clusters:    
-            selector:
-              matchLabels:
-                type: "workload"     
-                region: "eu"                     
-  template:      
-    metadata:
-      name: 'eu-only-{{index .path.segments 1}}-{{.name}}'     
-    spec:
-      project: default
-      source:
-        repoURL: <a git repo>
-        targetRevision: HEAD
-        path: '{{.path.path}}'
-      destination:
-        server: '{{.server}}'
-        namespace: 'eu-only-{{index .path.segments 1}}'
 
-      syncPolicy:
-        syncOptions:
-          - CreateNamespace=true  
-        automated: 
-          prune: true
-          selfHeal: true 
-```
+If you use Application Sets you also have access to all [gotemplate functions](./applicationset/GoTemplate.md) as well as [Sprig methods](https://masterminds.github.io/sprig/)
+So no Helm templating is required.
 
-If you use Application Sets you also have access to all [gotemplate functions](./applicationset/GoTemplate.md) as well as [Sprig methods](https://masterminds.github.io/sprig/). So no Helm templating is required.
-
-For more information see also [Templating](./applicationset/Template.md).
+* MORE [Templating](./applicationset/Template.md)
 
 
 ## App Of Apps Pattern (Alternative)
 
- You can also use the **app of apps pattern**.
+* == app / creates OTHER apps / create OTHER apps / ...
+* allows
+    * declaratively manage a group of apps / deployed & configured in concert
 
+TODO: 
 > [!WARNING]
 > **App of Apps is an admin-only tool**
 >

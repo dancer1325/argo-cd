@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: eu-only-appset
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - matrix:
+        generators:
+          - git:
+              repoURL: <a git repo>
+              revision: HEAD
+              directories:
+                - path: my-eu-apps/*
+          - clusters:
+              selector:
+                matchLabels:
+                  type: "workload"
+                  region: "eu"
+  template:
+    metadata:
+      name: 'eu-only-{{index .path.segments 1}}-{{.name}}'
+    spec:
+      project: default
+      source:
+        repoURL: <a git repo>
+        targetRevision: HEAD
+        path: '{{.path.path}}'
+      destination:
+        server: '{{.server}}'
+        namespace: 'eu-only-{{index .path.segments 1}}'
+
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+        automated:
+          prune: true
+          selfHeal: true

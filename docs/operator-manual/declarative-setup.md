@@ -72,11 +72,7 @@
 
 ### App of Apps
 
-* TODO:
-You can create an app that creates other apps, which in turn can create other apps.
-This allows you to declaratively manage a group of apps that can be deployed and configured in concert.
-
-See [cluster bootstrapping](cluster-bootstrapping.md).
+* [here](cluster-bootstrapping.md)
 
 ## Projects -- `AppProject` --
 
@@ -93,6 +89,7 @@ See [cluster bootstrapping](cluster-bootstrapping.md).
     * `.roles`
       * == entitieS / define access -- to -- project's resources
 
+TODO: 
 > [!WARNING]
 > **Projects which can deploy to the Argo CD namespace grant admin access**
 >
@@ -497,92 +494,88 @@ A note on noProxy: Argo CD uses exec to interact with different tools such as he
 
 ## Clusters
 
-Cluster credentials are stored in secrets same as repositories or repository credentials. Each secret must have label
-`argocd.argoproj.io/secret-type: cluster`.
+* Cluster credentials
+  * 💡are stored | secrets💡
+    * requirements of the secrets
+      * label `argocd.argoproj.io/secret-type: cluster`
+      * fields
+        * `name`
+          * == cluster name
+        * `server` 
+          * == cluster api server url
+        * `namespaces`
+          * OPTIONAL
+          * == comma-separated list of namespaces / accessible | that cluster
+            * -> cluster-level resources are ignored
+              * ⚠️EXCEPTION: `clusterResources=true`⚠️
+        * `clusterResources` 
+          * OPTIONAL
+          * == boolean string (== `"true"` OR `"false"`)
+            * specify whether Argo CD can manage cluster-level resources | this cluster
+          * requirements
+            * `namespaces` is specified
+        * `project` 
+          * OPTIONAL
+          * == string / mark this -- as a -- project-scoped cluster
+        * `config`
+          * == JSON / data structure
 
-The secret data must i2nclude following fields:
+          ```yaml
+          # Basic authentication settings
+          username: string
+          password: string
+          # Bearer authentication settings
+          bearerToken: string
+          # IAM authentication configuration
+          awsAuthConfig:
+          clusterName: string
+          roleARN: string
+          profile: string
+          # Configure external command to supply client credentials
+          # See https://godoc.org/k8s.io/client-go/tools/clientcmd/api#ExecConfig
+          execProviderConfig:
+          command: string
+          args: [
+          string
+          ]
+          env: {
+          key: value
+          }
+          apiVersion: string
+          installHint: string
+          # Proxy URL for the kubernetes client to use when connecting to the cluster api server
+          proxyUrl: string
+          # Transport layer security configuration settings
+          tlsClientConfig:
+          # Base64 encoded PEM-encoded bytes (typically read from a client certificate file).
+          caData: string
+          # Base64 encoded PEM-encoded bytes (typically read from a client certificate file).
+          certData: string
+          # Server should be accessed without verifying the TLS certificate
+          insecure: boolean
+          # Base64 encoded PEM-encoded bytes (typically read from a client certificate key file).
+          keyData: string
+          # ServerName is passed to the server for SNI and is used in the client to check server
+          # certificates against. If ServerName is empty, the hostname used to contact the
+          # server is used.
+          serverName: string
+          # Disable automatic compression for requests to the cluster
+          disableCompression: boolean
+          ```
 
-* `name` - cluster name
-* `server` - cluster api server url
-* `namespaces` - optional comma-separated list of namespaces which are accessible in that cluster. Setting namespace values will cause cluster-level resources to be ignored unless `clusterResources` is set to `true`.
-* `clusterResources` - optional boolean string (`"true"` or `"false"`) determining whether Argo CD can manage cluster-level resources on this cluster. This setting is only used when namespaces are restricted using the `namespaces` list.
-* `project` - optional string to designate this as a project-scoped cluster.
-* `config` - JSON representation of the following data structure:
-
-```yaml
-# Basic authentication settings
-username: string
-password: string
-# Bearer authentication settings
-bearerToken: string
-# IAM authentication configuration
-awsAuthConfig:
-    clusterName: string
-    roleARN: string
-    profile: string
-# Configure external command to supply client credentials
-# See https://godoc.org/k8s.io/client-go/tools/clientcmd/api#ExecConfig
-execProviderConfig:
-    command: string
-    args: [
-      string
-    ]
-    env: {
-      key: value
-    }
-    apiVersion: string
-    installHint: string
-# Proxy URL for the kubernetes client to use when connecting to the cluster api server
-proxyUrl: string
-# Transport layer security configuration settings
-tlsClientConfig:
-    # Base64 encoded PEM-encoded bytes (typically read from a client certificate file).
-    caData: string
-    # Base64 encoded PEM-encoded bytes (typically read from a client certificate file).
-    certData: string
-    # Server should be accessed without verifying the TLS certificate
-    insecure: boolean
-    # Base64 encoded PEM-encoded bytes (typically read from a client certificate key file).
-    keyData: string
-    # ServerName is passed to the server for SNI and is used in the client to check server
-    # certificates against. If ServerName is empty, the hostname used to contact the
-    # server is used.
-    serverName: string
-# Disable automatic compression for requests to the cluster 
-disableCompression: boolean
-```
+TODO:
 
 > [!IMPORTANT]
-> When `namespaces` is set, Argo CD will perform a separate list/watch operation for each namespace. This can cause
+> When `namespaces` is set, Argo CD will perform a separate list/watch operation for each namespace
+> 3This can cause
 > the Application controller to exceed the maximum number of idle connections allowed for the Kubernetes API server.
 > To resolve this issue, you can increase the `ARGOCD_K8S_CLIENT_MAX_IDLE_CONNECTIONS` environment variable in the
 > Application controller.
 
 > [!IMPORTANT]
-> Note that if you specify a command to run under `execProviderConfig`, that command must be available in the Argo CD image. See [BYOI (Build Your Own Image)](custom_tools.md#byoi-build-your-own-image).
-
-Cluster secret example:
-
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mycluster-secret
-  labels:
-    argocd.argoproj.io/secret-type: cluster
-type: Opaque
-stringData:
-  name: mycluster.example.com
-  server: https://mycluster.example.com
-  config: |
-    {
-      "bearerToken": "<authentication token>",
-      "tlsClientConfig": {
-        "insecure": false,
-        "caData": "<base64 encoded certificate>"
-      }
-    }
-```
+> Note that if you specify a command to run under `execProviderConfig`,
+> that command must be available in the Argo CD image
+> See [BYOI (Build Your Own Image)](custom_tools.md#byoi-build-your-own-image).
 
 ### Skipping Cluster Reconciliation
 

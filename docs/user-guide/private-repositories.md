@@ -1,40 +1,48 @@
 # Private Repositories
 
-> [!NOTE]
-> Some Git hosters - notably GitLab and possibly on-premise GitLab instances as well - require you to
-> specify the `.git` suffix in the repository URL, otherwise they will send a HTTP 301 redirect to the
-> repository URL suffixed with `.git`. Argo CD will **not** follow these redirects, so you have to
-> adapt your repository URL to be suffixed with `.git`.
+* steps
+  * | your repository URL, 
+    * add the suffix ".git" 
+      * Reason:🧠
+        * some Git hosters require it
+          * _Example:_ GitLab & on-premise GitLab instances
+          * otherwise -> send HTTP 301 / "redirect to the repository URL suffixed with `.git`"
+        * Argo CD does NOT follow these redirects
+
+TODO: where to place?
+* repositories OR repository credentials
+  * are stored | secrets
 
 ## Credentials
 
-If application manifests are located in private repository then repository credentials have to be configured. Argo CD supports both HTTPS and SSH Git credentials.
+* application manifests / located | private repository
+  * configure repository credentials
+    * Argo CD supports Git credentials -- via --
+      * HTTPS
+      * SSH 
 
-### HTTPS Username And Password Credential
+### HTTPS Username & Password Credential
 
-Private repositories that require a username and password typically have a URL that start with `https://` rather than `git@` or `ssh://`. 
+* Private repositories / require a username/password
+  * NORMALLY, have a URL / start with `https://`
+    * != `git@` OR `ssh://` 
 
-Credentials can be configured using Argo CD CLI:
+* ways to configure the credentials
+  * -- via -- Argo CD CLI
 
-```bash
-argocd repo add https://github.com/argoproj/argocd-example-apps --username <username> --password <password>
-```
+    ```bash
+    argocd repo add https://github.com/argoproj/argocd-example-apps --username <username> --password <password>
+    ```
+  * -- via -- UI
+    * steps
+      * "Settings/Repositories" > "Connect Repo using HTTPS"
+        * enter credentials 
 
-or UI:
+          ![connect repo](../assets/repo-add-https.png)
+        * "Connect"
+          * test the connection & add the repository 
 
-1. Navigate to `Settings/Repositories`
-
-    ![connect repo overview](../assets/repo-add-overview.png)
-
-2. Click `Connect Repo using HTTPS` button and enter credentials 
-
-    ![connect repo](../assets/repo-add-https.png)
-
-    *Note: username in screenshot is for illustration purposes only , we have no relationship to this GitHub account should it exist.*
-
-3. Click `Connect` to test the connection and have the repository added 
-
-![connect repo](../assets/connect-repo.png)
+          ![connect repo](../assets/connect-repo.png)
 
 #### Access Token
 
