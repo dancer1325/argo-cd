@@ -1,57 +1,58 @@
-# Go Template
+# [Go Text Template](https://pkg.go.dev/text/template)
 
 ## Introduction
 
-ApplicationSet is able to use [Go Text Template](https://pkg.go.dev/text/template). To activate this feature, add 
-`goTemplate: true` to your ApplicationSet manifest.
+* Go Template
+  * == Go Standard -- for -- string templating
+  * vs fasttemplate
+    * MORE powerful
+  * uses
+    * by ApplicationSet
+  * how to configure?
+    * | your ApplicationSet manifest,
+      * add `goTemplate: true`
+        * == activate this feature
+      * add `goTemplateOptions: ["opt1", "opt2", ...]`
+        * [options](https://pkg.go.dev/text/template#Template.Option)
+          * if 
+            * undefined values are specified -> report an error
+              * `missingkey=error`
+                * recommended one
+                * 1 useful one
+            * unset parameters -> error
 
-The [Sprig function library](https://masterminds.github.io/sprig/) (except for `env`, `expandenv` and `getHostByName`) 
-is available in addition to the default Go Text Template functions.
+* fasttemplate
+  * default templating engine
 
-An additional `normalize` function makes any string parameter usable as a valid DNS name by replacing invalid characters 
-with hyphens and truncating at 253 characters. This is useful when making parameters safe for things like Application
-names.
-
-Another `slugify` function has been added which, by default, sanitizes and smart truncates (it doesn't cut a word into 2). This function accepts a couple of arguments:
-
-- The first argument (if provided) is an integer specifying the maximum length of the slug.
-- The second argument (if provided) is a boolean indicating whether smart truncation is enabled.
-- The last argument (if provided) is the input name that needs to be slugified.
-
-#### Usage example
-
-```
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: test-appset
-spec:
-  ... 
-  template:
-    metadata:
-      name: 'hellos3-{{.name}}-{{ cat .branch | slugify 23 }}'
-      annotations:
-        label-1: '{{ cat .branch | slugify }}'
-        label-2: '{{ cat .branch | slugify 23 }}'
-        label-3: '{{ cat .branch | slugify 50 false }}'
-```
-
-If you want to customize [options defined by text/template](https://pkg.go.dev/text/template#Template.Option), you can
-add the `goTemplateOptions: ["opt1", "opt2", ...]` key to your ApplicationSet next to `goTemplate: true`. Note that at
-the time of writing, there is only one useful option defined, which is `missingkey=error`.
-
-The recommended setting of `goTemplateOptions` is `["missingkey=error"]`, which ensures that if undefined values are
-looked up by your template then an error is reported instead of being ignored silently. This is not currently the default
-behavior, for backwards compatibility.
-
-## Motivation
-
-Go Template is the Go Standard for string templating. It is also more powerful than fasttemplate (the default templating 
-engine) as it allows doing complex templating logic.
+* ALLOWED functions
+  * [Sprig function library](https://masterminds.github.io/sprig/)
+    * EXCEPT to: `env`, `expandenv` and `getHostByName`
+  * Go Text Template functions
+  * `normalize` function
+    * any string parameter is normalized -- as a -- valid DNS name 
+      * replace invalid characters -- with -- hyphens
+      * truncate at 253 characters
+    * uses
+      * make safe some parameters
+        * _Example:_ Application names
+  * `slugify` function
+    * sanitizes and smart truncates
+    * 's arguments
+      - first argument
+        - OPTIONAL
+        - integer -- about the -- maximum length of the slug
+      - second argument
+        - OPTIONAL
+        - boolean / enable smart truncation 
+      - last argument
+        - OPTIONAL 
+        - name / needs -- to be - slugified
 
 ## Limitations
 
-Go templates are applied on a per-field basis, and only on string fields. Here are some examples of what is **not** 
+TODO: 
+Go templates are applied on a per-fieald basis, and only on string fields
+* Here are some examples of what is **not** 
 possible with Go text templates:
 
 - Templating a boolean field.
@@ -129,7 +130,8 @@ By activating Go Templating, `{{ .metadata }}` becomes an object.
 
 ### Git Generators
 
-By activating Go Templating, `{{ .path }}` becomes an object. Therefore, some changes must be made to the Git 
+By activating Go Templating, `{{ .path }}` becomes an object
+* Therefore, some changes must be made to the Git 
 generators' templating:
 
 - `{{ path }}` becomes `{{ .path.path }}`
@@ -225,79 +227,19 @@ ApplicationSet controller provides:
 
 ## Examples
 
-### Basic Go template usage
+### Fallback value -- for -- unset parameters
 
-This example shows basic string parameter substitution.
+* use cases
+  * | some generators,
+    * parameter of a certain name might NOT ALWAYS be populated
+      * _Example:_ values generator OR git files generator
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: guestbook
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-  - list:
-      elements:
-      - cluster: engineering-dev
-        url: https://1.2.3.4
-      - cluster: engineering-prod
-        url: https://2.4.6.8
-      - cluster: finance-preprod
-        url: https://9.8.7.6
-  template:
-    metadata:
-      name: '{{.cluster}}-guestbook'
-    spec:
-      project: my-project
-      source:
-        repoURL: https://github.com/infra-team/cluster-deployments.git
-        targetRevision: HEAD
-        path: guestbook/{{.cluster}}
-      destination:
-        server: '{{.url}}'
-        namespace: guestbook
-```
+, so you need to avoid looking up a property
+that doesn't exist
 
-### Fallbacks for unset parameters
 
-For some generators, a parameter of a certain name might not always be populated (for example, with the values generator
-or the git files generator). In these cases, you can use a Go template to provide a fallback value.
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: guestbook
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-  - list:
-      elements:
-      - cluster: engineering-dev
-        url: https://kubernetes.default.svc
-      - cluster: engineering-prod
-        url: https://kubernetes.default.svc
-        nameSuffix: -my-name-suffix
-  template:
-    metadata:
-      name: '{{.cluster}}{{dig "nameSuffix" "" .}}'
-    spec:
-      project: default
-      source:
-        repoURL: https://github.com/argoproj/argo-cd.git
-        targetRevision: HEAD
-        path: applicationset/examples/list-generator/guestbook/{{.cluster}}
-      destination:
-        server: '{{.url}}'
-        namespace: guestbook
-```
-
-This ApplicationSet will produce an Application called `engineering-dev` and another called 
-`engineering-prod-my-name-suffix`.
-
-Note that unset parameters are an error, so you need to avoid looking up a property that doesn't exist. Instead, use
-template functions like `dig` to do the lookup with a default. If you prefer to have unset parameters default to zero,
-you can remove `goTemplateOptions: ["missingkey=error"]` or set it to `goTemplateOptions: ["missingkey=invalid"]`
+* use template functions / do the lookup -- with a -- default 
+  * _Example:_ `dig`
+* if you want unset parameters / fallback 0 ->
+  * remove `goTemplateOptions: ["missingkey=error"]` OR
+  * set `goTemplateOptions: ["missingkey=invalid"]`

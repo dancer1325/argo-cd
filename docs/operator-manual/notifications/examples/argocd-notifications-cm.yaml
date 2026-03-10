@@ -11,8 +11,11 @@ data:
     - when: app.status.sync.status == 'Unknown'
       send: [my-custom-template]  
 
-  # Optional 'oncePer' property ensure that notification is sent only once per specified field value
-  # E.g. following is triggered once per sync revision
+  # oncePer
+  #   OPTIONAL
+  # _Example:_ send notification 1! / sync revision
+  # Reason: application health status INTERMITTENTLY switch BETWEEN `Progressing` & `Healthy`
+  #   -> UNNECESSARILY generate MULTIPLE notifications
   trigger.on-deployed: |
     - when: app.status.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
       oncePer: app.status.sync.revision

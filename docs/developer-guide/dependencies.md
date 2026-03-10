@@ -1,16 +1,16 @@
 # Managing Dependencies
 
-## Notifications Engine (`github.com/argoproj/notifications-engine`)
-
-### Repository
-
-[notifications-engine](https://github.com/argoproj/notifications-engine)
+## [Notifications Engine](https://github.com/argoproj/notifications-engine)
 
 ### Pulling changes from `notifications-engine`
 
-After your Notifications Engine PR has been merged, ArgoCD needs to be updated to pull in the version of the notifications engine that contains your change. Here are the steps:
+TODO: 
+After your Notifications Engine PR has been merged, ArgoCD needs to be updated to pull in 
+the version of the notifications engine that contains your change
+* Here are the steps:
 
-- Retrieve the SHA hash for your commit. You will use this in the next step.
+- Retrieve the SHA hash for your commit
+  * You will use this in the next step.
 - From the `argo-cd` folder, run the following command
 
   `go get github.com/argoproj/notifications-engine@<git-commit-sha>`
@@ -30,11 +30,13 @@ After your Notifications Engine PR has been merged, ArgoCD needs to be updated t
 
 - Create an ArgoCD PR with a `chore:` type in its title for the above file changes.
 
-## Argo UI Components (`github.com/argoproj/argo-ui`)
+## [Argo UI Components](https://github.com/argoproj/argo-ui)
 ### Contributing to Argo CD UI
 
-Argo CD, along with Argo Workflows, uses shared React components from [Argo UI](https://github.com/argoproj/argo-ui). Examples of some of these components include buttons, containers, form controls, 
-and others. Although you can make changes to these files and run them locally, in order to have these changes added to the Argo CD repo, you will need to follow these steps. 
+Argo CD, along with Argo Workflows, uses shared React components from [Argo UI](https://github.com/argoproj/argo-ui)
+* Examples of some of these components include buttons, containers, form controls, 
+and others
+* Although you can make changes to these files and run them locally, in order to have these changes added to the Argo CD repo, you will need to follow these steps. 
 
 1. Fork and clone the [Argo UI repository](https://github.com/argoproj/argo-ui).
 

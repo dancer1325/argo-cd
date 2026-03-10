@@ -39,55 +39,22 @@ and the evaluation of the
 
 ## Avoid Sending Same Notification Too Often
 
-In some cases, the trigger condition might be "flapping"
-* The example below illustrates the problem.
-The trigger is supposed to generate a notification once when Argo CD application is successfully
-synchronized and healthy.
-However, the application health status might intermittently switch to `Progressing` and
-* then back to `Healthy` so the trigger might unnecessarily generate
-multiple notifications
-* The `oncePer` field configures triggers to generate the notification only when the corresponding 
-application field changes.
-The `on-deployed` trigger from the example below sends the notification only once per observed Git
-revision of the deployment repository.
+* use cases
+  * trigger's conditionS (`when`) change
+    * quickly
+    * intermittently
 
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: argocd-notifications-cm
-data:
-  # Optional 'oncePer' property ensure that notification is sent only once per specified field value
-  # E.g. following is triggered once per sync revision
-  trigger.on-deployed: |
-    when: app.status?.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
-    oncePer: app.status.sync.revision
-    send: [app-sync-succeeded]
-```
+* `oncePer` field
+  * OPTIONAL
+  * configures triggers -- to -- avoid generating MULTIPLE notificationS
 
-**Mono Repo Usage**
-
+* | [mono repos](../applicationset/Use-Cases.md#use-case-monorepos)
+TODO:
 When one repo is used to sync multiple applications, the `oncePer: app.status.sync.revision` field 
 will trigger a notification for each commit
 * For mono repos, the better approach will be using `oncePer: app.status?.operationState.syncResult.revision`
 statement
 * This way a notification will be sent only for a particular Application's revision.
-
-### oncePer
-
-The `oncePer` field is supported like as follows.
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    example.com/version: v0.1
-```
-
-```yaml
-oncePer: app.metadata.annotations["example.com/version"]
-```
 
 ## Default Triggers
 
@@ -98,7 +65,7 @@ oncePer: app.metadata.annotations["example.com/version"]
     * TODO: add the structure `notifications.argoproj.io/subscribe.on-sync-succeeded.slack` annotation
 
 
-* In this example, `slack` sends when `on-sync-status-unknown`, and `mattermost` sends when `on-sync-running` and `on-sync-succeeded`.
+* TODO: In this example, `slack` sends when `on-sync-status-unknown`, and `mattermost` sends when `on-sync-running` and `on-sync-succeeded`.
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1

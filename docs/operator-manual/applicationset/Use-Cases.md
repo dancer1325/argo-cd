@@ -40,14 +40,15 @@ See the [generators section](Generators.md) for details on each of the generator
   * == MULTIPLE Argo CD Application resources / defined | 1! Git repository
     * _Example:_ Kubernetes cluster entire state managed -- from -- 1! Git repository
 
-TODO: 
-Manifest changes merged into the Git repository should automatically deploy to the cluster.
-
 ![Monorepo diagram](../../assets/applicationset/Use-Cases/Monorepos.png)
 
-In this example, the infrastructure team maintains a Git repository containing application manifests for an Argo Workflows controller, and a Prometheus operator. Independent development teams also have added additional services they wish to deploy to the cluster.
+TODO:
+In this example, the infrastructure team maintains a Git repository containing application manifests 
+for an Argo Workflows controller, and a Prometheus operator. Independent development teams also have added additional
+services they wish to deploy to the cluster.
 
-Changes made to the Git repository -- for example, updating the version of a deployed artifact -- should automatically cause that update to be applied to the corresponding Kubernetes cluster by Argo CD.
+Changes made to the Git repository -- for example, updating the version of a deployed artifact -- should automatically
+cause that update to be applied to the corresponding Kubernetes cluster by Argo CD.
 
 The Git generator may be used to support this use case:
 

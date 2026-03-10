@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: test-appset
+spec:
+  goTemplate: true
+  goTemplateOptions: [ "missingkey=error" ]
+  template:
+    metadata:
+      name: 'hellos3-{{.name}}-{{ cat .branch | slugify 23 }}'
+      annotations:
+        label-1: '{{ cat .branch | slugify }}'
+        label-2: '{{ cat .branch | slugify 23 }}'
+        label-3: '{{ cat .branch | slugify 50 false }}'
