@@ -1,17 +1,13 @@
 # Private Repositories
 
-* steps
+* steps | SOME Git hosters
   * | your repository URL, 
     * add the suffix ".git" 
       * Reason:🧠
-        * some Git hosters require it
+        * SOME Git hosters require it
           * _Example:_ GitLab & on-premise GitLab instances
           * otherwise -> send HTTP 301 / "redirect to the repository URL suffixed with `.git`"
         * Argo CD does NOT follow these redirects
-
-TODO: where to place?
-* repositories OR repository credentials
-  * are stored | secrets
 
 ## Credentials
 
@@ -19,7 +15,7 @@ TODO: where to place?
   * configure repository credentials
     * Argo CD supports Git credentials -- via --
       * HTTPS
-      * SSH 
+      * SSH
 
 ### HTTPS Username & Password Credential
 

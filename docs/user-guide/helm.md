@@ -2,68 +2,34 @@
 
 ## Declarative
 
-You can install Helm charts through the UI, or in the declarative GitOps way.  
-Helm is [only used to inflate charts with `helm template`](../faq.md#after-deploying-my-helm-application-with-argo-cd-i-cannot-see-it-with-helm-ls-and-other-helm-commands). The lifecycle of the application is handled by Argo CD instead of Helm.
-Here is an example:
+* ways to install Helm charts
+  * -- through -- Argo CD UI
+  * -- via -- declarative GitOps way  
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: sealed-secrets
-  namespace: argocd
-spec:
-  project: default
-  source:
-    chart: sealed-secrets
-    repoURL: https://bitnami-labs.github.io/sealed-secrets
-    targetRevision: 1.16.1
-    helm:
-      releaseName: sealed-secrets
-  destination:
-    server: "https://kubernetes.default.svc"
-    namespace: kubeseal
-```
+* Argo CD 
+  * ⭐️ONLY uses Helm -- , through `helm template`, to -- [inflate charts](../faq.md#after-deploying-my-helm-application----with----argo-cd-i-can-not-see-it----through----helm-ls-or-other-helm-commands)⭐️
+    * [how to configure DECLARATIVELY -- using -- Helm](../operator-manual/declarative-setup.md#helm)
+    * [ways to provide values](#helm-value-precedence)
 
-Another example using a public OCI helm chart:
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: nginx
-spec:
-  project: default
-  source:
-    chart: nginx
-    repoURL: registry-1.docker.io/bitnamicharts  # note: the oci:// syntax is not included.
-    targetRevision: 15.9.0
-  destination:
-    name: "in-cluster"
-    namespace: nginx
-```
-
-> [!NOTE]
-> **When using Helm there are multiple ways to provide values**
->
-> Order of precedence is `parameters > valuesObject > values > valueFiles > helm repository values.yaml`. [Value precedence](./helm.md#helm-value-precedence) has a more detailed example.
-
-The [Declarative Setup section on Helm](../operator-manual/declarative-setup.md#helm) has more info about how to configure private Helm repositories and private OCI registries.
+* (application / helm-based) 's lifecycle
+  * ⭐️handled -- by -- Argo CD⭐️
+    * ❌NOT -- by -- Helm❌
 
 ## Values Files
 
-Helm has the ability to use a different, or even multiple "values.yaml" files to derive its
-parameters from. Alternate or multiple values file(s), can be specified using the `--values`
-flag. The flag can be repeated to support multiple values files:
+* --values 
+  * Helm CLI command option
+    * _Example:_ `helm someCommand --values file1 --values file2 ...`
+  * 💡ALSO valid -- as -- Argo CD CLI command option💡
+    * _Example:_ `argocd app set helm-guestbook --values values-production.yaml`
 
-```bash
-argocd app set helm-guestbook --values values-production.yaml
-```
-> [!NOTE]
-> Before `v2.6` of Argo CD, Values files must be in the same git repository as the Helm
-> chart. The files can be in a different location in which case it can be accessed using
-> a relative path relative to the root directory of the Helm chart.
-> As of `v2.6`, values files can be sourced from a separate repository than the Helm chart
-> by taking advantage of [multiple sources for Applications](./multiple_sources.md#helm-value-files-from-external-git-repository).
+* | Argo CD v2.6-,
+  * git repository | live values files (MUST be) == git repository | live Helm chart
+* | Argo CD v2.6+, 
+  * git repository | live values files (can be) != git repository | live Helm chart
+    * Reason:🧠thanks -- to -- [multiple sources for Applications](./multiple_sources.md#helm-value-files----from----external-git-repository)🧠
+    * TODO: The files can be in a different location in which case it can be accessed using
+      a relative path relative to the root directory of the Helm chart.
 
 In the declarative syntax:
 

@@ -97,17 +97,22 @@ data:
       name: stable
 ```
 
-## After deploying my Helm application with Argo CD I cannot see it with `helm ls` and other Helm commands
+## AFTER deploying my Helm application -- with -- Argo CD, I can NOT see it -- through -- `helm ls` OR OTHER `helm` commands
 
-When deploying a Helm application Argo CD is using Helm
-only as a template mechanism. It runs `helm template` and
-then deploys the resulting manifests on the cluster instead of doing `helm install`. This means that you cannot use any Helm command
-to view/verify the application. It is fully managed by Argo CD.
-Note that Argo CD supports natively some capabilities that you might miss in Helm (such as the history and rollback commands).
+rollback commands
 
-This decision was made so that Argo CD is neutral
-to all manifest generators.
-
+* Argo CD
+  * 💡is neutral -- to -- ALL manifest generators💡
+  * | deploy Helm application,
+    * steps
+      * generate -- , through `helm template` -- a manifest
+      * deploy the manifest
+        * ❌NOT -- through -- `helm install`❌
+          * -> ❌you can NOT check -- via -- any `helm` command ❌
+    * FULLY managed -- by -- Argo CD
+    * CLI vs Helm commands
+      * `argocd app history`
+      * `argocd app rollback`
 
 ## I've configured [cluster secret](./operator-manual/declarative-setup.md#clusters) but it does not show up in CLI/UI, how do I fix it?
 
