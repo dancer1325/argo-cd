@@ -22,11 +22,9 @@
     * [app-of-apps](../operator-manual/cluster-bootstrapping.md)
   * if MULTIPLE sources produce the SAME resource (== SAME `group`, `kind`, `name`, and `namespace`) -> 
     * the last source to produce the resource take precedence
+      * == resource | chat is override -- with a -- resource | Git repo
     * `RepeatedResourceWarning` is produced
-    * STILL sync the resources 
-
-TODO:
-* This provides a convenient way to override a resource from a chart with a resource from a Git repo.
+    * STILL sync the resources
 
 ## Helm value files -- from -- external Git repository
 
@@ -36,22 +34,16 @@ TODO:
 * how to configure the external Git repository / contain the value files
   * | "Application", 
     * | Values git repo, 
-      * specify `spec.sources[*].ref: ValuesGitRepoReference`
+      * specify 
+        * `spec.sources[*].ref: ValuesGitRepoReference`
+        * `spec.sources[*].path: PathToKubernetesManifests`
+          * OPTIONAL
+          * uses
+            * generate Kubernetes objects
     * | helm chart git repo,
       * specify `spec.sources[*].helm.valueFiles`
         * `$ValuesGitRepoReference` variable
           * can ONLY be used | beginning
           * == 👀Values git repo's root 👀
-TODO: 
-If the `path` field is set in the `$values` source, Argo CD will attempt to generate resources
-from the git repository
-at that URL
-* If the `path` field is not set, Argo CD will use the repository solely as a source of value files.
-
 
 * ❌NOT specify `spec.sources[*].chart`❌
-
-> [!NOTE]
-> Even when the `ref` field is configured with the `path` field, `$value` still
-> represents the root of sources with the `ref` field
-* Consequently, `valueFiles` must be specified as relative paths from the root of sources.
