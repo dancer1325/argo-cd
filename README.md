@@ -16,7 +16,8 @@
     * ⚠️force you to follow GitOps model | your Kubernetes manifests (Deployment, ConfigMaps, namespaces, ..) or environment (cluster + namespace)⚠️
       * otherwise, people MANUALLY or via scripts running `kubectl apply ...` commands
     * application deployment (specifying the target environment) & lifecycle management are
-      * automated
+      * automated/auto-pilot
+        * == AFTER push | git -> ALL done AUTOMATICALLY
       * auditable
     * developers can define & control the deployment of Kubernetes application resources -- from -- Git workflow
 
@@ -45,7 +46,7 @@
 TODO: check which one make sense
 
 1. [Awesome-Argo: A Curated List of Awesome Projects and Resources Related to Argo](https://github.com/terrytangyuan/awesome-argo)
-1. [Unveil the Secret Ingredients of Continuous Delivery at Enterprise Scale with Argo CD](https://akuity.io/blog/secret-ingredients-of-continuous-delivery-at-enterprise-scale-with-argocd/)
+1. [Unveil the Secret Ingredients of Continuous Delivery at Enterprise Scale with Argo CD](/blogs/docs/secret-ingredients-of-continuous-delivery-at-enterprise-scale-with-argocd.md)
 1. [GitOps Without Pipelines With ArgoCD Image Updater](https://youtu.be/avPUQin9kzU)
 1. [Combining Argo CD (GitOps), Crossplane (Control Plane), And KubeVela (OAM)](https://youtu.be/eEcgn_gU3SM)
 1. [How to Apply GitOps to Everything - Combining Argo CD and Crossplane](https://youtu.be/yrj4lmScKHQ)

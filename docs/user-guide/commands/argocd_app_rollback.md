@@ -1,5 +1,8 @@
 # `argocd app rollback` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/app.md)👀
+
 ## argocd app rollback
 
 Rollback application to a previous deployed version by History ID, omitted will Rollback to the previous version
