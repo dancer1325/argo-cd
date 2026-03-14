@@ -5,23 +5,41 @@
 # Argo CD - Declarative Continuous Delivery for Kubernetes
 
 * Argo CD
-  * == CD tool for Kubernetes /
-    * declarative
-      * == define the desired application state
-    * follow GitOps pattern 
-      * == Git repositories == source of truth
+  * == Kubernetes-native CD tool /
+    * 's design
+      * declarative
+        * == define the desired application state | manifests
+      * GitOps-based
+        * Git repositories -- as -- 1! source of truth
+      * [application-centric view](/blogs/docs/why-we-created-the-argo-project.md)
   * [video](https://youtu.be/0WAm0y2vLIo) 
     * TODO: 
-  * benefits
-    * ⚠️force you to follow GitOps model | your Kubernetes manifests (Deployment, ConfigMaps, namespaces, ..) or environment (cluster + namespace)⚠️
-      * otherwise, people MANUALLY or via scripts running `kubectl apply ...` commands
-    * application deployment (specifying the target environment) & lifecycle management are
-      * automated/auto-pilot
-        * == AFTER push | git -> ALL done AUTOMATICALLY
-      * auditable
-    * developers can define & control the deployment of Kubernetes application resources -- from -- Git workflow
+  * [allows](#benefits)
+    * GitOps enforcement
+    * automated continuous delivery
 
 ![Argo CD UI](docs/assets/argocd-ui.gif)
+
+## Benefits
+### GitOps enforcement
+
+* == your application Kubernetes-related manifests MUST be defined | Git
+  * _Example:_ Deployments, ConfigMaps, Services, ...
+* continuous reconciliation
+  * == live cluster state == desired state | Git
+    * self-healing
+      * OPTIONAL
+
+### Automated continuous delivery
+
+* automatic CD
+  * `git push` → ArgoCD detects → syncs AUTOMATICALLY
+  * 💡eliminates MANUAL operations💡
+    * ❌ NO
+      * `kubectl apply` commands
+      * ad-hoc deployment scripts❌
+* automatic application health validation
+* easy rollback
 
 ## Who uses Argo CD?
 

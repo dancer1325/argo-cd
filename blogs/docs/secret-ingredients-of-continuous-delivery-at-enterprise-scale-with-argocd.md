@@ -22,9 +22,12 @@ Authors: Yuan Tang (Akuity), Hong Wang (Akuity), and Alexander Matyushentsev (In
 
 # What is Argo?
 
-The Argo project is a set of Kubernetes-native tools for deploying and running jobs and applications
-* It uses GitOps paradigms such as continuous delivery and progressive delivery and enables MLOps on Kubernetes
-* It is made of 4 independent Kubernetes-native projects
+* Argo project
+  * == set of 4 (INDEPENDENT) Kubernetes-native tools 
+    * -- about --
+      * deploy jobs & applications
+      * running jobs & applications
+    * TODO: follow GitOps paradigms such as continuous delivery and progressive delivery and enables MLOps on Kubernetes
 * We see teams use different combinations of those products to solve their unique challenges
 * If you would like to share your Argo journey, please reach out to us at CNCF Argo Slack channel, we will invite you to present at our community meetings, related conferences, and meetups.
 
