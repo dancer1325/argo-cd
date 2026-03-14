@@ -7,7 +7,7 @@
   * features / 
     * AVAILABLE
       * GitOps functionality
-    * NOT AVAILABLE
+    * ❌NOT AVAILABLE❌
       - Argo CD RBAC model
       - Argo CD API
       - Argo CD Notification Controller
@@ -15,7 +15,9 @@
     * [partially available](#using)
       - Argo CD Web UI
       - Argo CD CLI
-      - Multi-tenancy (strictly GitOps based on git push permissions)
+      - Multi-tenancy 
+        - strictly GitOps
+          - == -- based on -- git push permissions
   * use cases
     - ONLY rely on 
       - Kubernetes RBAC
@@ -29,8 +31,9 @@
 ## Architecture
 
 * install fewer components
+  * == install non-HA / EACH component
 
-![Argo CD Core](../assets/argocd-core-components.png)
+    ![Argo CD Core](../assets/argocd-core-components.png)
 
 * Redis
   * STILL included here
@@ -52,6 +55,8 @@
   kubectl create namespace argocd
   kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/$ARGOCD_VERSION/manifests/core-install.yaml
   ```
+
+* [manifest](/manifests/core-install.yaml)
 
 ## Using
 

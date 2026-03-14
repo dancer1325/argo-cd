@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: child-app
+  namespace: namespace-b
+  annotations:
+    # Argo CD instance / manages it
+    argocd.argoproj.io/managed-by-url: "http://localhost:8081"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/YOUR-ORG/my-apps-repo.git
+    targetRevision: HEAD
+    path: path-to-child-app
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: namespace-b
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true

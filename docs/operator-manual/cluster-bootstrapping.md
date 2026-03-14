@@ -37,6 +37,11 @@ So no Helm templating is required.
 ## App Of Apps Pattern (Alternative)
 
 * == app / creates OTHER apps / create OTHER apps / ...
+* 's architecture
+  * primary Argo CD instance
+    * creates a parent Application / deploy child Applications
+  * secondary Argo CD instance
+    * manage the child Applications
 * allows
     * declaratively manage a group of apps / deployed & configured in concert
 

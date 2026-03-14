@@ -1,7 +1,22 @@
 # Argo CD Installation Manifests
 
-## common installationS
-### -- via -- 1! step
+## Multi-Tenant
+
+* MOST common way
+* use cases
+  * \>1 application developer teams /
+    * maintained -- by a -- platform team
+    * can access Argo CD's API server -- via --
+      * Web UI OR
+      * [`argocd` CLI](/docs/user-guide/commands/argocd_login.md)
+
+### Non-High Availability
+
+* 👀recommendations👀
+  * use | testing & demos
+  * ❌NOT use | production ❌
+
+#### -- via -- 1! step
 
 * [install.yaml](install.yaml)
   * standard Argo CD installation
@@ -19,7 +34,7 @@
 * steps
   * `kubectl apply -f install.yaml`
 
-### -- via -- 2 steps
+#### -- via -- 2 steps
 
 * [namespace-install.yaml](namespace-install.yaml) 
   * ❌NOT include ArgoCD CRDs❌
@@ -44,7 +59,10 @@
   * `kubectl apply -f manifests/crds`
   * `kubectl apply -n someNameSpace -f namespace-install.yaml`
 
-## High Availability
+### High Availability
+
+* recommendations
+  * use | production
 
 * [ha/install.yaml](ha/install.yaml)
   * == [install.yaml](install.yaml) + MULTIPLE replicas / supported components
@@ -59,5 +77,6 @@
       * `spec.replicas` | `kind: Deployment`
 
 ## Core installation
+
 * [manifest](core-install.yaml)
 * [guide](/docs/operator-manual/core.md)
