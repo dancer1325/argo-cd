@@ -13,33 +13,12 @@
         * Git repositories -- as -- 1! source of truth
       * [application-centric view](/blogs/docs/why-we-created-the-argo-project.md)
   * [video](https://youtu.be/0WAm0y2vLIo) 
-    * TODO: 
-  * [allows](#benefits)
+    * TODO: 0:32
+  * [allows](docs/index.md)
     * GitOps enforcement
     * automated continuous delivery
 
 ![Argo CD UI](docs/assets/argocd-ui.gif)
-
-## Benefits
-### GitOps enforcement
-
-* == your application Kubernetes-related manifests MUST be defined | Git
-  * _Example:_ Deployments, ConfigMaps, Services, ...
-* continuous reconciliation
-  * == live cluster state == desired state | Git
-    * self-healing
-      * OPTIONAL
-
-### Automated continuous delivery
-
-* automatic CD
-  * `git push` → ArgoCD detects → syncs AUTOMATICALLY
-  * 💡eliminates MANUAL operations💡
-    * ❌ NO
-      * `kubectl apply` commands
-      * ad-hoc deployment scripts❌
-* automatic application health validation
-* easy rollback
 
 ## Who uses Argo CD?
 
