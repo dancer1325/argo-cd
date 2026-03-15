@@ -1,125 +1,106 @@
 # Git Webhook Configuration
 
-## Overview
+* goal
+  * how to configure Application Git webhook | some git provider
+    * ❌!= [how to configure ApplicationSet Git webhook](applicationset/Generators-Git.md#webhook-configuration)❌
 
-Argo CD polls Git repositories every three minutes to detect changes to the manifests. To eliminate
-this delay from polling, the API server can be configured to receive webhook events. Argo CD supports
-Git webhook notifications from GitHub, GitLab, Bitbucket, Bitbucket Server, Azure DevOps and Gogs. The following explains how to configure
-a Git webhook for GitHub, but the same process should be applicable to other providers.
+* Argo CD 
+  * supports
+    * 💡Git webhook notifications💡
+      * requirements
+        * configure API server / receive webhook events
+      * ⚠️vs Argo CD polls Git repositories⚠️
+        * NO delay
+          * Reason:🧠poll is in intervals🧠
+      * -- from -- 
+        * GitHub
+        * GitLab
+        * Bitbucket
+        * Bitbucket Server
+        * Azure DevOps
+        * Gogs
 
-Application Sets use a separate webhook configuration for generating applications. [Webhook support for the Git Generator can be found here](applicationset/Generators-Git.md#webhook-configuration).
+* webhook handler 
+  * ❌if branch name == tag name -> NOT differentiate branch event -- & -- tag event ❌
 
-> [!NOTE]
-> The webhook handler does not differentiate between branch events and tag events where the branch and tag names are
-> the same. A hook event for a push to branch `x` will trigger a refresh for an app pointing at the same repo with
-> `targetRevision: refs/tags/x`.
+* TODO: A hook event for a push to branch `x` will trigger a refresh for an app pointing at the same repo with `targetRevision: refs/tags/x`
 
-## 1. Create The WebHook In The Git Provider
+## steps
 
-In your Git provider, navigate to the settings page where webhooks can be configured. The payload
-URL configured in the Git provider should use the `/api/webhook` endpoint of your Argo CD instance
-(e.g. `https://argocd.example.com/api/webhook`). If you wish to use a shared secret, input an
-arbitrary value in the secret. This value will be used when configuring the webhook in the next step.
+### 1. Create the WebHook | Git Provider
 
-To prevent DDoS attacks with unauthenticated webhook events (the `/api/webhook` endpoint currently lacks rate limiting protection), it is recommended to limit the payload size. You can achieve this by configuring the `argocd-cm` ConfigMap with the `webhook.maxPayloadSizeMB` attribute. The default value is 50MB.
+* | your Git provider,
+  * settings > webhooks
+    * set 
+      * payload URL == your Argo CD instance's "/api/webhook" endpoint
+        * _Example:_ https://argocd.example.com/api/webhook
+      * secret
+        * 👀OPTIONAL👀
+          * Reason:🧠ONLY functionality: ArgoCD checks desired state vs live state
+            * == NOT take in account webhook payload🧠
+          * ⚠️if Argo CD is publicly accessible -> recommended to configure a webhook secret⚠️
+            * Reason:🧠prevent a DDoS attack🧠
+        * if you specify -> you need to configure [step 2](#2-configure-the-webhook-secret--argo-cd-optional)
 
-### Github
+* | "argocd-cm" ConfigMap,
+  * specify `data.webhook.maxPayloadSizeMB` -- based on -- your use case
+    * == limit the payload size
+      * Reason:🧠
+        * "/api/webhook" endpoint lacks rate limiting protection
+        * prevent DDoS attacks -- against -- unauthenticated webhook events🧠
+    * by default, 50MB
+
+#### Github
+
+* ADDITIONAL steps,
+  * | your GitHub,
+    * settings > webhooks
+      * set "Content type" == "application/json"
+        * Reason:🧠"application/x-www-form-urlencoded" (default value) is NOT supported🧠
 
 ![Add Webhook](../assets/webhook-config.png "Add Webhook")
 
-> [!NOTE]
-> When creating the webhook in GitHub, the "Content type" needs to be set to "application/json". The default value "application/x-www-form-urlencoded" is not supported by the library used to handle the hooks
+#### Azure DevOps
 
-### Azure DevOps
+* OPTIONAL ADDITIONAL steps
+  * | your Azure DevOps,
+    * settings > webhooks
+      * set "basic authentication username" & "basic authentication password"
 
 ![Add Webhook](../assets/azure-devops-webhook-config.png "Add Webhook")
 
-Azure DevOps optionally supports securing the webhook using basic authentication. To use it, specify the username and password in the webhook configuration and configure the same username/password in `argocd-secret` Kubernetes secret in
-`webhook.azuredevops.username` and `webhook.azuredevops.password` keys.
+### 2. Configure the WebHook secret | Argo CD (OPTIONAL)
 
-## 2. Configure Argo CD With The WebHook Secret (Optional)
+* 👀OPTIONAL👀
+* depend -- on -- you configured | [step 1](#1-create-the-webhook--git-provider)
 
-Configuring a webhook shared secret is optional, since Argo CD will still refresh applications
-related to the Git repository, even with unauthenticated webhook events. This is safe to do since
-the contents of webhook payloads are considered untrusted, and will only result in a refresh of the
-application (a process which already occurs at three-minute intervals). If Argo CD is publicly
-accessible, then configuring a webhook secret is recommended to prevent a DDoS attack.
+* steps
+  * | "argocd-secret" Kubernetes secret's `stringData`
+    * configure -- based on the -- chosen Git provider's configured | step 1
+    * ⚠️if you want to configure | ANOTHER Kubernetes secret -> [here](user-management/index.md#alternative)⚠️
+    * vs Kubernetes secret's `data`
+      * PREVIOUS step: encode the values base64  
 
-In the `argocd-secret` Kubernetes secret, configure one of the following keys with the Git
-provider's webhook secret configured in step 1.
-
-| Provider        | K8s Secret Key                   |
-|-----------------|----------------------------------|
-| GitHub          | `webhook.github.secret`          |
-| GitLab          | `webhook.gitlab.secret`          |
-| BitBucket       | `webhook.bitbucket.uuid`         |
-| BitBucketServer | `webhook.bitbucketserver.secret` |
-| Gogs            | `webhook.gogs.secret`            |
-| Azure DevOps    | `webhook.azuredevops.username`   |
-|                 | `webhook.azuredevops.password`   |
-
-Edit the Argo CD Kubernetes secret:
-
-```bash
-kubectl edit secret argocd-secret -n argocd
-```
-
-TIP: for ease of entering secrets, Kubernetes supports inputting secrets in the `stringData` field,
-which saves you the trouble of base64 encoding the values and copying it to the `data` field.
-Simply copy the shared webhook secret created in step 1, to the corresponding
-GitHub/GitLab/BitBucket key under the `stringData` field:
-
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: argocd-secret
-  namespace: argocd
-type: Opaque
-data:
-...
-
-stringData:
-  # github webhook secret
-  webhook.github.secret: shhhh! it's a GitHub secret
-
-  # gitlab webhook secret
-  webhook.gitlab.secret: shhhh! it's a GitLab secret
-
-  # bitbucket webhook secret
-  webhook.bitbucket.uuid: your-bitbucket-uuid
-
-  # bitbucket server webhook secret
-  webhook.bitbucketserver.secret: shhhh! it's a Bitbucket server secret
-
-  # gogs server webhook secret
-  webhook.gogs.secret: shhhh! it's a gogs server secret
-
-  # azuredevops username and password
-  webhook.azuredevops.username: admin
-  webhook.azuredevops.password: secret-password
-```
-
-After saving, the changes should take effect automatically.
-
-### Alternative
-
-If you want to store webhook data in **another** Kubernetes `Secret`, instead of `argocd-secret`. ArgoCD knows to check the keys under `data` in your Kubernetes `Secret` starts with `$`, then your Kubernetes `Secret` name and `:` (colon).
-
-Syntax: `$<k8s_secret_name>:<a_key_in_that_k8s_secret>`
-
-> [!NOTE]
-> Secret must have label `app.kubernetes.io/part-of: argocd`
-
-For more information refer to the corresponding section in the [User Management Documentation](user-management/index.md#alternative).
+| Provider        | K8s Secret Key                   | K8s Secret Key     |
+|-----------------|----------------------------------|--------------------|
+| GitHub          | `webhook.github.secret`          | specified \| step1 | 
+| GitLab          | `webhook.gitlab.secret`          | specified \| step1 |
+| BitBucket       | `webhook.bitbucket.uuid`         | specified \| step1 |
+| BitBucketServer | `webhook.bitbucketserver.secret` | specified \| step1 |
+| Gogs            | `webhook.gogs.secret`            | specified \| step1 |
+| Azure DevOps    | `webhook.azuredevops.username`   | specified \| step1 |
+|                 | `webhook.azuredevops.password`   | specified \| step1 |
 
 ## Special handling for BitBucket Cloud
+
+TODO: 
 BitBucket does not include the list of changed files in the webhook request body.
 This prevents the [Manifest Paths Annotation](high_availability.md#manifest-paths-annotation) feature from working with repositories hosted on BitBucket Cloud.
 BitBucket provides the `diffstat` API to determine the list of changed files between two commits.
 To address the missing changed files list in the webhook, the Argo CD webhook handler makes an API callback to the originating server.
 To prevent Server-side request forgery (SSRF) attacks, Argo CD server supports the callback mechanism only for encrypted webhook requests.
-The incoming webhook must include `X-Hook-UUID` request header. The corresponding UUID must be provided as `webhook.bitbucket.uuid` in `argocd-secret` for verification.
+The incoming webhook must include `X-Hook-UUID` request header
+* The corresponding UUID must be provided as `webhook.bitbucket.uuid` in `argocd-secret` for verification.
 The callback mechanism supports both public and private repositories on BitBucket Cloud.
 For public repositories, the Argo CD webhook handler uses a no-auth client for the API callback.
 For private repositories, the Argo CD webhook handler searches for a valid repository OAuth token for the HTTP/HTTPS URL.

@@ -1,12 +1,7 @@
 # Core Concepts
 
 * requirements
-  * knowledge about
-    * Git
-    * Docker
-    * Kubernetes
-    * Continuous Delivery
-    * GitOps concepts 
+  * [here](understand_the_basics.md)
 
 * ArgoCD main concepts
   * **Application**

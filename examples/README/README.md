@@ -1,12 +1,8 @@
 # Kubernetes-native CD tool /
 ## 's design
-### declarative
-
-* [here](declarative-vs-imperative.md)
-
 ### GitOps-based
 
-* == Git repositories -- as -- 1! source of truth
+#### Git repositories -- as -- 1! source of truth
   * declared | [Argo CD's Application](simple-application.yaml)
 
     ```yaml
@@ -22,12 +18,13 @@
     
     # NO MANUAL cluster operations 
     ```
+#### declarative
+
+* [here](declarative-vs-imperative.md)
 
 ### application-centric view
-TODO:
 
-# allows
-## GitOps enforcement
-TODO:
-## automated continuous delivery
-TODO:
+* == ALL Kubernetes objects grouped -- based on -- Argo CD's Application
+  * != namespace-view OR cluster-view
+
+* TODO: link to simple case

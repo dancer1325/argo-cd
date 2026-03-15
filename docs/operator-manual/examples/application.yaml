@@ -19,9 +19,26 @@ spec:
 
   # Source of the application manifests
   source:
-    repoURL: https://github.com/argoproj/argocd-example-apps.git  # Can point to either a Helm chart repo or a git repo.
-    targetRevision: HEAD  # For Helm, this refers to the chart version.
-    path: guestbook  # This has no meaning for Helm charts pulled directly from a Helm repo instead of git.
+    # ALLOWED values
+    #   1. Helm chart repo
+    #   2. git repo
+    repoURL: https://github.com/argoproj/argocd-example-apps.git
+
+    # == source's revision | sync the application
+    # ALLOWED values
+    #   1. if repoURL == Helm chart repo -> == chart's version
+    #   2. if repoURL == git repo,
+    #     commit sha
+    #     tag name
+    #     branch name
+    #     HEAD
+    #       == HEAD itself
+    #       default one
+    targetRevision: HEAD
+
+    # ❌1. if repoURL == Helm chart repo -> NOT used❌
+    #   2. if repoURL == Helm chart repo -> relative path | repoURL
+    path: guestbook
 
     # helm specific config
     chart: chart-name  # Set this when pulling directly from a Helm repo. DO NOT set for git-hosted Helm charts.

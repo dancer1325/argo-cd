@@ -7,16 +7,13 @@
 * Argo CD
   * == Kubernetes-native CD tool /
     * 's design
-      * declarative
-        * == define the desired application state | manifests
-      * GitOps-based
+      * [GitOps-based](https://opengitops.dev/)
         * Git repositories -- as -- 1! source of truth
+        * declarative
+          * == define the desired application state | manifests
       * [application-centric view](/blogs/docs/why-we-created-the-argo-project.md)
   * [video](https://youtu.be/0WAm0y2vLIo) 
     * TODO: 0:32
-  * [allows](docs/index.md)
-    * GitOps enforcement
-    * automated continuous delivery
 
 ![Argo CD UI](docs/assets/argocd-ui.gif)
 

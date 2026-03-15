@@ -4,7 +4,7 @@
 
 TODO: check if to refactor
 
-## How it works
+## how does it work?
 
 * Application deployments
   * can track updates |
@@ -15,10 +15,6 @@ TODO: check if to refactor
 
 * [demo video](https://youtu.be/aWDIQMbp1cc?t=1m4s)
   * TODO:
-
-## Architecture
-
-* [here](operator-manual/architecture.md)
 
 ## Features
 
@@ -56,25 +52,3 @@ TODO: check if to refactor
   * [Prometheus metrics](operator-manual/metrics.md)
   * Parameter overrides
     * -- for -- overriding helm parameters | Git
-
-
-## Benefits
-### GitOps enforcement
-
-* == your application Kubernetes-related manifests MUST be defined | Git
-  * _Example:_ Deployments, ConfigMaps, Services, ...
-* continuous reconciliation
-  * == live cluster state == desired state | Git
-    * self-healing
-      * OPTIONAL
-
-### Automated continuous delivery
-
-* automatic CD
-  * `git push` → ArgoCD detects → syncs AUTOMATICALLY
-  * 💡eliminates MANUAL operations💡
-    * ❌ NO
-      * `kubectl apply` commands
-      * ad-hoc deployment scripts❌
-* automatic application health validation
-* easy rollback

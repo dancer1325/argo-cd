@@ -152,20 +152,38 @@ the `application.instanceLabelKey` value in the `argocd-cm`. We recommend that y
 
 See [#1482](https://github.com/argoproj/argo-cd/issues/1482).
 
-## How often does Argo CD check for changes to my Git or Helm repository ?
+## How often does Argo CD check for changes | Git OR Helm repository ?
 
-By default, Argo CD checks (polls) Git repositories every 3 minutes to detect changes.
-This default interval is calculated as 120 seconds + up to 60 seconds of jitter (a small random delay to avoid simultaneous polling). You can customize this behavior by updating the following keys in the `argocd-cm` ConfigMap:
-```yaml
-timeout.reconciliation: 120s
-timeout.reconciliation.jitter: 60s 
-```
-During each polling cycle, Argo CD checks whether your tracked repositories have changed. If changes are found:
-- Applications with auto-sync enabled will automatically sync to match the new state.
-- Applications without auto-sync will simply be marked as OutOfSync in the UI.
+* frequency / Argo CD poll changes -- from -- Git OR helm repository
+  * == `data.timeout.reconciliation` + `data.timeout.reconciliation.jitter`
+    * by default, EACH 3' 
+    * _Example:_ [here](/docs/operator-manual/examples/argocd-cm.yaml)
+  * specified | "argocd-cm" ConfigMap,
+    * `data.timeout.reconciliation`
+      * ⚠️if you set 0 -> disables AUTOMATIC polling⚠️
+        * requirements    
+          * configure `ARGOCD_DEFAULT_CACHE_EXPIRATION`
+        * -> use ANOTHER approachways / Argo CD detect changes
+          * trigger -- through -- webhooks TODO:
+          * manual refresh
+        * ❌NOT recommended❌
+          * Reason: 🧠 
+            * failure of webhooks -- due to -- network issues
+            * misconfiguration🧠
+    * `data.timeout.reconciliation.jitter`
 
-Setting `timeout.reconciliation` to 0 completely disables automatic polling. In that case, Argo CD will only detect changes when triggered through webhooks or a manual refresh. When setting it to 0, it may also be required to configure ARGOCD_DEFAULT_CACHE_EXPIRATION.
-However, setting this value to 0 is not recommended for several reasons such as failure of webhooks due to network issues, misconfiguration etc. If you are using webhooks and are interested in improving Argo CD performance / resource consumption, you can set `timeout.reconciliation` to a lower-frequency interval to reduce the frequency of explicit polling, for example `15m`, `1h` or other interval that is appropriate for your case. 
+* ⭐️ways / Argo CD detect changes -- from -- Git OR helm repository ⭐️
+  * Argo CD poll configuration
+  * [webhooks](operator-manual/webhook.md)
+  * MANUAL refresh
+    * -- via -- CLI
+      * `--refresh` 
+        * `argocd app get APPNAME --refresh`
+    * -- via -- Argo CD UI
+
+* recommendations
+  * if you set Argo CD poll + Git webhook -> set `timeout.reconciliation` = low (_Example:_ `15m`, `1h`)
+    * Reason:🧠improve Argo CD performance / resource consumption🧠
 
 ## Why is my ArgoCD application `Out Of Sync` when there are no actual changes to the resource limits (or other fields with unit values)?
 

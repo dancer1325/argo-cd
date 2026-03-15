@@ -136,5 +136,7 @@ which is controlled by `--self-heal-timeout-seconds` flag of `argocd-application
 * Automatic sync will not reattempt a sync if the previous sync attempt against the same commit-SHA
   and parameters had failed.
 
-* Rollback cannot be performed against an application with automated sync enabled.
-* The automatic sync interval is determined by [the `timeout.reconciliation` value in the `argocd-cm` ConfigMap](../faq.md#how-often-does-argo-cd-check-for-changes-to-my-git-or-helm-repository), which defaults to `120s` with added jitter of `60s` for a maximum period of 3 minutes.
+* automated sync
+  * ❌if it's enabled -> NOT possible to perform a Rollback❌
+  * automatic sync interval
+    * determined -- by -- [`timeout.reconciliation` value | `argocd-cm` ConfigMap](../faq.md#how-often-does-argo-cd-check-for-changes--git-or-helm-repository-)
