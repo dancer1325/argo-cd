@@ -2064,395 +2064,403 @@ func printTreeViewDetailed(nodeMapping map[string]argoappv1.ResourceNode, parent
 
 // NewApplicationSyncCommand returns a new instance of an `argocd app sync` command
 # func NewApplicationSyncCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {
-	var (
-		revision                  string
-		revisions                 []string
-		sourcePositions           []int64
-		sourceNames               []string
-		resources                 []string
-		labels                    []string
-		selector                  string
-		prune                     bool
-		dryRun                    bool
-		timeout                   uint
-		strategy                  string
-		force                     bool
-		replace                   bool
-		serverSideApply           bool
-		applyOutOfSyncOnly        bool
-		async                     bool
-		retryLimit                int64
-		retryRefresh              bool
-		retryBackoffDuration      time.Duration
-		retryBackoffMaxDuration   time.Duration
-		retryBackoffFactor        int64
-		local                     string
-		localRepoRoot             string
-		infos                     []string
-		diffChanges               bool
-		diffChangesConfirm        bool
-		projects                  []string
-		output                    string
-		appNamespace              string
-		ignoreNormalizerOpts      normalizers.IgnoreNormalizerOpts
-		serverSideDiffConcurrency int
-		serverSideDiffMaxBatchKB  int
-	)
-	command := &cobra.Command{
-		Use:   "sync [APPNAME... | -l selector | --project project-name]",
-		Short: "Sync an application to its target state",
-		Example: `  # Sync an app
-  argocd app sync my-app
+* options
 
-  # Sync multiples apps
-  argocd app sync my-app other-app
+	```
+		var (
+			revision                  string
+			revisions                 []string
+			sourcePositions           []int64
+			sourceNames               []string
+			resources                 []string
+			labels                    []string
+			selector                  string
+			prune                     bool
+			dryRun                    bool
+			timeout                   uint
+			strategy                  string
+			force                     bool
+			replace                   bool
+			serverSideApply           bool
+			applyOutOfSyncOnly        bool
+			async                     bool
+			retryLimit                int64
+			retryRefresh              bool
+			retryBackoffDuration      time.Duration
+			retryBackoffMaxDuration   time.Duration
+			retryBackoffFactor        int64
+			local                     string
+			localRepoRoot             string
+			infos                     []string
+			diffChanges               bool
+			diffChangesConfirm        bool
+			projects                  []string
+			output                    string
+			appNamespace              string
+			ignoreNormalizerOpts      normalizers.IgnoreNormalizerOpts
+			serverSideDiffConcurrency int
+			serverSideDiffMaxBatchKB  int
+		)
+	```
 
-  # Sync apps by label, in this example we sync apps that are children of another app (aka app-of-apps)
-  argocd app sync -l app.kubernetes.io/instance=my-app
-  argocd app sync -l app.kubernetes.io/instance!=my-app
-  argocd app sync -l app.kubernetes.io/instance
-  argocd app sync -l '!app.kubernetes.io/instance'
-  argocd app sync -l 'app.kubernetes.io/instance notin (my-app,other-app)'
+* `sync [APPNAME... | -l selector | --project project-name]`
+  * == `argocd app sync [APPNAME... | -l selector | --project project-name]`
 
-  # Sync a multi-source application for specific revision of specific sources
-  argocd app sync my-app --revisions 0.0.1 --source-positions 1 --revisions 0.0.2 --source-positions 2
-  argocd app sync my-app --revisions 0.0.1 --source-names my-chart --revisions 0.0.2 --source-names my-values
+* allows
+  * sync an application -- to -- its target state
+      
+        Example: `  # Sync an app
+      argocd app sync my-app
 
-  # Sync a specific resource
-  # Resource should be formatted as GROUP:KIND:NAME. If no GROUP is specified then :KIND:NAME
-  argocd app sync my-app --resource :Service:my-service
-  argocd app sync my-app --resource argoproj.io:Rollout:my-rollout
-  argocd app sync my-app --resource '!apps:Deployment:my-service'
-  argocd app sync my-app --resource apps:Deployment:my-service --resource :Service:my-service
-  argocd app sync my-app --resource '!*:Service:*'
-  # Specify namespace if the application has resources with the same name in different namespaces
-  argocd app sync my-app --resource argoproj.io:Rollout:my-namespace/my-rollout`,
-		Run: func(c *cobra.Command, args []string) {
-			ctx := c.Context()
-			if len(args) == 0 && selector == "" && len(projects) == 0 {
-				c.HelpFunc()(c, args)
-				os.Exit(1)
-			}
-			if len(args) > 1 && selector != "" {
-				log.Fatal("Cannot use selector option when application name(s) passed as argument(s)")
-			}
+      # Sync multiples apps
+      argocd app sync my-app other-app
 
-			if len(args) != 1 && (len(revisions) > 0 || len(sourcePositions) > 0) {
-				log.Fatal("Cannot use --revisions and --source-positions options when 0 or more than 1 application names are passed as argument(s)")
-			}
+      # Sync apps by label, in this example we sync apps that are children of another app (aka app-of-apps)
+      argocd app sync -l app.kubernetes.io/instance=my-app
+      argocd app sync -l app.kubernetes.io/instance!=my-app
+      argocd app sync -l app.kubernetes.io/instance
+      argocd app sync -l '!app.kubernetes.io/instance'
+      argocd app sync -l 'app.kubernetes.io/instance notin (my-app,other-app)'
 
-			if len(args) != 1 && (len(revisions) > 0 || len(sourceNames) > 0) {
-				log.Fatal("Cannot use --revisions and --source-names options when 0 or more than 1 application names are passed as argument(s)")
-			}
+      # Sync a multi-source application for specific revision of specific sources
+      argocd app sync my-app --revisions 0.0.1 --source-positions 1 --revisions 0.0.2 --source-positions 2
+      argocd app sync my-app --revisions 0.0.1 --source-names my-chart --revisions 0.0.2 --source-names my-values
 
-			if len(sourceNames) > 0 && len(sourcePositions) > 0 {
-				log.Fatal("Only one of source-positions and source-names can be specified.")
-			}
+      # Sync a specific resource
+      # Resource should be formatted as GROUP:KIND:NAME. If no GROUP is specified then :KIND:NAME
+      argocd app sync my-app --resource :Service:my-service
+      argocd app sync my-app --resource argoproj.io:Rollout:my-rollout
+      argocd app sync my-app --resource '!apps:Deployment:my-service'
+      argocd app sync my-app --resource apps:Deployment:my-service --resource :Service:my-service
+      argocd app sync my-app --resource '!*:Service:*'
+      # Specify namespace if the application has resources with the same name in different namespaces
+      argocd app sync my-app --resource argoproj.io:Rollout:my-namespace/my-rollout`,
+        Run: func(c *cobra.Command, args []string) {
+            ctx := c.Context()
+            if len(args) == 0 && selector == "" && len(projects) == 0 {
+                c.HelpFunc()(c, args)
+                os.Exit(1)
+            }
+            if len(args) > 1 && selector != "" {
+                log.Fatal("Cannot use selector option when application name(s) passed as argument(s)")
+            }
 
-			if len(sourcePositions) > 0 && len(revisions) != len(sourcePositions) {
-				log.Fatal("While using --revisions and --source-positions, length of values for both flags should be same.")
-			}
+            if len(args) != 1 && (len(revisions) > 0 || len(sourcePositions) > 0) {
+                log.Fatal("Cannot use --revisions and --source-positions options when 0 or more than 1 application names are passed as argument(s)")
+            }
 
-			if len(sourceNames) > 0 && len(revisions) != len(sourceNames) {
-				log.Fatal("While using --revisions and --source-names, length of values for both flags should be same.")
-			}
+            if len(args) != 1 && (len(revisions) > 0 || len(sourceNames) > 0) {
+                log.Fatal("Cannot use --revisions and --source-names options when 0 or more than 1 application names are passed as argument(s)")
+            }
 
-			for _, pos := range sourcePositions {
-				if pos <= 0 {
-					log.Fatal("source-position cannot be less than or equal to 0, Counting starts at 1")
-				}
-			}
+            if len(sourceNames) > 0 && len(sourcePositions) > 0 {
+                log.Fatal("Only one of source-positions and source-names can be specified.")
+            }
 
-			acdClient := headless.NewClientOrDie(clientOpts, c)
-			conn, appIf := acdClient.NewApplicationClientOrDie()
-			defer utilio.Close(conn)
+            if len(sourcePositions) > 0 && len(revisions) != len(sourcePositions) {
+                log.Fatal("While using --revisions and --source-positions, length of values for both flags should be same.")
+            }
 
-			selectedLabels, err := label.Parse(labels)
-			errors.CheckError(err)
+            if len(sourceNames) > 0 && len(revisions) != len(sourceNames) {
+                log.Fatal("While using --revisions and --source-names, length of values for both flags should be same.")
+            }
 
-			if len(args) == 1 && len(sourceNames) > 0 {
-				appName, _ := argo.ParseFromQualifiedName(args[0], appNamespace)
-				app, err := appIf.Get(context.Background(), &application.ApplicationQuery{Name: &appName})
-				errors.CheckError(err)
+            for _, pos := range sourcePositions {
+                if pos <= 0 {
+                    log.Fatal("source-position cannot be less than or equal to 0, Counting starts at 1")
+                }
+            }
 
-				sourceNameToPosition := getSourceNameToPositionMap(app)
+            acdClient := headless.NewClientOrDie(clientOpts, c)
+            conn, appIf := acdClient.NewApplicationClientOrDie()
+            defer utilio.Close(conn)
 
-				for _, name := range sourceNames {
-					pos, ok := sourceNameToPosition[name]
-					if !ok {
-						log.Fatalf("Unknown source name '%s'", name)
-					}
-					sourcePositions = append(sourcePositions, pos)
-				}
-			}
+            selectedLabels, err := label.Parse(labels)
+            errors.CheckError(err)
 
-			appNames := args
-			if selector != "" || len(projects) > 0 {
-				list, err := appIf.List(ctx, &application.ApplicationQuery{
-					Selector:     new(selector),
-					AppNamespace: &appNamespace,
-					Projects:     projects,
-				})
-				errors.CheckError(err)
+            if len(args) == 1 && len(sourceNames) > 0 {
+                appName, _ := argo.ParseFromQualifiedName(args[0], appNamespace)
+                app, err := appIf.Get(context.Background(), &application.ApplicationQuery{Name: &appName})
+                errors.CheckError(err)
 
-				// unlike list, we'd want to fail if nothing was found
-				if len(list.Items) == 0 {
-					errMsg := "No matching apps found for filter:"
-					if selector != "" {
-						errMsg += " selector " + selector
-					}
-					if len(projects) != 0 {
-						errMsg += fmt.Sprintf(" projects %v", projects)
-					}
-					log.Fatal(errMsg)
-				}
+                sourceNameToPosition := getSourceNameToPositionMap(app)
 
-				for _, i := range list.Items {
-					appNames = append(appNames, i.QualifiedName())
-				}
-			}
+                for _, name := range sourceNames {
+                    pos, ok := sourceNameToPosition[name]
+                    if !ok {
+                        log.Fatalf("Unknown source name '%s'", name)
+                    }
+                    sourcePositions = append(sourcePositions, pos)
+                }
+            }
 
-			for _, appQualifiedName := range appNames {
-				// Construct QualifiedName
-				if appNamespace != "" && !strings.Contains(appQualifiedName, "/") {
-					appQualifiedName = appNamespace + "/" + appQualifiedName
-				}
-				appName, appNs := argo.ParseFromQualifiedName(appQualifiedName, "")
+            appNames := args
+            if selector != "" || len(projects) > 0 {
+                list, err := appIf.List(ctx, &application.ApplicationQuery{
+                    Selector:     new(selector),
+                    AppNamespace: &appNamespace,
+                    Projects:     projects,
+                })
+                errors.CheckError(err)
 
-				if len(selectedLabels) > 0 {
-					q := application.ApplicationManifestQuery{
-						Name:            &appName,
-						AppNamespace:    &appNs,
-						Revision:        &revision,
-						Revisions:       revisions,
-						SourcePositions: sourcePositions,
-					}
+                // unlike list, we'd want to fail if nothing was found
+                if len(list.Items) == 0 {
+                    errMsg := "No matching apps found for filter:"
+                    if selector != "" {
+                        errMsg += " selector " + selector
+                    }
+                    if len(projects) != 0 {
+                        errMsg += fmt.Sprintf(" projects %v", projects)
+                    }
+                    log.Fatal(errMsg)
+                }
 
-					res, err := appIf.GetManifests(ctx, &q)
-					if err != nil {
-						log.Fatal(err)
-					}
+                for _, i := range list.Items {
+                    appNames = append(appNames, i.QualifiedName())
+                }
+            }
 
-					fmt.Println("The name of the app is ", appName)
+            for _, appQualifiedName := range appNames {
+                // Construct QualifiedName
+                if appNamespace != "" && !strings.Contains(appQualifiedName, "/") {
+                    appQualifiedName = appNamespace + "/" + appQualifiedName
+                }
+                appName, appNs := argo.ParseFromQualifiedName(appQualifiedName, "")
 
-					for _, mfst := range res.Manifests {
-						obj, err := argoappv1.UnmarshalToUnstructured(mfst)
-						errors.CheckError(err)
-						for key, selectedValue := range selectedLabels {
-							if objectValue, ok := obj.GetLabels()[key]; ok && selectedValue == objectValue {
-								gvk := obj.GroupVersionKind()
-								resources = append(resources, fmt.Sprintf("%s:%s:%s", gvk.Group, gvk.Kind, obj.GetName()))
-							}
-						}
-					}
+                if len(selectedLabels) > 0 {
+                    q := application.ApplicationManifestQuery{
+                        Name:            &appName,
+                        AppNamespace:    &appNs,
+                        Revision:        &revision,
+                        Revisions:       revisions,
+                        SourcePositions: sourcePositions,
+                    }
 
-					// If labels are provided and none are found return error only if specific resources were also not
-					// specified.
-					if len(resources) == 0 {
-						log.Fatalf("No matching resources found for labels: %v", labels)
-						return
-					}
-				}
+                    res, err := appIf.GetManifests(ctx, &q)
+                    if err != nil {
+                        log.Fatal(err)
+                    }
 
-				selectedResources, err := parseSelectedResources(resources)
-				errors.CheckError(err)
+                    fmt.Println("The name of the app is ", appName)
 
-				var localObjsStrings []string
-				diffOption := &DifferenceOption{}
+                    for _, mfst := range res.Manifests {
+                        obj, err := argoappv1.UnmarshalToUnstructured(mfst)
+                        errors.CheckError(err)
+                        for key, selectedValue := range selectedLabels {
+                            if objectValue, ok := obj.GetLabels()[key]; ok && selectedValue == objectValue {
+                                gvk := obj.GroupVersionKind()
+                                resources = append(resources, fmt.Sprintf("%s:%s:%s", gvk.Group, gvk.Kind, obj.GetName()))
+                            }
+                        }
+                    }
 
-				app, err := appIf.Get(ctx, &application.ApplicationQuery{
-					Name:         &appName,
-					AppNamespace: &appNs,
-				})
-				errors.CheckError(err)
+                    // If labels are provided and none are found return error only if specific resources were also not
+                    // specified.
+                    if len(resources) == 0 {
+                        log.Fatalf("No matching resources found for labels: %v", labels)
+                        return
+                    }
+                }
 
-				if app.Spec.HasMultipleSources() {
-					if revision != "" {
-						log.Fatal("argocd cli does not work on multi-source app with --revision flag. Use --revisions and --source-position instead.")
-						return
-					}
+                selectedResources, err := parseSelectedResources(resources)
+                errors.CheckError(err)
 
-					if local != "" {
-						log.Fatal("argocd cli does not work on multi-source app with --local flag")
-						return
-					}
-				}
+                var localObjsStrings []string
+                diffOption := &DifferenceOption{}
 
-				// filters out only those resources that needs to be synced
-				filteredResources := filterAppResources(app, selectedResources)
+                app, err := appIf.Get(ctx, &application.ApplicationQuery{
+                    Name:         &appName,
+                    AppNamespace: &appNs,
+                })
+                errors.CheckError(err)
 
-				// if resources are provided and no app resources match, then return error
-				if len(resources) > 0 && len(filteredResources) == 0 {
-					log.Fatalf("No matching app resources found for resource filter: %v", strings.Join(resources, ", "))
-				}
+                if app.Spec.HasMultipleSources() {
+                    if revision != "" {
+                        log.Fatal("argocd cli does not work on multi-source app with --revision flag. Use --revisions and --source-position instead.")
+                        return
+                    }
 
-				if local != "" {
-					if app.Spec.SyncPolicy != nil && app.Spec.SyncPolicy.IsAutomatedSyncEnabled() && !dryRun {
-						log.Fatal("Cannot use local sync when Automatic Sync Policy is enabled except with --dry-run")
-					}
+                    if local != "" {
+                        log.Fatal("argocd cli does not work on multi-source app with --local flag")
+                        return
+                    }
+                }
 
-					errors.CheckError(err)
-					conn, settingsIf := acdClient.NewSettingsClientOrDie()
-					argoSettings, err := settingsIf.Get(ctx, &settings.SettingsQuery{})
-					errors.CheckError(err)
-					utilio.Close(conn)
+                // filters out only those resources that needs to be synced
+                filteredResources := filterAppResources(app, selectedResources)
 
-					conn, clusterIf := acdClient.NewClusterClientOrDie()
-					defer utilio.Close(conn)
-					cluster, err := clusterIf.Get(ctx, &clusterpkg.ClusterQuery{Name: app.Spec.Destination.Name, Server: app.Spec.Destination.Server})
-					errors.CheckError(err)
-					utilio.Close(conn)
+                // if resources are provided and no app resources match, then return error
+                if len(resources) > 0 && len(filteredResources) == 0 {
+                    log.Fatalf("No matching app resources found for resource filter: %v", strings.Join(resources, ", "))
+                }
 
-					proj := getProject(ctx, c, clientOpts, app.Spec.Project)
-					localObjsStrings = getLocalObjectsString(ctx, app, proj.Project, local, localRepoRoot, argoSettings.AppLabelKey, cluster.Info.ServerVersion, cluster.Info.APIVersions, argoSettings.KustomizeOptions, argoSettings.TrackingMethod)
-					errors.CheckError(err)
-					diffOption.local = local
-					diffOption.localRepoRoot = localRepoRoot
-					diffOption.cluster = cluster
-				}
+                if local != "" {
+                    if app.Spec.SyncPolicy != nil && app.Spec.SyncPolicy.IsAutomatedSyncEnabled() && !dryRun {
+                        log.Fatal("Cannot use local sync when Automatic Sync Policy is enabled except with --dry-run")
+                    }
 
-				syncOptionsFactory := func() *application.SyncOptions {
-					syncOptions := application.SyncOptions{}
-					items := make([]string, 0)
-					if replace {
-						items = append(items, common.SyncOptionReplace)
-					}
-					if serverSideApply {
-						items = append(items, common.SyncOptionServerSideApply)
-					}
-					if applyOutOfSyncOnly {
-						items = append(items, common.SyncOptionApplyOutOfSyncOnly)
-					}
+                    errors.CheckError(err)
+                    conn, settingsIf := acdClient.NewSettingsClientOrDie()
+                    argoSettings, err := settingsIf.Get(ctx, &settings.SettingsQuery{})
+                    errors.CheckError(err)
+                    utilio.Close(conn)
 
-					if len(items) == 0 {
-						// for prevent send even empty array if not need
-						return nil
-					}
-					syncOptions.Items = items
-					return &syncOptions
-				}
+                    conn, clusterIf := acdClient.NewClusterClientOrDie()
+                    defer utilio.Close(conn)
+                    cluster, err := clusterIf.Get(ctx, &clusterpkg.ClusterQuery{Name: app.Spec.Destination.Name, Server: app.Spec.Destination.Server})
+                    errors.CheckError(err)
+                    utilio.Close(conn)
 
-				syncReq := application.ApplicationSyncRequest{
-					Name:            &appName,
-					AppNamespace:    &appNs,
-					DryRun:          &dryRun,
-					Revision:        &revision,
-					Resources:       filteredResources,
-					Prune:           &prune,
-					Manifests:       localObjsStrings,
-					Infos:           getInfos(infos),
-					SyncOptions:     syncOptionsFactory(),
-					Revisions:       revisions,
-					SourcePositions: sourcePositions,
-				}
+                    proj := getProject(ctx, c, clientOpts, app.Spec.Project)
+                    localObjsStrings = getLocalObjectsString(ctx, app, proj.Project, local, localRepoRoot, argoSettings.AppLabelKey, cluster.Info.ServerVersion, cluster.Info.APIVersions, argoSettings.KustomizeOptions, argoSettings.TrackingMethod)
+                    errors.CheckError(err)
+                    diffOption.local = local
+                    diffOption.localRepoRoot = localRepoRoot
+                    diffOption.cluster = cluster
+                }
 
-				switch strategy {
-				case "apply":
-					syncReq.Strategy = &argoappv1.SyncStrategy{Apply: &argoappv1.SyncStrategyApply{}}
-					syncReq.Strategy.Apply.Force = force
-				case "", "hook":
-					syncReq.Strategy = &argoappv1.SyncStrategy{Hook: &argoappv1.SyncStrategyHook{}}
-					syncReq.Strategy.Hook.Force = force
-				default:
-					log.Fatalf("Unknown sync strategy: '%s'", strategy)
-				}
-				if retryLimit != 0 {
-					syncReq.RetryStrategy = &argoappv1.RetryStrategy{
-						Limit:   retryLimit,
-						Refresh: retryRefresh,
-						Backoff: &argoappv1.Backoff{
-							Duration:    retryBackoffDuration.String(),
-							MaxDuration: retryBackoffMaxDuration.String(),
-							Factor:      new(retryBackoffFactor),
-						},
-					}
-				}
-				if diffChanges {
-					resources, err := appIf.ManagedResources(ctx, &application.ResourcesQuery{
-						ApplicationName: &appName,
-						AppNamespace:    &appNs,
-					})
-					errors.CheckError(err)
-					conn, settingsIf := acdClient.NewSettingsClientOrDie()
-					defer utilio.Close(conn)
-					argoSettings, err := settingsIf.Get(ctx, &settings.SettingsQuery{})
-					errors.CheckError(err)
-					foundDiffs := false
-					fmt.Printf("====== Previewing differences between live and desired state of application %s ======\n", appQualifiedName)
+                syncOptionsFactory := func() *application.SyncOptions {
+                    syncOptions := application.SyncOptions{}
+                    items := make([]string, 0)
+                    if replace {
+                        items = append(items, common.SyncOptionReplace)
+                    }
+                    if serverSideApply {
+                        items = append(items, common.SyncOptionServerSideApply)
+                    }
+                    if applyOutOfSyncOnly {
+                        items = append(items, common.SyncOptionApplyOutOfSyncOnly)
+                    }
 
-					proj := getProject(ctx, c, clientOpts, app.Spec.Project)
+                    if len(items) == 0 {
+                        // for prevent send even empty array if not need
+                        return nil
+                    }
+                    syncOptions.Items = items
+                    return &syncOptions
+                }
 
-					// Check if application has ServerSideDiff annotation
-					serverSideDiff := resourceutil.HasAnnotationOption(app, argocommon.AnnotationCompareOptions, "ServerSideDiff=true")
+                syncReq := application.ApplicationSyncRequest{
+                    Name:            &appName,
+                    AppNamespace:    &appNs,
+                    DryRun:          &dryRun,
+                    Revision:        &revision,
+                    Resources:       filteredResources,
+                    Prune:           &prune,
+                    Manifests:       localObjsStrings,
+                    Infos:           getInfos(infos),
+                    SyncOptions:     syncOptionsFactory(),
+                    Revisions:       revisions,
+                    SourcePositions: sourcePositions,
+                }
 
-					foundDiffs = findAndPrintDiff(ctx, app, proj.Project, resources, argoSettings, diffOption, ignoreNormalizerOpts, serverSideDiff, appIf, appName, appNs, serverSideDiffConcurrency, serverSideDiffMaxBatchKB)
-					if !foundDiffs {
-						fmt.Printf("====== No Differences found ======\n")
-						// if no differences found, then no need to sync
-						return
-					}
-					if !diffChangesConfirm {
-						yesno := cli.AskToProceed(fmt.Sprintf("Please review changes to application %s shown above. Do you want to continue the sync process? (y/n): ", appQualifiedName))
-						if !yesno {
-							os.Exit(0)
-						}
-					}
-				}
-				_, err = appIf.Sync(ctx, &syncReq)
-				errors.CheckError(err)
+                switch strategy {
+                case "apply":
+                    syncReq.Strategy = &argoappv1.SyncStrategy{Apply: &argoappv1.SyncStrategyApply{}}
+                    syncReq.Strategy.Apply.Force = force
+                case "", "hook":
+                    syncReq.Strategy = &argoappv1.SyncStrategy{Hook: &argoappv1.SyncStrategyHook{}}
+                    syncReq.Strategy.Hook.Force = force
+                default:
+                    log.Fatalf("Unknown sync strategy: '%s'", strategy)
+                }
+                if retryLimit != 0 {
+                    syncReq.RetryStrategy = &argoappv1.RetryStrategy{
+                        Limit:   retryLimit,
+                        Refresh: retryRefresh,
+                        Backoff: &argoappv1.Backoff{
+                            Duration:    retryBackoffDuration.String(),
+                            MaxDuration: retryBackoffMaxDuration.String(),
+                            Factor:      new(retryBackoffFactor),
+                        },
+                    }
+                }
+                if diffChanges {
+                    resources, err := appIf.ManagedResources(ctx, &application.ResourcesQuery{
+                        ApplicationName: &appName,
+                        AppNamespace:    &appNs,
+                    })
+                    errors.CheckError(err)
+                    conn, settingsIf := acdClient.NewSettingsClientOrDie()
+                    defer utilio.Close(conn)
+                    argoSettings, err := settingsIf.Get(ctx, &settings.SettingsQuery{})
+                    errors.CheckError(err)
+                    foundDiffs := false
+                    fmt.Printf("====== Previewing differences between live and desired state of application %s ======\n", appQualifiedName)
 
-				if !async {
-					app, opState, err := waitOnApplicationStatus(ctx, acdClient, appQualifiedName, timeout, watchOpts{operation: true}, selectedResources, output)
-					errors.CheckError(err)
+                    proj := getProject(ctx, c, clientOpts, app.Spec.Project)
 
-					if !dryRun {
-						if !opState.Phase.Successful() {
-							log.Fatalf("Operation has completed with phase: %s", opState.Phase)
-						} else if len(selectedResources) == 0 && app.Status.Sync.Status != argoappv1.SyncStatusCodeSynced {
-							// Only get resources to be pruned if sync was application-wide and final status is not synced
-							pruningRequired := opState.SyncResult.Resources.PruningRequired()
-							if pruningRequired > 0 {
-								log.Fatalf("%d resources require pruning", pruningRequired)
-							}
-						}
-					}
-				}
-			}
-		},
-	}
-	command.Flags().BoolVar(&dryRun, "dry-run", false, "Preview apply without affecting cluster")
-	command.Flags().BoolVar(&prune, "prune", false, "Allow deleting unexpected resources")
-	command.Flags().StringVar(&revision, "revision", "", "Sync to a specific revision. Preserves parameter overrides")
-	command.Flags().StringArrayVar(&resources, "resource", []string{}, fmt.Sprintf("Sync only specific resources as GROUP%[1]sKIND%[1]sNAME or %[2]sGROUP%[1]sKIND%[1]sNAME. Fields may be blank and '*' can be used. This option may be specified repeatedly", resourceFieldDelimiter, resourceExcludeIndicator))
-	command.Flags().StringVarP(&selector, "selector", "l", "", "Sync apps that match this label. Supports '=', '==', '!=', in, notin, exists & not exists. Matching apps must satisfy all of the specified label constraints.")
-	command.Flags().StringArrayVar(&labels, "label", []string{}, "Sync only specific resources with a label. This option may be specified repeatedly.")
-	command.Flags().UintVar(&timeout, "timeout", defaultCheckTimeoutSeconds, "Time out after this many seconds")
-	command.Flags().Int64Var(&retryLimit, "retry-limit", 0, "Max number of allowed sync retries")
-	command.Flags().BoolVar(&retryRefresh, "retry-refresh", false, "Indicates if the latest revision should be used on retry instead of the initial one")
-	command.Flags().DurationVar(&retryBackoffDuration, "retry-backoff-duration", argoappv1.DefaultSyncRetryDuration, "Retry backoff base duration. Input needs to be a duration (e.g. 2m, 1h)")
-	command.Flags().DurationVar(&retryBackoffMaxDuration, "retry-backoff-max-duration", argoappv1.DefaultSyncRetryMaxDuration, "Max retry backoff duration. Input needs to be a duration (e.g. 2m, 1h)")
-	command.Flags().Int64Var(&retryBackoffFactor, "retry-backoff-factor", argoappv1.DefaultSyncRetryFactor, "Factor multiplies the base duration after each failed retry")
-	command.Flags().StringVar(&strategy, "strategy", "", "Sync strategy (one of: apply|hook)")
-	command.Flags().BoolVar(&force, "force", false, "Use a force apply")
-	command.Flags().BoolVar(&replace, "replace", false, "Use a kubectl create/replace instead apply")
-	command.Flags().BoolVar(&serverSideApply, "server-side", false, "Use server-side apply while syncing the application")
-	command.Flags().BoolVar(&applyOutOfSyncOnly, "apply-out-of-sync-only", false, "Sync only out-of-sync resources")
-	command.Flags().BoolVar(&async, "async", false, "Do not wait for application to sync before continuing")
-	command.Flags().StringVar(&local, "local", "", "Path to a local directory. When this flag is present no git queries will be made")
-	command.Flags().StringVar(&localRepoRoot, "local-repo-root", "/", "Path to the repository root. Used together with --local allows setting the repository root")
-	command.Flags().StringArrayVar(&infos, "info", []string{}, "A list of key-value pairs during sync process. These infos will be persisted in app.")
-	command.Flags().BoolVar(&diffChangesConfirm, "assumeYes", false, "Assume yes as answer for all user queries or prompts")
-	command.Flags().BoolVar(&diffChanges, "preview-changes", false, "Preview difference against the target and live state before syncing app and wait for user confirmation")
-	command.Flags().StringArrayVar(&projects, "project", []string{}, "Sync apps that belong to the specified projects. This option may be specified repeatedly.")
-	command.Flags().StringVarP(&output, "output", "o", "wide", "Output format. One of: json|yaml|wide|tree|tree=detailed")
-	command.Flags().StringVarP(&appNamespace, "app-namespace", "N", "", "Only sync an application in namespace")
-	command.Flags().DurationVar(&ignoreNormalizerOpts.JQExecutionTimeout, "ignore-normalizer-jq-execution-timeout", normalizers.DefaultJQExecutionTimeout, "Set ignore normalizer JQ execution timeout")
-	command.Flags().StringArrayVar(&revisions, "revisions", []string{}, "Show manifests at specific revisions for source position in source-positions")
-	command.Flags().Int64SliceVar(&sourcePositions, "source-positions", []int64{}, "List of source positions. Default is empty array. Counting start at 1.")
-	command.Flags().StringArrayVar(&sourceNames, "source-names", []string{}, "List of source names. Default is an empty array.")
-	addServerSideDiffPerfFlags(command, &serverSideDiffConcurrency, &serverSideDiffMaxBatchKB)
-	return command
-}
+                    // Check if application has ServerSideDiff annotation
+                    serverSideDiff := resourceutil.HasAnnotationOption(app, argocommon.AnnotationCompareOptions, "ServerSideDiff=true")
+
+                    foundDiffs = findAndPrintDiff(ctx, app, proj.Project, resources, argoSettings, diffOption, ignoreNormalizerOpts, serverSideDiff, appIf, appName, appNs, serverSideDiffConcurrency, serverSideDiffMaxBatchKB)
+                    if !foundDiffs {
+                        fmt.Printf("====== No Differences found ======\n")
+                        // if no differences found, then no need to sync
+                        return
+                    }
+                    if !diffChangesConfirm {
+                        yesno := cli.AskToProceed(fmt.Sprintf("Please review changes to application %s shown above. Do you want to continue the sync process? (y/n): ", appQualifiedName))
+                        if !yesno {
+                            os.Exit(0)
+                        }
+                    }
+                }
+                _, err = appIf.Sync(ctx, &syncReq)
+                errors.CheckError(err)
+
+                if !async {
+                    app, opState, err := waitOnApplicationStatus(ctx, acdClient, appQualifiedName, timeout, watchOpts{operation: true}, selectedResources, output)
+                    errors.CheckError(err)
+
+                    if !dryRun {
+                        if !opState.Phase.Successful() {
+                            log.Fatalf("Operation has completed with phase: %s", opState.Phase)
+                        } else if len(selectedResources) == 0 && app.Status.Sync.Status != argoappv1.SyncStatusCodeSynced {
+                            // Only get resources to be pruned if sync was application-wide and final status is not synced
+                            pruningRequired := opState.SyncResult.Resources.PruningRequired()
+                            if pruningRequired > 0 {
+                                log.Fatalf("%d resources require pruning", pruningRequired)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+      }
+      command.Flags().BoolVar(&dryRun, "dry-run", false, "Preview apply without affecting cluster")
+      command.Flags().BoolVar(&prune, "prune", false, "Allow deleting unexpected resources")
+      command.Flags().StringVar(&revision, "revision", "", "Sync to a specific revision. Preserves parameter overrides")
+      command.Flags().StringArrayVar(&resources, "resource", []string{}, fmt.Sprintf("Sync only specific resources as GROUP%[1]sKIND%[1]sNAME or %[2]sGROUP%[1]sKIND%[1]sNAME. Fields may be blank and '*' can be used. This option may be specified repeatedly", resourceFieldDelimiter, resourceExcludeIndicator))
+      command.Flags().StringVarP(&selector, "selector", "l", "", "Sync apps that match this label. Supports '=', '==', '!=', in, notin, exists & not exists. Matching apps must satisfy all of the specified label constraints.")
+      command.Flags().StringArrayVar(&labels, "label", []string{}, "Sync only specific resources with a label. This option may be specified repeatedly.")
+      command.Flags().UintVar(&timeout, "timeout", defaultCheckTimeoutSeconds, "Time out after this many seconds")
+      command.Flags().Int64Var(&retryLimit, "retry-limit", 0, "Max number of allowed sync retries")
+      command.Flags().BoolVar(&retryRefresh, "retry-refresh", false, "Indicates if the latest revision should be used on retry instead of the initial one")
+      command.Flags().DurationVar(&retryBackoffDuration, "retry-backoff-duration", argoappv1.DefaultSyncRetryDuration, "Retry backoff base duration. Input needs to be a duration (e.g. 2m, 1h)")
+      command.Flags().DurationVar(&retryBackoffMaxDuration, "retry-backoff-max-duration", argoappv1.DefaultSyncRetryMaxDuration, "Max retry backoff duration. Input needs to be a duration (e.g. 2m, 1h)")
+      command.Flags().Int64Var(&retryBackoffFactor, "retry-backoff-factor", argoappv1.DefaultSyncRetryFactor, "Factor multiplies the base duration after each failed retry")
+      command.Flags().StringVar(&strategy, "strategy", "", "Sync strategy (one of: apply|hook)")
+      command.Flags().BoolVar(&force, "force", false, "Use a force apply")
+      command.Flags().BoolVar(&replace, "replace", false, "Use a kubectl create/replace instead apply")
+      command.Flags().BoolVar(&serverSideApply, "server-side", false, "Use server-side apply while syncing the application")
+      command.Flags().BoolVar(&applyOutOfSyncOnly, "apply-out-of-sync-only", false, "Sync only out-of-sync resources")
+      command.Flags().BoolVar(&async, "async", false, "Do not wait for application to sync before continuing")
+      command.Flags().StringVar(&local, "local", "", "Path to a local directory. When this flag is present no git queries will be made")
+      command.Flags().StringVar(&localRepoRoot, "local-repo-root", "/", "Path to the repository root. Used together with --local allows setting the repository root")
+      command.Flags().StringArrayVar(&infos, "info", []string{}, "A list of key-value pairs during sync process. These infos will be persisted in app.")
+      command.Flags().BoolVar(&diffChangesConfirm, "assumeYes", false, "Assume yes as answer for all user queries or prompts")
+      command.Flags().BoolVar(&diffChanges, "preview-changes", false, "Preview difference against the target and live state before syncing app and wait for user confirmation")
+      command.Flags().StringArrayVar(&projects, "project", []string{}, "Sync apps that belong to the specified projects. This option may be specified repeatedly.")
+      command.Flags().StringVarP(&output, "output", "o", "wide", "Output format. One of: json|yaml|wide|tree|tree=detailed")
+      command.Flags().StringVarP(&appNamespace, "app-namespace", "N", "", "Only sync an application in namespace")
+      command.Flags().DurationVar(&ignoreNormalizerOpts.JQExecutionTimeout, "ignore-normalizer-jq-execution-timeout", normalizers.DefaultJQExecutionTimeout, "Set ignore normalizer JQ execution timeout")
+      command.Flags().StringArrayVar(&revisions, "revisions", []string{}, "Show manifests at specific revisions for source position in source-positions")
+      command.Flags().Int64SliceVar(&sourcePositions, "source-positions", []int64{}, "List of source positions. Default is empty array. Counting start at 1.")
+      command.Flags().StringArrayVar(&sourceNames, "source-names", []string{}, "List of source names. Default is an empty array.")
+      addServerSideDiffPerfFlags(command, &serverSideDiffConcurrency, &serverSideDiffMaxBatchKB)
+      return command
+    }
 
 func getAppNamesBySelector(ctx context.Context, appIf application.ApplicationServiceClient, selector string) ([]string, error) {
 	appNames := []string{}

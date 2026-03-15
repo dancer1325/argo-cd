@@ -1,5 +1,8 @@
 # `argocd app sync` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/app.md)👀
+
 ## argocd app sync
 
 * application -- is sync to -- its target state

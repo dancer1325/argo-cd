@@ -1,10 +1,15 @@
 
 # Config Management Plugins
 
-Argo CD's "native" config management tools are Helm, Jsonnet, and Kustomize. If you want to use a different config
-management tool, or if Argo CD's native tool support does not include a feature you need, you might need to turn to
-a Config Management Plugin (CMP).
+* Argo CD's config management tools
+  * "native" ones
+    * [Helm](../user-guide/helm.md)
+    * [Jsonnet](../user-guide/jsonnet.md)
+    * [Kustomize](../user-guide/kustomize.md)
+  * others
+    * -- via -- Config Management Plugin (CMP)
 
+TODO:
 The Argo CD "repo server" component is in charge of building Kubernetes manifests based on some source files from a
 Helm, OCI, or Git repository. When a config management plugin is correctly configured, the repo server may delegate the
 task of building manifests to the plugin.

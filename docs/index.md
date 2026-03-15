@@ -1,5 +1,9 @@
 # Overview
 
+* [index](/mkdocs.yml)'s `nav`
+
+TODO: check if to refactor
+
 ## How it works
 
 * Application deployments
@@ -30,6 +34,7 @@
   * about authorization
     * Multi-tenancy 
     * RBAC policies
+  * TODO: extensible   -- NO duplicated with some PREVIOUS one ? -- 
 * provide
   * application resources' health status analysis 
   * AUTOMATED configuration drift detection and visualization
@@ -51,3 +56,25 @@
   * [Prometheus metrics](operator-manual/metrics.md)
   * Parameter overrides
     * -- for -- overriding helm parameters | Git
+
+
+## Benefits
+### GitOps enforcement
+
+* == your application Kubernetes-related manifests MUST be defined | Git
+  * _Example:_ Deployments, ConfigMaps, Services, ...
+* continuous reconciliation
+  * == live cluster state == desired state | Git
+    * self-healing
+      * OPTIONAL
+
+### Automated continuous delivery
+
+* automatic CD
+  * `git push` → ArgoCD detects → syncs AUTOMATICALLY
+  * 💡eliminates MANUAL operations💡
+    * ❌ NO
+      * `kubectl apply` commands
+      * ad-hoc deployment scripts❌
+* automatic application health validation
+* easy rollback
