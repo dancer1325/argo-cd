@@ -1,28 +1,38 @@
 # Sync Options
 
-Argo CD allows users to customize some aspects of how it syncs the desired state in the target cluster. Some Sync Options can be defined as annotations in a specific resource. Most of the Sync Options are configured in the Application resource `spec.syncPolicy.syncOptions` attribute. Multiple Sync Options which are configured with the `argocd.argoproj.io/sync-options` annotation can be concatenated with a `,` in the annotation value; white-space will be trimmed.
+* goal
+  * ways Argo CD can sync the desired state | target cluster
 
-Below you can find details about each available Sync Option:
+* Sync Options
+  * ways to define
+    * some
+      * can be defined -- as -- annotations (== `metadta.annotations`) | specific resource
+        * _Example:_ `argocd.argoproj.io/sync-options: syncOptionValue1,syncOptionValue1,...`
+    * most
+      * are configured | Application's `spec.syncPolicy.syncOptions` attribute
 
 ## No Prune Resources
 
-You may wish to prevent an object from being pruned:
+* way to configure
+    ```yaml
+    metadata:
+      annotations:
+        argocd.argoproj.io/sync-options: Prune=false
+    ```
 
-```yaml
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-options: Prune=false
-```
+* ⚠️if Argo CD pull Git & detects that a resource should be pruned ALTHOUGH `Prune=false` -> app will be out of sync⚠️ 
 
-The sync-status panel shows that pruning was skipped, and why:
+* displayed | sync-status panel
 
 ![sync option no prune](../assets/sync-option-no-prune-sync-status.png)
 
-The app will be out of sync if Argo CD expects a resource to be pruned. You may wish to use this along with [compare options](compare-options.md).
+* common use cases
+  * \+ [compare options](compare-options.md)
 
 ## Resource Pruning With Confirmation
 
-Resources such as Namespaces are critical and should not be pruned without confirmation. You can set the `Prune=confirm`
+Resources such as Namespaces are critical and should not be pruned without confirmation
+* You can set the `Prune=confirm`
 sync option to require manual confirmation before pruning.
 
 ```yaml
@@ -41,7 +51,9 @@ confirmed. The UI will look similar to this, with the "Confirm Pruning" button a
 
 ## Disable Kubectl Validation
 
-For a certain class of objects, it is necessary to `kubectl apply` them using the `--validate=false` flag. Examples of this are Kubernetes types which uses `RawExtension`, such as [ServiceCatalog](https://github.com/kubernetes-incubator/service-catalog/blob/master/pkg/apis/servicecatalog/v1beta1/types.go#L497). You can do that using this annotation:
+For a certain class of objects, it is necessary to `kubectl apply` them using the `--validate=false` flag
+* Examples of this are Kubernetes types which uses `RawExtension`, such as [ServiceCatalog](https://github.com/kubernetes-incubator/service-catalog/blob/master/pkg/apis/servicecatalog/v1beta1/types.go#L497)
+* You can do that using this annotation:
 
 ```yaml
 metadata:
@@ -55,9 +67,12 @@ If you want to exclude a whole class of objects globally, consider setting `reso
 
 When syncing a custom resource which is not yet known to the cluster, there are generally two options:
 
-1. The CRD manifest is part of the same sync. Then Argo CD will automatically skip the dry run, the CRD will be applied and the resource can be created.
-2. In some cases the CRD is not part of the sync, but it could be created in another way, e.g. by a controller in the cluster. An example is [gatekeeper](https://github.com/open-policy-agent/gatekeeper),
-which creates CRDs in response to user defined `ConstraintTemplates`. Argo CD cannot find the CRD in the sync and will fail with the error `the server could not find the requested resource`.
+1. The CRD manifest is part of the same sync
+   * Then Argo CD will automatically skip the dry run, the CRD will be applied and the resource can be created.
+2. In some cases the CRD is not part of the sync, but it could be created in another way, e.g. by a controller in the cluster
+   * An example is [gatekeeper](https://github.com/open-policy-agent/gatekeeper),
+   which creates CRDs in response to user defined `ConstraintTemplates`
+   * Argo CD cannot find the CRD in the sync and will fail with the error `the server could not find the requested resource`.
 
 To skip the dry run for missing resource types, use the following annotation:
 
@@ -69,7 +84,8 @@ metadata:
 
 The dry run will still be executed if the CRD is already present in the cluster.
 
-It is also possible to skip dry run on missing resource for all application resources. You can set the `SkipDryRunOnMissingResource=true`
+It is also possible to skip dry run on missing resource for all application resources
+* You can set the `SkipDryRunOnMissingResource=true`
 sync option to skip dry run on missing resource
 
 ```yaml
@@ -94,7 +110,8 @@ metadata:
 
 ## Resource Deletion With Confirmation
 
-Resources such as Namespaces are critical and should not be deleted without confirmation. You can set the `Delete=confirm`
+Resources such as Namespaces are critical and should not be deleted without confirmation
+* You can set the `Delete=confirm`
 sync option to require manual confirmation before deletion.
 
 ```yaml
@@ -137,8 +154,10 @@ $ argocd app set guestbook --sync-option ApplyOutOfSyncOnly=true
 
 ## Resources Prune Deletion Propagation Policy
 
-By default, extraneous resources get pruned using the foreground deletion policy. The propagation policy can be controlled
-using the `PrunePropagationPolicy` sync option. Supported policies are background, foreground, and orphan.
+By default, extraneous resources get pruned using the foreground deletion policy
+* The propagation policy can be controlled
+using the `PrunePropagationPolicy` sync option
+* Supported policies are background, foreground, and orphan.
 More information about those policies can be found in the Kubernetes [Garbage Collection](https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/) documentation.
 
 ```yaml
@@ -173,9 +192,12 @@ metadata:
 
 ## Replace Resource Instead Of Applying Changes
 
-By default, Argo CD executes the `kubectl apply` operation to apply the configuration stored in Git. In some cases
-`kubectl apply` is not suitable. For example, a resource spec might be too large and won't fit into the
-`kubectl.kubernetes.io/last-applied-configuration` annotation that is added by `kubectl apply`. In such cases you
+By default, Argo CD executes the `kubectl apply` operation to apply the configuration stored in Git
+* In some cases
+`kubectl apply` is not suitable
+* For example, a resource spec might be too large and won't fit into the
+`kubectl.kubernetes.io/last-applied-configuration` annotation that is added by `kubectl apply`
+* In such cases you
 might use `Replace=true` sync option:
 
 

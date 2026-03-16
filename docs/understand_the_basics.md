@@ -9,5 +9,3 @@
 * integrating -- with a -- CI tool
   * [GitHub Actions](https://docs.github.com/en/actions)
   * [Jenkins](https://www.jenkins.io/doc/book/)
-
-* GitOps concepts 

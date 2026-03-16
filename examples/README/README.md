@@ -3,24 +3,28 @@
 ### GitOps-based
 
 #### Git repositories -- as -- 1! source of truth
-  * declared | [Argo CD's Application](simple-application.yaml)
+* declared | [Argo CD's Application](simple-application.yaml)
 
-    ```yaml
-    source:
-      repoURL: https://github.com/argoproj/argocd-example-apps.git
-      targetRevision: HEAD
-      path: guestbook
-    ```
-  * workflow
+  ```yaml
+  source:
+    repoURL: https://github.com/argoproj/argocd-example-apps.git
+    targetRevision: HEAD
+    path: guestbook
+  ```
+* workflow
 
-    ```
-    Developer → Git commit → Push → ArgoCD detects → Cluster updated
+  ```
+  Developer → Git commit → Push → ArgoCD detects → Cluster updated
     
-    # NO MANUAL cluster operations 
-    ```
+  # NO MANUAL cluster operations 
+  ```
 #### declarative
 
 * [here](declarative-vs-imperative.md)
+
+#### pull -- from -- Git
+
+* `argocd app history <APP-NAME>`
 
 ### application-centric view
 

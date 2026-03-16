@@ -1,35 +1,72 @@
 # Automation from CI Pipelines
 
-Argo CD follows the GitOps model of deployment, where desired configuration changes are first
-pushed to Git, and the cluster state then syncs to the desired state in git
-* This is a departure
-from imperative pipelines which do not traditionally use Git repositories to hold application
-config.
+* goal
+  * how to automate CI pipelines / CD is managed -- by -- Argo CD
 
-To push new container images to a cluster managed by Argo CD, the following workflow (or 
-variations) might be used:
+* != traditional CI pipeline
+  * Reason: 🧠declarative vs imperative🧠
 
-## Build And Publish A New Container Image
+```mermaid
+flowchart TB
+    subgraph CIPhase["🔨 CONTINUOUS INTEGRATION (CI)"]
+        direction TB
+        subgraph CITool["CI Tool: GitHub Actions / Jenkins"]
+            direction TB
+            A[Step 1: Build Container Image<br/>docker build -t image:v2.0]
+            B[Step 2: Push to Registry<br/>docker push image:v2.0]
+            C[Step 3: Update Git Manifests<br/>kustomize edit set image]
+            F[Step 4 OPTIONAL:<br/>Trigger Sync<br/>argocd app sync]
+        end
+        A --> B --> C
+        C -.->|optional| F
+    end
 
-```bash
-docker build -t mycompany/guestbook:v2.0 .
-docker push mycompany/guestbook:v2.0
+    GitRepo["📁 Git Repository<br/>(Config Repo)<br/>Kubernetes Manifests:<br/>deployment.yaml, service.yaml, etc."]
+
+    subgraph CDPhase["🚀 CONTINUOUS DELIVERY (CD)"]
+        direction TB
+        subgraph ArgoCD["ArgoCD Controller"]
+            direction TB
+            D[Auto-Detect Changes<br/>✅ RECOMMENDED<br/>webhook or polling]
+            E[Sync to Cluster<br/>kubectl apply]
+        end
+        D --> E
+    end
+
+    K8s["☸️ Kubernetes Cluster<br/>Running Pods with v2.0"]
+
+    C -->|git push| GitRepo
+    GitRepo -->|automatic| D
+    F -.->|manual trigger| E
+    E -->|deploys| K8s
+
+    style CIPhase fill:#e3f2fd,stroke:#1565c0,stroke-width:3px
+    style CDPhase fill:#fff3e0,stroke:#e65100,stroke-width:3px
+    style CITool fill:#bbdefb,stroke:#1976d2,stroke-width:2px
+    style ArgoCD fill:#ffe0b2,stroke:#f57c00,stroke-width:2px
+    style GitRepo fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style K8s fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
 ```
 
-## Update The Local Manifests Using Your Preferred Templating Tool, And Push The Changes To Git
+## steps
 
-> [!TIP]
-> The use of a different Git repository to hold your Kubernetes manifests (separate from
-> your application source code), is highly recommended
-* See [best practices](best_practices.md)
-> for further rationale.
+### build & publish a NEW container image
 
 ```bash
-git clone https://github.com/mycompany/guestbook-config.git
-cd guestbook-config
+docker build -t tagName:vX.Y .
+docker push tagName:vX.Y
+```
+
+* handled -- by -- CI tool
+
+### update the local manifests -- via -- your preferred templating tool + push the changes | Git
+
+```bash
+git clone https://github.com/serviceName-config.git
+cd serviceName-config
 
 # kustomize
-kustomize edit set image mycompany/guestbook:v2.0
+kustomize edit set image tagName:vX.Y
 
 # plain yaml
 kubectl patch --local -f config-deployment.yaml -p '{"spec":{"template":{"spec":{"containers":[{"name":"guestbook","image":"mycompany/guestbook:v2.0"}]}}}}' -o yaml > config-deployment.yaml
@@ -38,22 +75,35 @@ git commit -am "Update guestbook to v2.0"
 git push
 ```
 
-## Synchronize The App (Optional)
+* recommendations
+  * 👀git repository / hold your application source code != git repository / hold your Kubernetes manifests👀
+  * [MORE](best_practices.md)
 
-For convenience, the argocd CLI can be downloaded directly from the API server
-* This is
-useful so that the CLI used in the CI pipeline is always kept in-sync and uses argocd binary
-that is always compatible with the Argo CD API server.
+* handled -- by -- CI tool
 
-```bash
-export ARGOCD_SERVER=argocd.example.com
-export ARGOCD_AUTH_TOKEN=<JWT token generated from project>
-curl -sSL -o /usr/local/bin/argocd https://${ARGOCD_SERVER}/download/argocd-linux-amd64
-argocd app sync guestbook
-argocd app wait guestbook
-```
+### Synchronize the app (OPTIONAL)
 
-If [automated synchronization](auto_sync.md) is configured for the application, this step is
-unnecessary
-* The controller will automatically detect the new config (fast tracked using a
-[webhook](../operator-manual/webhook.md), or polled at least every 3 minutes by default), and automatically sync the new manifests.
+* `argocd app sync APPNAME`
+
+* handled | CI pipeline
+  * ⚠️OPTIONAL⚠️
+    * Reason: 🧠if you configure [automated synchronization](auto_sync.md) -> this step is unnecessary🧠
+
+* argocd CLI
+  * 👀can be downloaded directly -- from the -- API server👀
+    * -> argocd CLI / used | CI pipeline: ALWAYS compatible -- with the -- Argo CD API server
+
+    ```bash
+    export ARGOCD_SERVER=argocd.example.com
+    export ARGOCD_AUTH_TOKEN=<JWT token generated from project>
+    curl -sSL -o /usr/local/bin/argocd https://${ARGOCD_SERVER}/download/argocd-linux-amd64
+    argocd app sync guestbook
+    argocd app wait guestbook
+    ```
+
+* 👀ways of sync👀
+  * [automatic sync policy](auto_sync.md)
+    * recommended one
+  * [`argocd app sync APPNAME`](ci_automation.md)
+    * triggered -- by -- CI
+    * performed -- by -- Argo CD (`argocd ...`)

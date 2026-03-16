@@ -11,6 +11,7 @@
         * Git repositories -- as -- 1! source of truth
         * declarative
           * == define the desired application state | manifests
+        * pull -- from -- Git
       * [application-centric view](/blogs/docs/why-we-created-the-argo-project.md)
   * [video](https://youtu.be/0WAm0y2vLIo) 
     * TODO: 0:32

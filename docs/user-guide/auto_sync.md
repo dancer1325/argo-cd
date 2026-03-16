@@ -1,38 +1,36 @@
 # Automated Sync Policy
 
-* Argo CD
-  * 👀if it detects DIFFERENCES BETWEEN the desired manifests | Git vs live state | cluster -> AUTOMATICALLY sync an application👀 
-    * -> CI/CD pipelines can perform the deployment
-      * ❌WITHOUT direct access to the Argo CD API server❌
-      * -- via -- `git commit` & `git push` | Git repository
+* ⚠️sync != trigger Argo CD detection⚠️
+  * ways of sync
+    * automatic sync policy
+      * recommended one
+    * [`argocd app sync APPNAME`](ci_automation.md)
+  * [ways of trigger Argo CD detection](../faq.md#how-often-does-argo-cd-check-for-changes--git-or-helm-repository-)
 
-To configure automated sync run:
-```bash
-argocd app set <APPNAME> --sync-policy automated
-```
+* Argo CD sync policy
+  * allows
+    * 👀if it detects DIFFERENCES BETWEEN the desired manifests | Git vs live state | cluster -> AUTOMATICALLY sync an application👀 
+      * -> CI/CD pipelines can perform the deployment
+        * ❌WITHOUT direct access to the Argo CD API server❌
+        * -- via -- `git commit` & `git push` | Git repository
+  * ways to configure
+    * `argocd app set <APPNAME> --sync-policy automated`
+    * | Argo CD's Application
 
-Alternatively, if creating the application an application manifest, specify a syncPolicy with an
-`automated` policy.
-```yaml
-spec:
-  syncPolicy:
-    automated: {}
-```
-Application CRD now also support explicitly setting automated sync to be turned on or off by using `spec.syncPolicy.automated.enabled` flag to true or false
-* When `enable` field is set to true, Automated Sync is active and when set to false controller will skip automated sync even if `prune`, `self-heal` and `allowEmpty` are set.
-```yaml
-spec:
-  syncPolicy:
-    automated:
-      enabled: true
-```
-
-> [!NOTE]
-> Setting the `spec.syncPolicy.automated.enabled` flag to null will be treated as if automated sync is enabled
-* When the `enabled` field is set to false, fields like `prune`, `selfHeal` and `allowEmpty` can be set without enabling them.
+      ```yaml
+      spec:
+        syncPolicy:
+          automated: {}
+            # ==
+            # enabled: null     == true
+      ```
+      * if you want to explicitly set -> specify `spec.syncPolicy.automated.enabled`
+        * ALLOWED values: true OR false
+        * if you set `false` -> skip `prune`, `self-heal` & `allowEmpty` configurations
 
 ## Temporarily toggling auto-sync for applications managed by ApplicationSets
 
+TODO: 
 For a standalone application, toggling auto-sync is performed by changing the application's `spec.syncPolicy.automated` field
 * For an ApplicationSet managed application, changing the application's `spec.syncPolicy.automated` field will, however, have no effect.
 [Controlling Resource Modification](../operator-manual/applicationset/Controlling-Resource-Modification.md) has more details about how to perform the toggling for applications managed by ApplicationSets.
@@ -124,19 +122,14 @@ spec:
 
 ## Automated Sync Semantics
 
-* An automated sync will only be performed if the application is OutOfSync
-  * Applications in a
-    Synced or error state will not attempt automated sync.
-* Automated sync will only attempt one synchronization per unique combination of commit SHA1 and
-  application parameters
-  * If the most recent successful sync in the history was already performed
-    against the same commit-SHA and parameters, a second sync will not be attempted, unless `selfHeal` flag is set to true.
-* If the `selfHeal` flag is set to true, then the sync will be attempted again after self-heal timeout (5 seconds by default)
-which is controlled by `--self-heal-timeout-seconds` flag of `argocd-application-controller` deployment.
-* Automatic sync will not reattempt a sync if the previous sync attempt against the same commit-SHA
-  and parameters had failed.
-
 * automated sync
+  * ⚠️requirements⚠️
+    * application is OutOfSync
+      * if application's status != OutOfSync (_Examples:_ Synced, Error, ...) -> NO try automated sync
+  * ⚠️ONLY try 1 AUTOMATIC synchronization / EACH UNIQUE combination of commit SHA1 + application parameters⚠️
+    * EXCEPTION: 
+      * if PREVIOUS automatic sync succeed + `selfHeal: true` + drift -- due to -- MANUAL adjustment | cluster -> retry automatic sync AFTER `--self-heal-timeout-seconds` 
+    * ❌ALTHOUGH PREVIOUS automatic sync failed, NOT retry❌
   * ❌if it's enabled -> NOT possible to perform a Rollback❌
   * automatic sync interval
     * determined -- by -- [`timeout.reconciliation` value | `argocd-cm` ConfigMap](../faq.md#how-often-does-argo-cd-check-for-changes--git-or-helm-repository-)
