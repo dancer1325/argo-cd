@@ -21,8 +21,8 @@
 ## how to enable?
 
 - steps
-  - To enable the source hydrator, you need to enable the "commit server" component and set the `hydrator.enabled` field in
-argocd-cmd-params-cm ConfigMap to `"true"`.
+  - enable the "commit server" component
+  - | "argocd-cmd-params-cm" configMap, set  `hydrator.enabled: true`
 
 ```yaml
 apiVersion: v1
