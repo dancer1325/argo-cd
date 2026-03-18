@@ -7,8 +7,7 @@
     - express the Kubernetes manifests -- as --  MORE concise & reusable way
 (DRY == Don't Repeat Yourself)
       - cons
-        - obscure the Kubernetes manifests / are
-applied | cluster
+        - obscure the Kubernetes manifests / are applied | cluster
 
 - "rendered manifest pattern"
   - == Argo CD's feature /
@@ -16,11 +15,13 @@ applied | cluster
     - enable
       - users can see the actual Kubernetes manifests / are applied | cluster
 
+- source hydrator
+  - by default, disabled
+
 ## how to enable?
 
-The source hydrator is disabled by default.
-
-To enable the source hydrator, you need to enable the "commit server" component and set the `hydrator.enabled` field in
+- steps
+  - To enable the source hydrator, you need to enable the "commit server" component and set the `hydrator.enabled` field in
 argocd-cmd-params-cm ConfigMap to `"true"`.
 
 ```yaml
