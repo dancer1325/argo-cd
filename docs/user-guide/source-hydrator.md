@@ -34,11 +34,11 @@ data:
   hydrator.enabled: "true"
 ```
 
-> [!IMPORTANT]
-> After updating the ConfigMap, you must restart the Argo CD controller and API server for the changes to take effect.
+  - restart Argo CD controller + API server 
+    - Reason: changes take effect
 
-If you are using one of the `*-install.yaml` manifests to install Argo CD, you can use the 
-`*-install-with-hydrator.yaml` version of that file instead.
+- if you are installing ArgoCD -- via -- one of the `*-install.yaml` manifests & you want hydrator -> use the homonymous
+`*-install-with-hydrator.yaml` manifest
 
 For example,
 
