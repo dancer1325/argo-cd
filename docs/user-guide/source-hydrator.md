@@ -10,10 +10,13 @@
         - obscure the Kubernetes manifests / are
 applied | cluster
 
-The "rendered manifest pattern" is a feature of Argo CD that allows users to push the hydrated manifests to git before syncing them to the cluster. This
-allows users to see the actual Kubernetes manifests that are applied to the cluster.
+- "rendered manifest pattern"
+  - == Argo CD's feature /
+    - BEFORE syncing to the cluster, push the hydrated manifests | git
+    - enable
+      - users can see the actual Kubernetes manifests / are applied | cluster
 
-## Enabling the Source Hydrator
+## how to enable?
 
 The source hydrator is disabled by default.
 
