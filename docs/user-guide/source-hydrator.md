@@ -2,9 +2,13 @@
 
 **Current feature state**: Alpha
 
-Tools like Helm and Kustomize allow users to express their Kubernetes manifests in a more concise and reusable way
-(keeping it DRY - Don't Repeat Yourself). However, these tools can obscure the actual Kubernetes manifests that are
-applied to the cluster.
+- some tools (_Example: Helm & Kustomize)
+  - allow
+    - express the Kubernetes manifests -- as --  MORE concise & reusable way
+(DRY == Don't Repeat Yourself)
+      - cons
+        - obscure the Kubernetes manifests / are
+applied | cluster
 
 The "rendered manifest pattern" is a feature of Argo CD that allows users to push the hydrated manifests to git before syncing them to the cluster. This
 allows users to see the actual Kubernetes manifests that are applied to the cluster.
