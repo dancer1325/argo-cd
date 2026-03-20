@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # ways to track Kubernetes resources
+  # 1. -- by -- annotation
+  application.resourceTrackingMethod: annotation
+  # 2. -- by -- label
+  #application.resourceTrackingMethod: label
+  # 3. -- by -- annotation+label
+  #application.resourceTrackingMethod: annotation+label

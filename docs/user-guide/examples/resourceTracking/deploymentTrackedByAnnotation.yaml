@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+  namespace: default
+  annotations:
+    argocd.argoproj.io/tracking-id: my-app:apps/Deployment:default/my-deployment
+    # 's value: <app-name>:<group>/<kind>:<namespace>/<resource-name>
+    #   <app-name>        ==  my-app
+    #   <group>           == apps
+    #   <kind>            == Deployment
+    #   <namespace>       == default
+    #   <resource-name>   == my-deployment
