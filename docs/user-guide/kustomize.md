@@ -1,52 +1,68 @@
 # Kustomize
 
+* == way to define Kubernetes manifests / 
+  * supported -- by -- Argo CD 
+
 ## Declarative
 
-You can define a Kustomize application manifest in the declarative GitOps way. Here is an example:
+* goal
+    * Argo CD renders the manifests -- via -- Kustomize
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: kustomize-example
-spec:
-  project: default
-  source:
-    path: examples/helloWorld
-    repoURL: 'https://github.com/kubernetes-sigs/kustomize'
-    targetRevision: HEAD
-  destination:
-    namespace: default
-    server: 'https://kubernetes.default.svc'
-```
+* Kustomize application manifests    
+  * follow [GitOps](https://opengitops.dev/about/)
+    * == declarative
 
-If the `kustomization.yaml` file exists at the location pointed to by `repoURL` and `path`, Argo CD will render the manifests using Kustomize.
-
-The following configuration options are available for Kustomize:
-
-* `namePrefix` overrides the namePrefix in the kustomization.yaml for Kustomize apps
-* `nameSuffix` overrides the nameSuffix in the kustomization.yaml for Kustomize apps
-* `images` is a list of Kustomize image overrides
-* `replicas` is a list of Kustomize replica overrides
-* `commonLabels` is a string map of additional labels
-* `labelWithoutSelector` is a boolean value which defines if the common label(s) should be applied to resource selectors. It also excludes common labels from templates unless `labelIncludeTemplates` is set to true.
-* `labelIncludeTemplates` is a boolean value which defines if the common label(s) should be applied to resource templates.
-* `commonAnnotations` is a string map of additional annotations
-* `namespace` is a Kubernetes resources namespace
-* `commonAnnotationsEnvsubst` is a boolean value which enables env variables substitution in annotation  values
-* `patches` is a list of Kustomize patches that supports inline updates
-* `components` is a list of Kustomize components
-* `ignoreMissingComponents` prevents kustomize from failing when components do not exist locally by not appending them to kustomization file
-* `forceCommonLabels` is a boolean value. When true, Argo CD passes --force to kustomize edit add label, allowing an existing commonLabels/labels entry in kustomization.yaml to be replaced. When false, generation fails if the label key already exists.
-* `forceCommonAnnotations` is a boolean value. When true, Argo CD passes --force to kustomize edit add annotation, allowing an existing commonAnnotations entry in kustomization.yaml to be replaced. When false, generation fails if the annotation key already exists. 
-
-To use Kustomize with an overlay, point your path to the overlay.
-
-> [!TIP]
-> If you're generating resources, you should read up how to ignore those generated resources using the [`IgnoreExtraneous` compare option](compare-options.md).
+* 👀how to configure Argo CD's Application/ use Kustomize?👀
+  * requirements
+    * configure `spec.source.repoURL` & `spec.source.path` /  
+      * 👀"kustomization.yaml" exists | `spec.source.repoURL` + `spec.source.path` 👀
+        * if you use [overlays](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#overlay) -> use overlay's "kustomization.yaml"
+  * `spec.source.kustomize`
+    * OPTIONAL
+    * [here](/manifests/crds/application-crd.yaml)
+    * ALLOWED properties
+      * `namePrefix`
+        * overrides the namePrefix in the kustomization.yaml for Kustomize apps
+      * `nameSuffix`
+        * overrides the nameSuffix in the kustomization.yaml for Kustomize apps
+      * `images`
+        * == list of Kustomize image overrides
+      * `replicas`
+        * == list of Kustomize replica overrides
+      * `commonLabels`
+        * == string map of additional labels
+      * `labelWithoutSelector`
+        * == boolean value which defines if the common label(s) should be applied to resource selectors
+        * It also excludes common labels from templates unless `labelIncludeTemplates` is set to true.
+      * `labelIncludeTemplates`
+        * == boolean value which defines if the common label(s) should be applied to resource templates.
+      * `commonAnnotations`
+        * == string map of additional annotations
+      * `namespace`
+        * == Kubernetes resources namespace
+      * `commonAnnotationsEnvsubst` 
+        * == boolean value which enables env variables substitution in annotation  values
+      * `patches`
+        * == list of Kustomize patches that supports inline updates
+      * `components`
+        * == list of Kustomize components
+      * `ignoreMissingComponents`
+        * prevents kustomize from failing when components do not exist locally by not appending them to kustomization file
+      * `forceCommonLabels`
+        * == boolean value
+        * When true, Argo CD passes --force to kustomize edit add label, allowing an existing commonLabels/labels entry in kustomization.yaml to be replaced
+        * When false, generation fails if the label key already exists.
+      * `forceCommonAnnotations` 
+        * == boolean value
+        * When true, Argo CD passes --force to kustomize edit add annotation, allowing an existing commonAnnotations entry in kustomization.yaml to be replaced
+        * When false, generation fails if the annotation key already exists.
+  * if you're generating resources -> you can -- , via [`IgnoreExtraneous` compare option](compare-options.md), -- ignore them 
 
 ## Patches
-Patches are a way to kustomize resources using inline configurations in Argo CD applications.  `patches`  follow the same logic as the corresponding Kustomization.  Any patches that target existing Kustomization file will be merged.
+
+Patches are a way to kustomize resources using inline configurations in Argo CD applications
+*  `patches`  follow the same logic as the corresponding Kustomization
+*  Any patches that target existing Kustomization file will be merged.
 
 This Kustomize example sources manifests from the `/kustomize-guestbook` folder of the `argoproj/argocd-example-apps` repository, and patches the `Deployment` to use port `443` on the container.
 ```yaml
@@ -96,7 +112,9 @@ spec:
               value: 443
 ```
 
-The inline kustomize patches work well with `ApplicationSets`, too. Instead of maintaining a patch or overlay for each cluster, patches can now be done in the `Application` template and utilize attributes from the generators. For example, with [`external-dns`](https://github.com/kubernetes-sigs/external-dns/) to set the [`txt-owner-id`](https://github.com/kubernetes-sigs/external-dns/blob/e1adc9079b12774cccac051966b2c6a3f18f7872/docs/registry/registry.md?plain=1#L6) to the cluster name.
+The inline kustomize patches work well with `ApplicationSets`, too
+* Instead of maintaining a patch or overlay for each cluster, patches can now be done in the `Application` template and utilize attributes from the generators
+* For example, with [`external-dns`](https://github.com/kubernetes-sigs/external-dns/) to set the [`txt-owner-id`](https://github.com/kubernetes-sigs/external-dns/blob/e1adc9079b12774cccac051966b2c6a3f18f7872/docs/registry/registry.md?plain=1#L6) to the cluster name.
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -132,10 +150,15 @@ spec:
 ```
 
 ## Components
-Kustomize [components](https://github.com/kubernetes-sigs/kustomize/blob/master/examples/components.md) encapsulate both resources and patches together. They provide a powerful way to modularize and reuse configuration in Kubernetes applications. 
-If Kustomize is passed a non-existing component directory, it will error out. Missing component directories can be ignored (meaning, not passed to Kustomize) using `ignoreMissingComponents`. This can be particularly helpful to implement a [default/override pattern].
 
-Outside of Argo CD, to utilize components, you must add the following to the `kustomization.yaml` that the Application references. For example:
+Kustomize [components](https://github.com/kubernetes-sigs/kustomize/blob/master/examples/components.md) encapsulate both resources and patches together
+* They provide a powerful way to modularize and reuse configuration in Kubernetes applications. 
+If Kustomize is passed a non-existing component directory, it will error out
+* Missing component directories can be ignored (meaning, not passed to Kustomize) using `ignoreMissingComponents`
+* This can be particularly helpful to implement a [default/override pattern].
+
+Outside of Argo CD, to utilize components, you must add the following to the `kustomization.yaml` that the Application references
+* For example:
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -168,13 +191,16 @@ spec:
 
 If you have remote bases that are either (a) HTTPS and need username/password (b) SSH and need SSH private key, then they'll inherit that from the app's repo.
 
-This will work if the remote bases use the same credentials/private key. It will not work if they use different ones. For security reasons your app only ever knows about its own repo (not other team's or users repos), and so you won't be able to access other private repos, even if Argo CD knows about them.
+This will work if the remote bases use the same credentials/private key
+* It will not work if they use different ones
+* For security reasons your app only ever knows about its own repo (not other team's or users repos), and so you won't be able to access other private repos, even if Argo CD knows about them.
 
 Read more about [private repos](private-repositories.md).
 
 ## `kustomize build` Options/Parameters
 
-To provide build options to `kustomize build` of default Kustomize version, use `kustomize.buildOptions` field of `argocd-cm` ConfigMap. Use `kustomize.buildOptions.<version>` to register version specific build options.
+To provide build options to `kustomize build` of default Kustomize version, use `kustomize.buildOptions` field of `argocd-cm` ConfigMap
+* Use `kustomize.buildOptions.<version>` to register version specific build options.
 
 ```yaml
 apiVersion: v1
@@ -240,7 +266,8 @@ argocd app set <appName> --kustomize-version v3.5.4
 
 Kustomize apps have access to the [standard build environment](build-environment.md) which can be used in combination with a [config management plugin](../operator-manual/config-management-plugins.md) to alter the rendered manifests.
 
-You can use these build environment variables in your Argo CD Application manifests. You can enable this by setting `.spec.source.kustomize.commonAnnotationsEnvsubst` to `true` in your Application manifest.
+You can use these build environment variables in your Argo CD Application manifests
+* You can enable this by setting `.spec.source.kustomize.commonAnnotationsEnvsubst` to `true` in your Application manifest.
 
 For example, the following Application manifest will set the `app-source` annotation to the name of the Application:
 
@@ -288,8 +315,11 @@ data:
 
 ## Setting the manifests' namespace
 
-The `spec.destination.namespace` field only adds a namespace when it's missing from the manifests generated by Kustomize. It also uses `kubectl` to set the namespace, which sometimes misses namespace fields in certain resources (for example, custom resources). In these cases, you might get an error like this: `ClusterRoleBinding.rbac.authorization.k8s.io "example" is invalid: subjects[0].namespace: Required value.`
+The `spec.destination.namespace` field only adds a namespace when it's missing from the manifests generated by Kustomize
+* It also uses `kubectl` to set the namespace, which sometimes misses namespace fields in certain resources (for example, custom resources)
+* In these cases, you might get an error like this: `ClusterRoleBinding.rbac.authorization.k8s.io "example" is invalid: subjects[0].namespace: Required value.`
 
-Using Kustomize directly to set the missing namespaces can resolve this problem. Setting `spec.source.kustomize.namespace` instructs Kustomize to set namespace fields to the given value.
+Using Kustomize directly to set the missing namespaces can resolve this problem
+* Setting `spec.source.kustomize.namespace` instructs Kustomize to set namespace fields to the given value.
 
 If `spec.destination.namespace` and `spec.source.kustomize.namespace` are both set, Argo CD will defer to the latter, the namespace value set by Kustomize.

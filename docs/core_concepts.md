@@ -9,6 +9,7 @@
       * == group of Kubernetes resources / defined -- by a -- manifest 
   * **Application source type**
     * == **Tool** / used -- to -- build the application
+    * [here](user-guide/application_sources.md)
   * **Target state** 
     * application's desired state
     * == files | Git repository
