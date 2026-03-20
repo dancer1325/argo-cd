@@ -47,8 +47,9 @@ Without hydrator: https://raw.githubusercontent.com/argoproj/argo-cd/stable/mani
 With hydrator:    https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install-with-hydrator.yaml
 ```
 
-> [!IMPORTANT]
-> The `*-with-hydrator-install.yaml` manifests will eventually be removed when the source hydrator is either enabled
+- "*-with-hydrator-install.yaml`
+" manifests
+  - eventually be removed when the source hydrator is either enabled
 > by default or removed. The upgrade guide will note if the `install-with-hydrator.yaml` manifests are no longer
 > available.
 
