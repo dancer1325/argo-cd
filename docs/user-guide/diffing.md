@@ -1,15 +1,16 @@
 # Diffing Customization
 
-It is possible for an application to be `OutOfSync` even immediately after a successful Sync operation. Some reasons for this might be:
-
-- There is a bug in the manifest, where it contains extra/unknown fields from the actual K8s spec. These extra fields would get dropped when querying Kubernetes for the live state,
+- `OutOfSync`
+  - application's status 
+    - it can happen EVEN INMEDIATELY AFTER  successful sync operation
+      - POSSIBLE REASONS
+        - bug | manifest, where it contains extra/unknown fields from the actual K8s spec. These extra fields would get dropped when querying Kubernetes for the live state,
   resulting in an `OutOfSync` status indicating a missing field was detected.
-- The sync was performed (with pruning disabled), and there are resources which need to be deleted.
-- A controller or [mutating webhook](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#mutatingadmissionwebhook) is altering the object after it was
-  submitted to Kubernetes so it differs from the one in Git.
-- A Helm chart is using a template function such as [`randAlphaNum`](https://github.com/helm/charts/blob/master/stable/redis/templates/secret.yaml#L16),
-  which generates different data every time `helm template` is invoked.
-- For Horizontal Pod Autoscaling (HPA) objects, the HPA controller is known to reorder `spec.metrics`
+        - sync was performed (pruning disabled) & there are resources / need to be deleted
+        - controller OR [mutating webhook](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#mutatingadmissionwebhook) / alter the object AFTER being submitted | Kubernetes ( -> != Git)
+        - Helm chart is using a template function
+          - _Example:_ [`randAlphaNum`](https://github.com/helm/charts/blob/master/stable/redis/templates/secret.yaml#L16) generates different data every time `helm template` is invoked.
+        - For Horizontal Pod Autoscaling (HPA) objects, the HPA controller is known to reorder `spec.metrics`
   in a specific order. See [kubernetes issue #74099](https://github.com/kubernetes/kubernetes/issues/74099).
   To work around this, you can order `spec.metrics` in Git in the same order that the controller
   prefers.
