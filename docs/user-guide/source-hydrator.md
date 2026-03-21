@@ -55,8 +55,16 @@ With hydrator:    https://raw.githubusercontent.com/argoproj/argo-cd/stable/mani
 
 ## Using the Source Hydrator
 
-To use the source hydrator, you must first install a push and a pull secret. This example uses a GitHub App for authentication, but
-you can use [any authentication method that Argo CD supports for repository access](../operator-manual/declarative-setup.md#repositories).
+- requirements
+  - install a 
+    - push secret
+    - pull secret
+
+
+This example uses a GitHub App
+
+
+ [authentication method / Argo CD supports -- for -- repository access](../operator-manual/declarative-setup.md#repositories)
 
 ```yaml
 apiVersion: v1
@@ -98,7 +106,7 @@ The only difference between the secrets above, besides the resource name, is tha
 `argocd.argoproj.io/secret-type: repository-write`, which causes the Secret to be used for pushing manifests to git
 instead of pulling from git. Argo CD requires different secrets for pushing and pulling to provide better isolation.
 
-Once your secrets are installed, set the `spec.sourceHydrator` field of the Application. For example:
+- set the `spec.sourceHydrator` field of the Application. For example:
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
