@@ -1,74 +1,170 @@
 # Reconcile Optimization
 
 * reconcile
-  * == action / 
+  * == process / 
     * desired state == cluster state
+    * 💡when it's triggered💡
+      * if resource changes & 
+        * NOT ignored -> ALWAYS reconcile 
+        * ignored & resource's [health status](./health.md) changes -> reconcile
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Kubernetes Cluster                            │
+│                                                                  │
+│  Resource changes (Pod restart, HPA scaling, etc.)              │
+└────────────────────────────┬─────────────────────────────────────┘
+                             ↓
+╔═════════════════════════════════════════════════════════════════╗
+║              Application Controller (watches & processes)       ║
+╠═════════════════════════════════════════════════════════════════╣
+║                    ┌────────────────────┐                       ║
+║                    │  1. Watch Resources │                      ║
+║                    │  (Kubernetes API)   │                      ║
+║                    └────────┬────────────┘                      ║
+║                             ↓                                   ║
+║                    ┌────────────────────┐                       ║
+║                    │  2. Detect Change  │                       ║
+║                    │  (Watch event)      │                      ║
+║                    └────────┬────────────┘                      ║
+║                             ↓                                   ║
+║              ┌──────────────────────────────┐                   ║
+║              │  3. ignoreResourceUpdates?   │                   ║
+║              │  • System-level config       │                   ║
+║              │  • Resource annotation       │                   ║
+║              └──────┬───────────────┬───────┘                   ║
+║                     │               │                            ║
+║                 YES │               │ NO                         ║
+║                     ↓               ↓                            ║
+║              ┌──────────┐   ┌─────────────────────────┐          ║
+║              │   STOP   │   │ 4. Enqueue Application  │           ║
+║              │          |   │    (== added to queue)  │          ║
+║              └──────────┘   └────────┬────────────────┘          ║
+║                                      ↓                           ║
+║                             ⏱️  Wait until:                       ║
+║                             • timeout.reconciliation (default 3m)║
+║                             • Manual refresh                     ║
+║                             • Webhook event                      ║
+║                                      ↓                           ║
+║                 ╔═══════════════════════════════╗                ║
+║                 ║  RECONCILE PROCESS (5-7)      ║                ║
+║                 ╚═══════════════════════════════╝                ║
+║                                      ↓                           ║
+║                    ┌──────────────────────────────┐              ║
+║                    │  5. Refresh                  │              ║
+║                    │  ┌────────────────────────┐  │              ║
+║                    │  │ • Get desired state:   │  │              ║
+║                    │  │   - From cache OR      │  │              ║
+║                    │  │   - Fetch from Git     │  │              ║
+║                    │  │   (via Repo Server)    │  │              ║
+║                    │  │                        │  │              ║
+║                    │  │ • Get live state       │  │              ║
+║                    │  │   (via Kube API)       │  │              ║
+║                    │  │                        │  │              ║
+║                    │  │ • Compare both with    │  │              ║
+║                    │  │   ignoreDifferences:   │  │              ║
+║                    │  │   - System-level       │  │              ║
+║                    │  │   - Per-app config     │  │              ║
+║                    │  └────────────────────────┘  │              ║
+║                    └──────────┬───────────────────┘              ║
+║                               ↓                                  ║
+║                    ┌──────────────────────────────┐              ║
+║                    │  6. Update Sync Status       │              ║
+║                    │  (based on comparison)       │              ║
+║                    └──────┬─────────┬─────────────┘              ║
+║                           │         │                            ║
+║                    Synced │         │ OutOfSync                  ║
+║                           ↓         ↓                            ║
+║                      ┌────────┐  ┌──────────────────────┐        ║
+║                      │  END   │  │ 7. Auto-Sync         │        ║
+║                      └────────┘  │    (if enabled)      │        ║
+║                                  └──────────────────────┘        ║
+║                                            ↓                     ║
+║                                          END                     ║
+╚═════════════════════════════════════════════════════════════════╝
+```
 
 * Argo CD Application
-  * if a resource changes -> it's refreshed
+  * if a resource (tracked OR untracked) changes -> it's refreshed
     * COMMON PROBLEMS: ⚠️HIGH CPU usage | "argocd-application-controller"⚠️
       * Reason: 🧠Kubernetes controllers OFTEN update the resources / they watch periodically -> CONTINUOUSLY reconcile🧠
       * SOLUTION: 👀ignore resource updates | specific fields👀
         * -- for -- [tracked resources](../user-guide/resource_tracking.md)
         * -- for -- [untracked resources](#ignoring-updates-for-untracked-resources)
 
-TODO: 
-When a resource update is ignored, if the resource's [health status](./health.md) does not change, 
-the Application that this resource belongs to will not be reconciled.
-
 ## System-Level Configuration
 
-* `resource.ignoreResourceUpdatesEnabled`
-  * enable OR disable
-    * Argo CD can ignore resource updates
-  * by default, `true`
-    * -> reduce unnecessary reconcile operations
-  * ways to configure
-    * GENERAL
-      * | "argocd-cm" ConfigMap,
-        * set `resource.ignoreResourceUpdatesEnabled`
-    * | ALL tracked resources
-      * | "argocd-cm" ConfigMap,
-        * set `resource.ignoreResourceUpdatesEnabled.all`
+* | "argocd-cm" ConfigMap,
+  * `resource.ignoreResourceUpdatesEnabled`
+    * enable OR disable
+      * Argo CD can ignore resource updates
+    * by default, `true`
+      * -> reduce unnecessary reconcile operations
+    * ALLOWED values
+      * `'true'`
+      * `'false'`
+  * `resource.customizations.ignoreResourceUpdates.all`
 
-TODO: 
+      ```yaml
+      data:
+        resource.customizations.ignoreResourceUpdates.all: |                                                                                                                                                                                
+          # ways to specify the resource updates / ignore
+          jsonPointers:              # [JSON Pointer]                                                                                                                                                                   
+          - /path/to/field                                                                                                                                                                                                                     
+          jqPathExpressions:         # [JQPathExpressions]                                                                                                                                                                      
+          - .path.to.field  
+      ```
+    * [JSON pointers](https://tools.ietf.org/html/rfc6902)
+    * [JQ path expressions](https://stedolan.github.io/jq/manual/#path(path_expression))
+  * `resource.customizations.ignoreResourceUpdates.<group>_<kind>`
+    * ⚠️override `resource.customizations.ignoreResourceUpdates.all`⚠️
 
-Argo CD allows ignoring resource updates at a specific JSON path, 
-using [RFC6902 JSON patches](https://tools.ietf.org/html/rfc6902) and
-[JQ path expressions](https://stedolan.github.io/jq/manual/#path(path_expression))
-* It can be configured for a specified group and kind
-in `resource.customizations` key of the `argocd-cm` ConfigMap.
-
-Following is an example of a customization which ignores the `refreshTime` status field
-of an [`ExternalSecret`](https://external-secrets.io/main/api/externalsecret/) resource:
-
-```yaml
-data:
-  resource.customizations.ignoreResourceUpdates.external-secrets.io_ExternalSecret:
-    |
-    jsonPointers:
-    - /status/refreshTime
-    # JQ equivalent of the above:
-    # jqPathExpressions:
-    # - .status.refreshTime
-```
+      ```yaml
+      data:
+        resource.customizations.ignoreResourceUpdates.<group>_<kind>: |                                                                                                                                                                                
+          # ways to specify the resource updates / ignore
+          jsonPointers:              # [JSON Pointer]                                                                                                                                                                   
+          - /path/to/field                                                                                                                                                                                                                     
+          jqPathExpressions:         # [JQPathExpressions]                                                                                                                                                                      
+          - .path.to.field  
+      ```
+    * [JSON pointers](https://tools.ietf.org/html/rfc6902)
+    * [JQ path expressions](https://stedolan.github.io/jq/manual/#path(path_expression))
 
 ### Using ignoreDifferences to ignore reconcile
 
-By default, the existing system-level `ignoreDifferences` customizations will be added to ignore resource updates as well
-* This helps reduce config management by preventing you to copy all existing ignore differences configurations.
+* `ignoreDifferences` 
+  * allows
+    * | calculate sync status, ignore certain fields
+  * by default, 
+    * 👀`ignoreDifferences` customizations -> apply | `ignoreResourceUpdates`👀
+      * Reason:🧠reduce config management -- by -- preventing you to copy duplicated🧠
+      * if you want to disable it `ignoreDifferencesOnResourceUpdates: false`
 
-To disable this behavior, the `ignoreDifferencesOnResourceUpdates` setting can be disabled:
+* | "argocd-cm" ConfigMap,
+  * `resource.customizations.ignoreDifferences.all`
 
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: argocd-cm
-data:
-  resource.compareoptions: |
-    ignoreDifferencesOnResourceUpdates: false
-```
+      ```yaml
+      data:
+        resource.customizations.ignoreDifferences.all: |                                                                                                                                                                                
+          # ways to specify the resource updates / ignore
+          jsonPointers:              # [JSON Pointer]                                                                                                                                                                   
+          - /path/to/field                                                                                                                                                                                                                     
+          jqPathExpressions:         # [JQPathExpressions]                                                                                                                                                                      
+          - .path.to.field  
+      ```
+  * `resource.customizations.ignoreDifferences.<group>_<kind>`
+    * ⚠️override `resource.customizations.ignoreDifferences.all`⚠️
+
+      ```yaml
+      data:
+        resource.customizations.ignoreDifferences.<group>_<kind>: |                                                                                                                                                                                
+          # ways to specify the resource updates / ignore
+          jsonPointers:              # [JSON Pointer]                                                                                                                                                                   
+          - /path/to/field                                                                                                                                                                                                                     
+          jqPathExpressions:         # [JQPathExpressions]                                                                                                                                                                      
+          - .path.to.field  
+      ```
 
 ## Default Configuration
 
@@ -77,53 +173,55 @@ data:
   * `metadata.resourceVersion`
   * `metadata.managedFields`
 
-## Finding Resources to Ignore
+## how to find high-churn resources?
 
-TODO: 
-The application controller logs when a resource change triggers a refresh
-* You can use these logs to find
-high-churn resource kinds and then inspect those resources to find which fields to ignore.
+* high-churn resources
+  * == resources / CONTINUOUSLY change
+    * -> CONTINUOUSLY trigger reconcile
+      * COMMON PROBLEMS: ⚠️HIGH CPU usage | "argocd-application-controller"⚠️
 
-To find these logs, search for `"Requesting app refresh caused by object update"`
-* The logs include structured
-fields for `api-version` and `kind`
-* Counting the number of refreshes triggered, by api-version/kind should
-reveal the high-churn resource kinds.
+* steps
+  * configure the application-controller's log level == `debug`
+  * look for | application-controller's logs: `"Requesting app refresh caused by object update"`
+    * return `api-version` & `kind` fields 
+    * hit | refresh step
+  * identify the 
+    * high-churn resource kinds
+      * == count NUMBER of `"Requesting app refresh caused by object update"` / EACH `kind`
+    * fields / are changing
 
-> [!NOTE]
-> These logs are at the `debug` level
-* Configure the application-controller's log level to `debug`.
+      ```shell
+      kubectl get <resource> -o yaml > /tmp/before.yaml
+        # Wait a minute or two.
+      kubectl get <resource> -o yaml > /tmp/after.yaml
+      diff /tmp/before.yaml /tmp/after.yaml
+      ```
 
-Once you have identified some resources which change often, you can try to determine which fields are changing
-* Here is
-one approach:
+## how to check that resource updates are ignored?
 
-```shell
-kubectl get <resource> -o yaml > /tmp/before.yaml
-# Wait a minute or two.
-kubectl get <resource> -o yaml > /tmp/after.yaml
-diff /tmp/before.yaml /tmp/after.yaml
-```
-
-The diff can give you a sense for which fields are changing and should perhaps be ignored.
-
-## Checking Whether Resource Updates are Ignored
-
-Whenever Argo CD skips a refresh due to an ignored resource update, the controller logs the following line:
-"Ignoring change of object because none of the watched resource fields have changed".
-
-Search the application-controller logs for this line to confirm that your resource ignore rules are being applied.
-
-> [!NOTE]
-> These logs are at the `debug` level
-* Configure the application-controller's log level to `debug`.
+* steps
+  * configure the application-controller's log level == `debug`
+  * look for | application-controller's logs: `"Ignoring change of object because none of the watched resource fields have changed"`
 
 ## Ignoring updates for untracked resources
 
-use the argocd.argoproj.io/ignore-resource-updates annotations
+* untracked resources
+  * == resources / NOT exist | Git & exist | cluster
+    * _Example:_ `Deployment` | Git, 
+      * creates DEPENDENT `ReplicaSet` & `Pod` | Cluster
+      * DEPENDENT `ReplicaSet` & `Pod` do NOT exist | Git
+  * Argo CD 
+    * ❌do NOT reconcile them ❌
+      * Reason:🧠it does NOT exist | Git🧠
+    * 💡monitors them💡
+      * _Example:_ if DEPENDENT `ReplicaSet` & `Pod` | Cluster change -> trigger a reconcile of whole Application
+      * COMMON PROBLEMS: ⚠️HIGH CPU usage | "argocd-application-controller"⚠️
+  * ⭐️ways to ignore untracked resources updates⭐️
+    * | untracked resources,
+      * you must add `argocd.argoproj.io/ignore-resource-updates=true`
 
-ArgoCD will only apply `ignoreResourceUpdates` configuration to tracked resources of an application
-* This means dependent resources, such as a `ReplicaSet` and `Pod` created by a `Deployment`, will not ignore any updates and trigger a reconcile of the application for any changes.
-
-If you want to apply the `ignoreResourceUpdates` configuration to an untracked resource, you can add the
-`argocd.argoproj.io/ignore-resource-updates=true` annotation in the dependent resources manifest.
+* `argocd.argoproj.io/ignore-resource-updates` annotations
+  * ArgoCD 
+    * ⚠️ONLY apply | application's tracked resources ⚠️
+    * ❌does NOT apply them | tracked' DEPENDENT resources❌
+      * _Example:_ `Deployment` | GIT -> `Deployment`'s DEPENDENT `ReplicaSet` & `Pod` are NOT ignored
