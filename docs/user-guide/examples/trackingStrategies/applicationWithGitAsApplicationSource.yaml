@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: myapp-helm-prod
+spec:
+  source:
+    path: manifests/
+    repoURL: https://github.com/myorg/myapp
+    # 1. HEAD / Branch Tracking
+    # 1.1 branch tracking
+    targetRevision: main         # main branch
+    #targetRevision: develop     # develop branch
+    # 1.2 HEAD
+    #targetRevision: HEAD        # Symbolic reference
+    # 2. Pin -- to a -- version
+    # 2.1 tag
+    # targetRevision: 1.2.0
+    # 2.2 commit SHA
+    # targetRevision: 1a2b3c4d5e6f7g8h
+    # 3. Track patches
+    # 3.1 -- via -- *
+    # targetRevision: 1.2.*
+    # 3.2 -- by -- specifying a range
+    # targetRevision: ">=1.2.0 <1.3.0"
+    # 4. Track minor releases
+    # 4.1 -- via -- *
+    # targetRevision: 1.*     # Tracks 1.0.0, 1.1.0, 1.2.0, etc.
+    # 4.2 -- by -- specifying a range
+    # targetRevision: ">=1.0.0 <2.0.0"
+    # 5. Use the latest
+    # 5.1 -- via -- *
+    # targetRevision: "*"     # Latest stable version
+    # 5.2 -- by -- range
+    # targetRevision: ">=0.0.0"
+    # 6. Use the latest including pre-releases
+    # 6.1 -- via -- *
+    # targetRevision: "*-0"
+    # 6.2 -- by -- range
+    # targetRevision: ">=0.0.0-0"

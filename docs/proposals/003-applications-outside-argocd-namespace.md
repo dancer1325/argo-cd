@@ -13,18 +13,18 @@ creation-date: 2021-06-05
 last-updated: 2021-06-05
 ---
 
-# Allow Application resources to exist in any namespace
+# Allow Application resources can exist | ANY namespace
 
-Improve Argo CDs multi-tenancy model to allow Application CRs to be created
-and consumed from different namespaces than the control plane's namespace.
+* goal
+  * | Argo CDs multi-tenancy model,
+    * enable Application CRs can be created & consumed | namespaceS / != control plane's namespace
 
-Related issues:
-- https://github.com/argoproj/argo-cd/issues/3474
+Related issues
+- [here](https://github.com/argoproj/argo-cd/issues/3474)
 
 ## Open Questions [optional]
 
-* The major open question is, how to name `Application`s in a scenario where
-  the K8s resource's name isn't unique anymore.
+* if the K8s resource's name is NOT UNIQUE anymore -> how to name `Application`S
 
 ## Summary
 

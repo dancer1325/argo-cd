@@ -1,5 +1,11 @@
 # Config Management Plugins
 
+* goal
+  * how about config management plugins,
+    * create
+    * install
+    * use
+
 * Argo CD's config management tools
   * "native" ones
     * [Helm](../user-guide/helm.md)
@@ -8,24 +14,25 @@
   * custom
     * -- via -- Config Management Plugin (CMP)
 
-TODO:
-The Argo CD "repo server" component is in charge of building Kubernetes manifests based on some source files from a
-Helm, OCI, or Git repository. When a config management plugin is correctly configured, the repo server may delegate the
-task of building manifests to the plugin.
+* Argo CD "repo server"
+  * responsible for
+    * building Kubernetes manifests -- based on -- some source files (_Examples:_ Helm, OCI, or Git repository)
+  * 💡if the config management plugin is CORRECTLY configured -> repo server may delegate the task of building manifests -- to the -- plugin💡
 
-The following sections will describe how to create, install, and use plugins. Check out the
-[example plugins](https://github.com/argoproj/argo-cd/tree/master/examples/plugins) for additional guidance.
-
-> [!WARNING]
-> Plugins are granted a level of trust in the Argo CD system, so it is important to implement plugins securely. Argo
-> CD administrators should only install plugins from trusted sources, and they should audit plugins to weigh their
-> particular risks and benefits.
+* Config management plugins
+  * _Examples:_ [here](/examples/plugins)
+  * recommendations
+    * ⚠️implement them SECURELY⚠️
+      * Reason:🧠implemented -- as -- Argo CD RepoServer's sidecar🧠
 
 ## Installing a config management plugin
 
 ### Sidecar plugin
 
-An operator can configure a plugin tool via a sidecar to repo-server. The following changes are required to configure a new plugin:
+TODO: 
+An operator can configure a plugin tool via a sidecar to repo-server
+* configure the new plugin
+  * TODO:
 
 #### Write the plugin configuration file
 

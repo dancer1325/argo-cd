@@ -73,22 +73,22 @@ type watchOpts struct {
 		Example: `  # Create a directory app
   argocd app create guestbook --repo https://github.com/argoproj/argocd-example-apps.git --path guestbook --dest-namespace default --dest-server https://kubernetes.default.svc --directory-recurse
 
-  # Create a Jsonnet app
+## Create aJsonnet app
   argocd app create jsonnet-guestbook --repo https://github.com/argoproj/argocd-example-apps.git --path jsonnet-guestbook --dest-namespace default --dest-server https://kubernetes.default.svc --jsonnet-ext-str replicas=2
 
-  # Create a Helm app
+## Create aHelm app
   argocd app create helm-guestbook --repo https://github.com/argoproj/argocd-example-apps.git --path helm-guestbook --dest-namespace default --dest-server https://kubernetes.default.svc --helm-set replicaCount=2
 
-  # Create a Helm app from a Helm repo
+## Create aHelm app from a Helm repo
   argocd app create nginx-ingress --repo https://charts.helm.sh/stable --helm-chart nginx-ingress --revision 1.24.3 --dest-namespace default --dest-server https://kubernetes.default.svc
 
-  # Create a Kustomize app
+## Create aKustomize app
   argocd app create kustomize-guestbook --repo https://github.com/argoproj/argocd-example-apps.git --path kustomize-guestbook --dest-namespace default --dest-server https://kubernetes.default.svc --kustomize-image quay.io/argoprojlabs/argocd-e2e-container:0.1
 
-  # Create a MultiSource app while yaml file contains an application with multiple sources
+## Create aMultiSource app while yaml file contains an application with multiple sources
   argocd app create guestbook --file <path-to-yaml-file>
 
-  # Create a app using a custom tool:
+## Create aapp using a custom tool:
   argocd app create kasane --repo https://github.com/argoproj/argocd-example-apps.git --path plugins/kasane --dest-namespace default --dest-server https://kubernetes.default.svc --config-management-plugin kasane`,
 		Run: func(c *cobra.Command, args []string) {
 			ctx := c.Context()
@@ -789,23 +789,7 @@ func getServer(app *argoappv1.Application) string {
 	command := &cobra.Command{
 		Use:   "set APPNAME",
 		Short: "Set application parameters",
-		Example: templates.Examples(`
-  # Set application parameters for the application "my-app"
-  argocd app set my-app --parameter key1=value1 --parameter key2=value2
-
-  # Set and validate application parameters for "my-app"
-  argocd app set my-app --parameter key1=value1 --parameter key2=value2 --validate
-
-  # Set and override application parameters for a source at position 1 under spec.sources of app my-app. source-position starts at 1.
-  argocd app set my-app --source-position 1 --repo https://github.com/argoproj/argocd-example-apps.git
-
-  # Set and override application parameters for a source named "test" under spec.sources of app my-app.
-  argocd app set my-app --source-name test --repo https://github.com/argoproj/argocd-example-apps.git
-
-  # Set application parameters and specify the namespace
-  argocd app set my-app --parameter key1=value1 --parameter key2=value2 --namespace my-namespace
-  		`),
-
+		Example: templates.Examples(``),
 		Run: func(c *cobra.Command, args []string) {
 			ctx := c.Context()
 
@@ -865,6 +849,25 @@ func getServer(app *argoappv1.Application) string {
 	command.Flags().IntVar(&sourcePosition, "source-position", -1, "Position of the source from the list of sources of the app. Counting starts at 1.")
 	return command
 }
+## _Examples:_ 
+
+```shell
+# Set application parameters for the application "my-app"
+argocd app set my-app --parameter key1=value1 --parameter key2=value2
+
+# Set and validate application parameters for "my-app"
+argocd app set my-app --parameter key1=value1 --parameter key2=value2 --validate
+
+# Set and override application parameters for a source at position 1 under spec.sources of app my-app. source-position starts at 1.
+argocd app set my-app --source-position 1 --repo https://github.com/argoproj/argocd-example-apps.git
+
+# Set and override application parameters for a source named "test" under spec.sources of app my-app.
+argocd app set my-app --source-name test --repo https://github.com/argoproj/argocd-example-apps.git
+
+# Set application parameters and specify the namespace
+argocd app set my-app --parameter key1=value1 --parameter key2=value2 --namespace my-namespace
+```
+
 
 // unsetOpts describe what to unset in an Application.
 type unsetOpts struct {
@@ -906,20 +909,7 @@ func (o *unsetOpts) KustomizeIsZero() bool {
 	command := &cobra.Command{
 		Use:   "unset APPNAME parameters",
 		Short: "Unset application parameters",
-		Example: `  # Unset kustomize override kustomize image
-  argocd app unset my-app --kustomize-image=alpine
-
-  # Unset kustomize override suffix
-  argocd app unset my-app --namesuffix
-
-  # Unset kustomize override suffix for source at position 1 under spec.sources of app my-app. source-position starts at 1.
-  argocd app unset my-app --source-position 1 --namesuffix
-
-  # Unset kustomize override suffix for source named "test" under spec.sources of app my-app.
-  argocd app unset my-app --source-name test --namesuffix
-
-  # Unset parameter override
-  argocd app unset my-app -p COMPONENT=PARAM`,
+		Example: ``,
 
 		Run: func(c *cobra.Command, args []string) {
 			ctx := c.Context()
@@ -1004,6 +994,25 @@ func (o *unsetOpts) KustomizeIsZero() bool {
 	command.Flags().IntVar(&sourcePosition, "source-position", -1, "Position of the source from the list of sources of the app. Counting starts at 1.")
 	return command
 }
+
+## _Examples:_ 
+
+```shell
+# Unset kustomize override kustomize image
+argocd app unset my-app --kustomize-image=alpine
+
+# Unset kustomize override suffix
+argocd app unset my-app --namesuffix
+
+# Unset kustomize override suffix for source at position 1 under spec.sources of app my-app. source-position starts at 1.
+argocd app unset my-app --source-position 1 --namesuffix
+
+# Unset kustomize override suffix for source named "test" under spec.sources of app my-app.
+argocd app unset my-app --source-name test --namesuffix
+
+# Unset parameter override
+argocd app unset my-app -p COMPONENT=PARAM`
+```
 
 func unset(source *argoappv1.ApplicationSource, opts unsetOpts) (updated bool, nothingToUnset bool) {
 	needToUnsetRef := false

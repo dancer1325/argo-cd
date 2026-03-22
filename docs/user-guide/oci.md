@@ -23,12 +23,14 @@
 
 ## OCI Repositories special cases
 
-TODO: if there is a need to have credentials for a OCI repository, a repository credential of type *oci needs to be created.
+* if you need credentials -- for a -- OCI repository ->
+  * you need to create a repository credential / type `oci`
 ```shell
   # Add a private HTTPS OCI repository named 'stable'
   argocd repo add oci://registry-1.docker.io/bitnamicharts/nginx --type oci --name stable --username test --password test 
 ```
 
+TODO:
 In the case of Helm repositories there is another way to use OCI credentials with Helm
 ```shell
   # Add a private HTTPS OCI Helm repository named 'stable'

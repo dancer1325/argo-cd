@@ -1,5 +1,8 @@
 # `argocd app set` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/app.md)'s `func NewApplicationSetCommand(`👀
+
 ## argocd app set
 
 Set application parameters

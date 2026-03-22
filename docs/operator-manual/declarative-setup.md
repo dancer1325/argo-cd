@@ -1,7 +1,7 @@
 # Declarative Setup
 
 * goal
-  * 💡define declaratively 💡, -- via -- Kubernetes manifests (== -- via -- `kubectl apply`),
+  * 💡define declaratively 💡, -- via -- Kubernetes manifests,
     * Argo CD applications,
     * Argo CD projects
     * Argo CD settings
@@ -303,6 +303,8 @@ stringData:
 A note on noProxy: Argo CD uses exec to interact with different tools such as helm and kustomize. Not all of these tools support the same noProxy syntax as the [httpproxy go package](https://cs.opensource.google/go/x/net/+/internal-branch.go1.21-vendor:http/httpproxy/proxy.go;l=38-50) does. In case you run in trouble with noProxy not being respected you might want to try using the full domain instead of a wildcard pattern or IP range to find a common syntax that all tools support.
 
 ## Clusters
+
+### Cluster credentials
 
 * Cluster credentials
   * 💡are stored | secrets💡
