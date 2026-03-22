@@ -1,59 +1,29 @@
-# OCI
+# Open Container Initiative (OCI)
+
+* [documentation](https://opencontainers.org/)
+* OCI images
+  * uses
+    * -- as -- [application source](application_sources.md)
+  * 👀types👀
+    * plain manifests (YAML, Kustomize, Jsonnet, ...)
+    * helm charts
 
 ## Declarative
 
-Argo CD supports using OCI (Open Container Initiative) images as an application source. 
-You can install applications using OCI images through the UI, or in the declarative GitOps way.  
-Here is an example:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: my-custom-image
-  namespace: argocd
-spec:
-  project: default
-  source:
-    path: .
-    repoURL: oci://registry-1.docker.io/some-user/my-custom-image
-    targetRevision: 1.16.1
-  destination:
-    server: "https://kubernetes.default.svc"
-    namespace: my-namespace
-```
-
-Another example using a public OCI helm chart:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: nginx
-spec:
-  project: default
-  source:
-    path: .
-    repoURL: oci://registry-1.docker.io/bitnamicharts/nginx 
-    targetRevision: 15.9.0
-    helm:
-      valuesObject:
-        some-value: foo
-  destination:
-    name: "in-cluster"
-    namespace: nginx
-```
-
-The key to start using OCI images are the following components in the application spec:  
-
-* `repoURL`: Specify the OCI image repository URL using the `oci://` scheme, followed by the registry and image name.
-* `targetRevision`: Use this field to specify the desired image tag or digest.
-* `path`: Use this field to select a relative path from the expanded image. If you don't want to select a subpath, use `.`.
-In the case of OCI Helm charts (an OCI artifact where the `mediaType` is set to `application/vnd.cncf.helm.chart.content.v1.tar+gzip`), 
-the path should always be set to `.`. 
+* | "Application.yaml",
+  * `spec.source.repoURL: oci://registryName/imageName`
+    * == OCI image repository URL  
+  * `spec.source.targetRevision`
+    * == desired image tag OR digest
+  * `spec.source.path`
+    * == relative path -- from the -- `spec.source.repoURL`
+      * if it's
+        * | root path -> `.`
+        * OCI Helm charts -> ALWAYS `.`
 
 ## OCI Repositories special cases
-if there is a need to have credentials for a OCI repository, a repository credential of type *oci needs to be created.
+
+TODO: if there is a need to have credentials for a OCI repository, a repository credential of type *oci needs to be created.
 ```shell
   # Add a private HTTPS OCI repository named 'stable'
   argocd repo add oci://registry-1.docker.io/bitnamicharts/nginx --type oci --name stable --username test --password test 
@@ -91,11 +61,14 @@ spec:
 
 ## Usage Guidelines
 
-First off, you'll need to have a repository that is OCI-compliant. As an example, DockerHub, ECR, GHCR and GCR all fit 
+First off, you'll need to have a repository that is OCI-compliant
+* As an example, DockerHub, ECR, GHCR and GCR all fit 
 the bill.
 
-Secondly, Argo CD expects an OCI image to contain a single layer. It also expects an OCI image to have a media type which 
-is accepted by the Argo CD repository server. By default, Argo CD accepts one of the following media types for the image 
+Secondly, Argo CD expects an OCI image to contain a single layer
+* It also expects an OCI image to have a media type which 
+is accepted by the Argo CD repository server
+* By default, Argo CD accepts one of the following media types for the image 
 layer:
 
 * `application/vnd.oci.image.layer.v1.tar+gzip`
@@ -104,8 +77,10 @@ layer:
 Custom media types can be configured by setting the `ARGOCD_REPO_SERVER_OCI_LAYER_MEDIA_TYPES` environment variable 
 in the repo-server deployment.
 
-To create an OCI artifact compatible with Argo CD, there are a multitude of tools to choose from. For this example we'll
-use [ORAS](https://oras.land/). Navigate to the directory where your manifests are located and run `oras push`.
+To create an OCI artifact compatible with Argo CD, there are a multitude of tools to choose from
+* For this example we'll
+use [ORAS](https://oras.land/)
+* Navigate to the directory where your manifests are located and run `oras push`.
 
 ```shell
 oras push <registry-url>/guestbook:latest .

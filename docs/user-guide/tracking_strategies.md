@@ -6,51 +6,47 @@ TODO: why tracking & deployment at same time?
   * provides
     * MULTIPLE ways of tracking Kubernetes resource manifests
 
-In all tracking strategies, the app has the option to sync automatically
-* If [auto-sync](auto_sync.md)
-is configured, the new resources manifests will be applied automatically -- as soon as a difference
-is detected.
-
-> [!NOTE]
-> In all tracking strategies, any [parameter overrides](parameters.md) take precedence over the Git state.
-
-* -- depending on -- ALLOWED Argo CD's Application `spec.source.repoURL`   ==
-  * [Helm repo](#helm)
-  * [Git repo](#git)
+* tracking strategies
+  * can [auto-sync](auto_sync.md)
+  * any [parameter overrides](parameters.md)'s priority > Git state's priority
+  * -- depend on -- ALLOWED Argo CD's Application `spec.source.repoURL`   ==
+    * [Helm repo](#helm)
+    * [Git repo](#git)
 
 ## Helm
 
-Helm chart versions are [Semantic Versions](https://semver.org/)
-* As a result, you can use any of the following version ranges:
+* Helm chart 
+  * follow [Semantic Versions](https://semver.org/) -- MAJOR.MINOR.PATCH -- 
+    * -> MULTIPLE ways to specify the version
 
-| Use Case                                   | How                             | Examples                    |
-|--------------------------------------------|---------------------------------|-----------------------------|
-| Pin to a version (e.g. in production)      | Use the version number          | `1.2.0`                     |
-| Track patches (e.g. in pre-production)     | Use a range                     | `1.2.*` or `>=1.2.0 <1.3.0` |
-| Track minor releases (e.g. in QA)          | Use a range                     | `1.*` or `>=1.0.0 <2.0.0`   |
-| Use the latest (e.g. in local development) | Use star range                  | `*` or `>=0.0.0`            |
-| Use the latest including pre-releases      | Use star range with `-0` suffix | `*-0` or `>=0.0.0-0`        |
+| Use Case                                                 | How                          | Examples                    |
+|----------------------------------------------------------|------------------------------|-----------------------------|
+| Pin -- to a -- version   (_Example:_ production)         | Use the version number       | `1.2.0`                     |
+| Track patches            (_Example:_ pre-production)     | Use a range                  | `1.2.*` OR `>=1.2.0 <1.3.0` |
+| Track minor releases     (_Example:_ QA)                 | Use a range                  | `1.*` or `>=1.0.0 <2.0.0`   |
+| Use the latest           (_Example:_ local development)  | Use star range               | `*` or `>=0.0.0`            |
+| Use the latest / INCLUDING pre-releases                  | Use star range / `-0` suffix | `*-0` or `>=0.0.0-0`        |
 
-[Read about version ranges](https://www.telerik.com/blogs/the-mystical-magical-semver-ranges-used-by-npm-bower)
-
-> [!NOTE]
-> If you want Argo CD to include all existing prerelease version tags of a repository in the comparison logic, you explicitly have to add a prerelease `-0` suffix to the version constraint
-* As mentioned `*-0` will compare against prerelease versions in a repository, `*` will not
-* The same applies for other constraints e.g. `>=1.2.2` will **not** compare prerelease versions vs. `>=1.2.2-0` which will include prerelease versions in the comparison.
-
-[Read about prerelease version comparison](https://github.com/Masterminds/semver?tab=readme-ov-file#working-with-prerelease-versions)
+* `-0`
+  * == prerelease versions 
+  * ALLOWED ALSO | NOT latest 
+    * _Example:_ `>=1.2.2-0`
+  * [MORE](https://github.com/Masterminds/semver?tab=readme-ov-file#working-with-prerelease-versions)
 
 ## Git
 
-For Git, all versions are Git references but tags [Semantic Versions](https://semver.org/) can also be used:
+* Git
+  * ALLOWED
+    * Git references
+    * tags [Semantic Versions](https://semver.org/)
 
-| Use Case                                   | How                                                                                       | Notes                                               |
-|--------------------------------------------|-------------------------------------------------------------------------------------------|-----------------------------------------------------|
-| Pin to a version (e.g. in production)      | Either (a) tag the commit with (e.g. `v1.2.0`) and use that tag, or (b) using commit SHA. | See [commit pinning](#commit-pinning).              |
-| Track patches (e.g. in pre-production)     | Use a range (e.g. `1.2.*` or `>=1.2.0 <1.3.0`)                                            | See [tag tracking](#tag-tracking)                   |
-| Track minor releases (e.g. in QA)          | Use a range (e.g. `1.*` or `>=1.0.0 <2.0.0`)                                              | See [tag tracking](#tag-tracking)                   |
-| Use the latest (e.g. in local development) | Use `HEAD` or `master` (assuming `master` is your master branch).                         | See [HEAD / Branch Tracking](#head-branch-tracking) |
-| Use the latest including pre-releases      | Use star range with `-0` suffix                                                           | `*-0` or `>=0.0.0-0`                                |
+| Use Case                                               | How                                   | Examples                         | Notes                                             |
+|--------------------------------------------------------|---------------------------------------|----------------------------------|---------------------------------------------------|
+| Pin -- to a -- version  (_Example:_ production)        | Use tag OR commit SHA                 | `v1.2.0` OR `1a2b3c4`            | [commit pinning](#commit-pinning)                 |
+| Track patches           (_Example:_ pre-production)    | Use a range                           | `1.2.*` OR `>=1.2.0 <1.3.0`      | [tag tracking](#tag-tracking)                     |
+| Track minor releases    (_Example:_ QA)                | Use a range                           | `1.*` OR `>=1.0.0 <2.0.0`        | [tag tracking](#tag-tracking)                     |
+| Use the latest          (_Example:_ local development) | Use `HEAD` or your master branch name | `HEAD` OR `master` OR `main`     | [HEAD / Branch Tracking](#head-branch-tracking)   |
+| Use the latest including pre-releases                  | Use star range / `-0` suffix          | `*-0` OR `>=0.0.0-0`             | [tag tracking](#tag-tracking)                     |
 
 
 ### HEAD / Branch Tracking
@@ -79,15 +75,15 @@ and Argo CD will get the latest version following the constraint rules.
 
 ### Commit Pinning
 
-If a Git commit SHA is specified, the app is effectively pinned to the manifests defined at
-the specified commit
-* This is the most restrictive of the techniques and is typically used to
-control production environments.
+* == specify a Git commit SHA
+  * -> ❌desired state does NOT change❌
+    * Reason:🧠commit SHAs content can NOT change🧠
+* allow
+  * pin -- to the -- manifests / defined | specified commit
+* use cases
+  * production environments
 
-Since commit SHAs cannot change meaning, the only way to change the live state of an app
-which is pinned to a commit, is by updating the tracking revision in the application to a different
-commit containing the new manifests
-* Note that [parameter overrides](parameters.md) can still be set
+* TODO: Note that [parameter overrides](parameters.md) can still be set
 on an app which is pinned to a revision.
 
 ### Handling Ambiguous Git References in Argo CD

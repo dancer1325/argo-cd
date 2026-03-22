@@ -1,0 +1,35 @@
+# 1.  types
+# 1.1   plain manifests
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-custom-image
+  namespace: argocd
+spec:
+  project: default
+  source:
+    path: .
+    repoURL: oci://registry-1.docker.io/some-user/my-custom-image
+    targetRevision: 1.16.1
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: my-namespace
+
+---
+# 1.2   helm charts
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx
+spec:
+  project: default
+  source:
+    path: .
+    repoURL: oci://registry-1.docker.io/bitnamicharts/nginx
+    targetRevision: 15.9.0
+    helm:     # make sense ONLY | helm charts
+      valuesObject:
+        some-value: foo
+  destination:
+    name: "in-cluster"
+    namespace: nginx

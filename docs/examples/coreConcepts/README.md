@@ -42,15 +42,3 @@ The health status of an application, indicating:
 - Can it serve requests?
 
 # Tool
-
-A tool that creates Kubernetes manifests from a directory of files.
-
-Example: Kustomize
-
-# Configuration Management Tool
-
-Tools used to manage and generate Kubernetes configurations.
-
-# Configuration Management Plugin
-
-A custom tool that can be integrated with ArgoCD to support additional configuration management methods.

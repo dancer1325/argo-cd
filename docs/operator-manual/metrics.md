@@ -1,48 +1,46 @@
 # Metrics
 
 * Argo CD
-  * exposes Prometheus metrics / server
+  * exposes Prometheus metrics -- trough -- HTTP
 
 ## Application Controller Metrics
 
 * [application controller](architecture.md#application-controller)
-* Application Controller Metrics
-  * display applications metrics
-  * scraped | "argocd-metrics:8082/metrics" endpoint
+  * expose applications metrics | "argocd-metrics:8082/metrics" endpoint
 
-| Metric                                            |   Type    | Description                                                                                                                                 |
-| ------------------------------------------------- | :-------: | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `argocd_app_info`                                 |   gauge   | Information about Applications. It contains labels such as `sync_status` and `health_status` that reflect the application state in Argo CD. |
-| `argocd_app_condition`                            |   gauge   | Report Applications conditions. It contains the conditions currently present in the application status.                                     |
-| `argocd_app_k8s_request_total`                    |  counter  | Number of Kubernetes requests executed during application reconciliation                                                                    |
-| `argocd_app_labels`                               |   gauge   | Argo Application labels converted to Prometheus labels. Disabled by default. See section below about how to enable it.                      |
-| `argocd_app_orphaned_resources_count`             |   gauge   | Number of orphaned resources per application.                                                                                               |
-| `argocd_app_reconcile`                            | histogram | Application reconciliation performance in seconds.                                                                                          |
-| `argocd_app_sync_total`                           |  counter  | Counter for application sync history                                                                                                        |
-| `argocd_app_sync_duration_seconds_total`          |  counter  | Application sync performance in seconds total.                                                                                                        |
-| `argocd_cluster_api_resource_objects`             |   gauge   | Number of k8s resource objects in the cache.                                                                                                |
-| `argocd_cluster_api_resources`                    |   gauge   | Number of monitored Kubernetes API resources.                                                                                               |
-| `argocd_cluster_cache_age_seconds`                |   gauge   | Cluster cache age in seconds.                                                                                                               |
-| `argocd_cluster_connection_status`                |   gauge   | The k8s cluster current connection status.                                                                                                  |
-| `argocd_cluster_events_total`                     |  counter  | Number of processes k8s resource events.                                                                                                    |
-| `argocd_cluster_info`                             |   gauge   | Information about cluster.                                                                                                                  |
-| `argocd_redis_request_duration`                   | histogram | Redis requests duration.                                                                                                                    |
-| `argocd_redis_request_total`                      |  counter  | Number of redis requests executed during application reconciliation                                                                         |
-| `argocd_resource_events_processing`               | histogram | Time to process resource events in batch in seconds                                                                                         |
-| `argocd_resource_events_processed_in_batch`       |   gauge   | Number of resource events processed in batch                                                                                                |
-| `argocd_kubectl_exec_pending`                     |   gauge   | Number of pending kubectl executions                                                                                                        |
-| `argocd_kubectl_exec_total`                       |  counter  | Number of kubectl executions                                                                                                                |
-| `argocd_kubectl_client_cert_rotation_age_seconds` |   gauge   | Age of kubectl client certificate rotation.                                                                                                 |
-| `argocd_kubectl_request_duration_seconds`         | histogram | Latency of kubectl requests.                                                                                                                |
-| `argocd_kubectl_dns_resolution_duration_seconds`  | histogram | Latency of kubectl resolver.                                                                                                                |
-| `argocd_kubectl_request_size_bytes`               | histogram | Size of kubectl requests.                                                                                                                   |
-| `argocd_kubectl_response_size_bytes`              | histogram | Size of kubectl responses.                                                                                                                  |
-| `argocd_kubectl_rate_limiter_duration_seconds`    | histogram | Latency of kubectl rate limiter.                                                                                                            |
-| `argocd_kubectl_requests_total`                   |  counter  | Result of kubectl requests.                                                                                                                 |
-| `argocd_kubectl_exec_plugin_call_total`           |  counter  | Number of kubectl exec plugin calls.                                                                                                        |
-| `argocd_kubectl_request_retries_total`            |  counter  | Number of kubectl request retries.                                                                                                          |
-| `argocd_kubectl_transport_cache_entries`          |   gauge   | Number of kubectl transport cache entries.                                                                                                  |
-| `argocd_kubectl_transport_create_calls_total`     |  counter  | Number of kubectl transport create calls.                                                                                                   |
+| Metric                                            |   Type    | Description                                                                                                                                                     |
+| ------------------------------------------------- | :-------: |-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `argocd_app_info`                                 |   gauge   | Information about Applications. It contains labels such as `sync_status` and `health_status` that reflect the application state in Argo CD.                     |
+| `argocd_app_condition`                            |   gauge   | Applications conditions / CURRENTLY present \| application status <br/> [MORE](#expose-application-conditions----as----prometheus-metrics)                      |
+| `argocd_app_k8s_request_total`                    |  counter  | Number of Kubernetes requests executed during application reconciliation                                                                                        |
+| `argocd_app_labels`                               |   gauge   | Argo Application labels / converted -- to -- Prometheus labels <br/> by default, disabled  <br/> [MORE](#expose-application-labels----as----prometheus-metrics) |
+| `argocd_app_orphaned_resources_count`             |   gauge   | Number of orphaned resources per application.                                                                                                                   |
+| `argocd_app_reconcile`                            | histogram | Application reconciliation performance in seconds.                                                                                                              |
+| `argocd_app_sync_total`                           |  counter  | Counter for application sync history                                                                                                                            |
+| `argocd_app_sync_duration_seconds_total`          |  counter  | Application sync performance in seconds total.                                                                                                                  |
+| `argocd_cluster_api_resource_objects`             |   gauge   | Number of k8s resource objects in the cache.                                                                                                                    |
+| `argocd_cluster_api_resources`                    |   gauge   | Number of monitored Kubernetes API resources.                                                                                                                   |
+| `argocd_cluster_cache_age_seconds`                |   gauge   | Cluster cache age in seconds.                                                                                                                                   |
+| `argocd_cluster_connection_status`                |   gauge   | The k8s cluster current connection status.                                                                                                                      |
+| `argocd_cluster_events_total`                     |  counter  | Number of processes k8s resource events.                                                                                                                        |
+| `argocd_cluster_info`                             |   gauge   | Information about cluster.                                                                                                                                      |
+| `argocd_redis_request_duration`                   | histogram | Redis requests duration.                                                                                                                                        |
+| `argocd_redis_request_total`                      |  counter  | Number of redis requests executed during application reconciliation                                                                                             |
+| `argocd_resource_events_processing`               | histogram | Time to process resource events in batch in seconds                                                                                                             |
+| `argocd_resource_events_processed_in_batch`       |   gauge   | Number of resource events processed in batch                                                                                                                    |
+| `argocd_kubectl_exec_pending`                     |   gauge   | Number of pending kubectl executions                                                                                                                            |
+| `argocd_kubectl_exec_total`                       |  counter  | Number of kubectl executions                                                                                                                                    |
+| `argocd_kubectl_client_cert_rotation_age_seconds` |   gauge   | Age of kubectl client certificate rotation.                                                                                                                     |
+| `argocd_kubectl_request_duration_seconds`         | histogram | Latency of kubectl requests.                                                                                                                                    |
+| `argocd_kubectl_dns_resolution_duration_seconds`  | histogram | Latency of kubectl resolver.                                                                                                                                    |
+| `argocd_kubectl_request_size_bytes`               | histogram | Size of kubectl requests.                                                                                                                                       |
+| `argocd_kubectl_response_size_bytes`              | histogram | Size of kubectl responses.                                                                                                                                      |
+| `argocd_kubectl_rate_limiter_duration_seconds`    | histogram | Latency of kubectl rate limiter.                                                                                                                                |
+| `argocd_kubectl_requests_total`                   |  counter  | Result of kubectl requests.                                                                                                                                     |
+| `argocd_kubectl_exec_plugin_call_total`           |  counter  | Number of kubectl exec plugin calls.                                                                                                                            |
+| `argocd_kubectl_request_retries_total`            |  counter  | Number of kubectl request retries.                                                                                                                              |
+| `argocd_kubectl_transport_cache_entries`          |   gauge   | Number of kubectl transport cache entries.                                                                                                                      |
+| `argocd_kubectl_transport_create_calls_total`     |  counter  | Number of kubectl transport create calls.                                                                                                                       |
 
 ### Labels
 
@@ -72,97 +70,89 @@
 
 ### Metrics Cache Expiration
 
-TODO: 
-If you use Argo CD with many application and project creation and deletion,
-the metrics page will keep in cache your application and project's history.
-If you are having issues because of a large number of metrics cardinality due
-to deleted resources, you can schedule a metrics reset to clean the
-history with an application controller flag. Example:
-`--metrics-cache-expiration="24h0m0s"`.
+* metrics cache
+  * == ArgoCD application's history & ArgoCD project's history (creation + deletion)
+  * it can be reset
+    * POSSIBLE use cases: issues -- due to -- large number of metrics cardinality | delete resources
+    * -- through -- application controller flag: `--metrics-cache-expiration="24h0m0s"`
 
-### Exposing Application labels as Prometheus metrics
+### Expose Application labels -- as -- Prometheus metrics
 
-There are use-cases where Argo CD Applications contain labels that are desired to be exposed as Prometheus metrics.
-Some examples are:
+* Argo CD Application's labels
+  * ❌!= [ALREADY EXISTING Prometheus labels](#labels)❌
+  * specific / EACH use case
+  * by default, disabled
+    * 👀if you want to enable it -> add the Argo CD application controller's `--metrics-application-labels` flag / EACH label👀
 
-- Having the team name as a label to allow routing alerts to specific receivers
-- Creating dashboards broken down by business units
+* `argocd_app_labels`
+  * == Prometheus metric / 
+    * contain Argo CD Application label
+    * gauge 
+    * 's label: `{label_APPLICATIONLABEL1="VALUE1",label_APPLICATIONLABEL2="VALUE2",...}`
+      * _Example:_ `argocd_app_labels{label_business_unit="bu-id-1",label_team_name="my-team",name="my-app-1",namespace="argocd",project="important-project"} 1`
 
-As the Application labels are specific to each company, this feature is disabled by default. To enable it, add the
-`--metrics-application-labels` flag to the Argo CD application controller.
+### Expose Application conditions -- as -- Prometheus metrics
 
-The example below will expose the Argo CD Application labels `team-name` and `business-unit` to Prometheus:
+* Argo CD Application's `status.conditions`
+  * [source code](/pkg/apis/application/v1alpha1/types.go)'s `ApplicationCondition`
+  * [Application CRD](/manifests/crds/application-crd.yaml)'s `status.conditions` 
+  * specific / EACH use case
+  * by default, disabled
+    * 👀if you want to enable it -> add the Argo CD application controller's `--metrics-application-conditions` flag / EACH label👀
+  * _Examples:_ 
+    * know the resources / are excluded -- from -- ArgoCD
+    * hunt orphaned resources -- ACROSS -- ALL deployed applications
 
-    containers:
-    - command:
-      - argocd-application-controller
-      - --metrics-application-labels
-      - team-name
-      - --metrics-application-labels
-      - business-unit
+* `argocd_app_condition`
+  * == Prometheus metric /
+    * contain Argo CD Application label
+    * gauge
+    * 's label: `{label_APPLICATIONCONDITION1="VALUE1",label_APPLICATIONCONDITION2="VALUE2",...}`
+      * _Example:_ `argocd_app_condition{label_business_unit="bu-id-1",label_team_name="my-team",name="my-app-1",namespace="argocd",project="important-project"} 1`
 
-In this case, the metric would look like:
+### Expose Cluster labels -- as -- Prometheus metrics
 
-```
-# TYPE argocd_app_labels gauge
-argocd_app_labels{label_business_unit="bu-id-1",label_team_name="my-team",name="my-app-1",namespace="argocd",project="important-project"} 1
-argocd_app_labels{label_business_unit="bu-id-1",label_team_name="my-team",name="my-app-2",namespace="argocd",project="important-project"} 1
-argocd_app_labels{label_business_unit="bu-id-2",label_team_name="another-team",name="my-app-3",namespace="argocd",project="important-project"} 1
-```
+* Cluster's labels
+  * specific / EACH use case
+  * by default, disabled
+    * 👀if you want to enable it -> add the Argo CD Application controller's `--metrics-cluster-labels` flag / EACH label👀
 
-### Exposing Application conditions as Prometheus metrics
-
-There are use-cases where Argo CD Applications contain conditions that are desired to be exposed as Prometheus metrics.
-Some examples are:
-
-- Hunting orphaned resources across all deployed applications
-- Knowing which resources are excluded from ArgoCD
-
-As the Application conditions are specific to each company, this feature is disabled by default. To enable it, add the
-`--metrics-application-conditions` flag to the Argo CD application controller.
-
-The example below will expose the Argo CD Application condition `OrphanedResourceWarning` and `ExcludedResourceWarning` to Prometheus:
-
-```yaml
-containers:
-  - command:
-      - argocd-application-controller
-      - --metrics-application-conditions
-      - OrphanedResourceWarning
-      - --metrics-application-conditions
-      - ExcludedResourceWarning
-```
+* `argocd_app_labels`
+  * == Prometheus metric /
+    * contain Argo CD Application label
+    * gauge
+    * 's label: `{label_APPLICATIONLABEL1="VALUE1",label_APPLICATIONLABEL2="VALUE2",...}`
+      * _Example:_ `argocd_app_labels{label_business_unit="bu-id-1",label_team_name="my-team",name="my-app-1",namespace="argocd",project="important-project"} 1`
 
 ## Application Set Controller metrics
 
-The Application Set controller exposes the following metrics for application sets.
+* [Application Set controller](/docs/developer-guide/architecture/components.md#applicationset-controller)
 
-| Metric                                            |   Type    | Description                                                                                                                                                                                |
-| ------------------------------------------------- | :-------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `argocd_appset_info`                              |   gauge   | Information about Application Sets. It contains labels for the name and namespace of an application set as well as `Resource_update_status` that reflects the `ResourcesUpToDate` property |
-| `argocd_appset_reconcile`                         | histogram | Application reconciliation performance in seconds. It contains labels for the name and namespace of an applicationset                                                                      |
-| `argocd_appset_labels`                            |   gauge   | Applicationset labels translated to Prometheus labels. Disabled by default                                                                                                                 |
-| `argocd_appset_owned_applications`                |   gauge   | Number of applications owned by the applicationset. It contains labels for the name and namespace of an applicationset.                                                                    |
-| `argocd_kubectl_client_cert_rotation_age_seconds` |   gauge   | Age of kubectl client certificate rotation.                                                                                                                                                |
-| `argocd_kubectl_request_duration_seconds`         | histogram | Latency of kubectl requests.                                                                                                                                                               |
-| `argocd_kubectl_dns_resolution_duration_seconds`  | histogram | Latency of kubectl resolver.                                                                                                                                                               |
-| `argocd_kubectl_request_size_bytes`               | histogram | Size of kubectl requests.                                                                                                                                                                  |
-| `argocd_kubectl_response_size_bytes`              | histogram | Size of kubectl responses.                                                                                                                                                                 |
-| `argocd_kubectl_rate_limiter_duration_seconds`    | histogram | Latency of kubectl rate limiter.                                                                                                                                                           |
-| `argocd_kubectl_requests_total`                   |  counter  | Result of kubectl requests.                                                                                                                                                                |
-| `argocd_kubectl_exec_plugin_call_total`           |  counter  | Number of kubectl exec plugin calls.                                                                                                                                                       |
-| `argocd_kubectl_request_retries_total`            |  counter  | Number of kubectl request retries.                                                                                                                                                         |
-| `argocd_kubectl_transport_cache_entries`          |   gauge   | Number of kubectl transport cache entries.                                                                                                                                                 |
-| `argocd_kubectl_transport_create_calls_total`     |  counter  | Number of kubectl transport create calls.                                                                                                                                                  |
-
-Similar to the same metric in application controller (`argocd_app_labels`) the metric `argocd_appset_labels` is disabled by default. You can enable it by providing the `–metrics-applicationset-labels` argument to the applicationset controller.
-
-Once enabled it works exactly the same as application controller metrics (label\_ appended to normalized label name).
-Available labels include Name, Namespace + all labels enabled by the command line options and their value (exactly like application controller metrics described in the previous section). |
+| Metric                                            |   Type    | Description                                                                                                                                                                                                          |
+| ------------------------------------------------- | :-------: |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `argocd_appset_info`                              |   gauge   | Information about Application Sets. It contains labels for the name and namespace of an application set as well as `Resource_update_status` that reflects the `ResourcesUpToDate` property                           |
+| `argocd_appset_reconcile`                         | histogram | Application reconciliation performance in seconds. It contains labels for the name and namespace of an applicationset                                                                                                |
+| `argocd_appset_labels`                            |   gauge   | Applicationset labels translated to Prometheus labels <br/> by default, disabled <br/>  &nbsp;&nbsp; if you want to enable it ->  provide the applicationset controller's CL flags `–metrics-applicationset-labels`  |
+| `argocd_appset_owned_applications`                |   gauge   | Number of applications owned by the applicationset. It contains labels for the name and namespace of an applicationset.                                                                                              |
+| `argocd_kubectl_client_cert_rotation_age_seconds` |   gauge   | Age of kubectl client certificate rotation.                                                                                                                                                                          |
+| `argocd_kubectl_request_duration_seconds`         | histogram | Latency of kubectl requests.                                                                                                                                                                                         |
+| `argocd_kubectl_dns_resolution_duration_seconds`  | histogram | Latency of kubectl resolver.                                                                                                                                                                                         |
+| `argocd_kubectl_request_size_bytes`               | histogram | Size of kubectl requests.                                                                                                                                                                                            |
+| `argocd_kubectl_response_size_bytes`              | histogram | Size of kubectl responses.                                                                                                                                                                                           |
+| `argocd_kubectl_rate_limiter_duration_seconds`    | histogram | Latency of kubectl rate limiter.                                                                                                                                                                                     |
+| `argocd_kubectl_requests_total`                   |  counter  | Result of kubectl requests.                                                                                                                                                                                          |
+| `argocd_kubectl_exec_plugin_call_total`           |  counter  | Number of kubectl exec plugin calls.                                                                                                                                                                                 |
+| `argocd_kubectl_request_retries_total`            |  counter  | Number of kubectl request retries.                                                                                                                                                                                   |
+| `argocd_kubectl_transport_cache_entries`          |   gauge   | Number of kubectl transport cache entries.                                                                                                                                                                           |
+| `argocd_kubectl_transport_create_calls_total`     |  counter  | Number of kubectl transport create calls.                                                                                                                                                                            |
 
 ### Application Set GitHub API metrics
 
-All the following `argocd_github_api_*` metrics can be enabled upon setting `applicationsetcontroller.enable.github.api.metrics: true` in `argocd-cmd-params-cm` ConfigMap. Note that they are disabled by default.
+* `argocd_github_api_*` metrics 
+  * by default, disabled
+  * how to enable?
+    * | "argocd-cmd-params-cm" ConfigMap,
+      * set `applicationsetcontroller.enable.github.api.metrics: true`
 
 | Metric                                       |   Type    | Description                                                                                                                                                               |
 | -------------------------------------------- | :-------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -186,35 +176,31 @@ All the following `argocd_github_api_*` metrics can be enabled upon setting `app
 | result      | hit           | Result of an attempt to get a transport from the kubectl (client-go) transport cache. Possible values are: hit, miss, unreachable.            |
 | verb        | List          | Kubernetes API verb used in the request. Possible values are: Get, Watch, List, Create, Delete, Patch, Update.                                |
 
-### Exposing Cluster labels as Prometheus metrics
+### Expose ApplicationSet labels -- as -- Prometheus metrics
 
-As the Cluster labels are specific to each company, this feature is disabled by default. To enable it, add the
-`--metrics-cluster-labels` flag to the Argo CD application controller.
+* Argo CD ApplicationSet's labels
+  * ❌!= [ALREADY EXISTING Prometheus labels](#labels-1)❌
+  * specific / EACH use case
+  * by default, disabled
+    * 👀if you want to enable it -> add the Argo CD applicationSet controller's `--metrics-applicationset-labels` flag / EACH label👀
 
-The example below will expose the Argo CD Application labels `team-name` and `environment` to Prometheus:
-
-    containers:
-    - command:
-      - argocd-application-controller
-      - --metrics-cluster-labels
-      - team-name
-      - --metrics-cluster-labels
-      - environment
-
-In this case, the metric would look like:
-
-```
-# TYPE argocd_app_labels gauge
-argocd_cluster_labels{label_environment="dev",label_team_name="team1",name="cluster1",server="server1"} 1
-argocd_cluster_labels{label_environment="staging",label_team_name="team2",name="cluster2",server="server2"} 1
-argocd_cluster_labels{label_environment="production",label_team_name="team3",name="cluster3",server="server3"} 1
-```
+* `argocd_appset_labels`
+  * == Prometheus metric /
+    * contain Argo CD ApplicationSet label
+    * gauge
+    * 's label: `{label_APPLICATIONSETLABEL1="VALUE1",label_APPLICATIONSETLABEL2="VALUE2",...}`
+      * _Example:_ `argocd_appset_labels{label_business_unit="bu-id-1",label_team_name="my-team",name="my-app-1",namespace="argocd"} 1`
 
 ## API Server Metrics
 
-Metrics about API Server API request and response activity (request totals, response codes, etc...).
-Scraped at the `argocd-server-metrics:8083/metrics` endpoint.
-For GRPC metrics to show up environment variable ARGOCD_ENABLE_GRPC_TIME_HISTOGRAM must be set to true. 
+* [API Server](/docs/developer-guide/architecture/components.md#api-server)
+
+* gRPC metrics
+  * by default, ❌NOT exposed❌
+    * if you want to enable -> set the `ARGOCD_ENABLE_GRPC_TIME_HISTOGRAM=true` environment variable
+
+* API Server metrics
+  * exposed | `argocd-server-metrics:8083/metrics` endpoint 
 
 | Metric                                            |   Type    | Description                                                                        
 |---------------------------------------------------|:---------:|---------------------------------------------------------------------------------------------|
@@ -255,9 +241,14 @@ For GRPC metrics to show up environment variable ARGOCD_ENABLE_GRPC_TIME_HISTOGR
 
 ## Repo Server Metrics
 
-Metrics about the Repo Server. The gRPC metrics are not exposed by default.  Metrics can be enabled using
-`ARGOCD_ENABLE_GRPC_TIME_HISTOGRAM=true` environment variable.  
-Scraped at the `argocd-repo-server:8084/metrics` endpoint.
+* [Repo Server](/docs/developer-guide/architecture/components.md#repo-server)
+
+* gRPC metrics
+  * by default, ❌NOT exposed❌ 
+    * if you want to enable -> set the `ARGOCD_ENABLE_GRPC_TIME_HISTOGRAM=true` environment variable
+
+* repo server metrics
+  * exposed | `argocd-repo-server:8084/metrics` endpoint
 
 
 | Metric                                   |    Type    | Description                                                               |
@@ -278,8 +269,11 @@ Scraped at the `argocd-repo-server:8084/metrics` endpoint.
 
 ## Commit Server Metrics
 
-Metrics about the Commit Server.
-Scraped at the `argocd-commit-server:8087/metrics` endpoint.
+* commit server
+  * [documentation](/docs/proposals/manifest-hydrator/commit-server)
+  * [manifest](/manifests/base/commit-server)
+* Commit Server Metrics
+  * exposed | `argocd-commit-server:8087/metrics` endpoint
 
 | Metric                                                  |   Type    | Description                                          |
 | ------------------------------------------------------- | :-------: | ---------------------------------------------------- |
@@ -292,6 +286,7 @@ Scraped at the `argocd-commit-server:8087/metrics` endpoint.
 
 ## Prometheus Operator
 
+TODO: 
 If using Prometheus Operator, the following ServiceMonitor example manifests can be used.
 Add a namespace where Argo CD is installed and change `metadata.labels.release` to the name of label selected by your Prometheus.
 
@@ -421,7 +416,8 @@ spec:
 
 ## Dashboards
 
-You can find an [example Grafana dashboard](https://github.com/argoproj/argo-cd/blob/master/examples/dashboard.json) or check the demo instance
-[dashboard](https://grafana.apps.argoproj.io).
+* _Example:_ 
+  * [Grafana ArgoCD dashboard configuration](/examples/dashboard.json)
+  * [Grafana ArgoCD dashboard -- for -- ArgoCD demo instance](https://grafana.apps.argoproj.io/d/LCAgc9rWz/argocd?var-interval=$__auto&orgId=1&from=now-30m&to=now&timezone=browser&var-datasource=prometheus&var-namespace=$__all&var-grouping=namespace&var-cluster=$__all&var-health_status=$__all&var-sync_status=$__all)
 
 ![dashboard](../assets/dashboard.jpg)

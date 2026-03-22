@@ -1,11 +1,22 @@
 # Jsonnet
 
-Any file matching `*.jsonnet` in a directory app is treated as a Jsonnet file. Argo CD evaluates the Jsonnet and is able to parse a generated object or array.
+* Jsonnet
+  * Jsonnet file
+    * == "*.jsonnet" | directory app 
+  * can generate
+    * object
+    * array
+* Argo CD 
+  * evaluates the Jsonnet' output
+  * parse  the Jsonnet' output
 
 ## Build Environment
 
-Jsonnet apps have access to the [standard build environment](build-environment.md) via substitution into *TLAs* and *external variables*.
-It is also possible to add a shared library (e.g. `vendor` folder) relative to the repository root.
+* Jsonnet apps
+  * can access -- , via substitution | *TLAs* & *external variables*, to the -- [standard build environment](build-environment.md)  
+
+TODO: 
+  It is also possible to add a shared library (e.g. `vendor` folder) relative to the repository root.
 
 E.g. via the CLI:
 

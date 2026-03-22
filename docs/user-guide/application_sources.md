@@ -10,8 +10,12 @@
       * [OCI](oci.md) images
       * directory of YAML + JSON + [Jsonnet](jsonnet.md) manifests
       * [custom config management tool](../operator-manual/config-management-plugins.md) / configured -- as a -- config management plugin
+        * == custom tools
   * 💡[Application's `spec.source`](/manifests/crds/application-crd.yaml)💡
     * == specify application source
+
+* how are those Kubernetes manifests used?
+  * Argo CD transforms -- to -- FINAL FULL Kubernetes manifest 
 
 ## | development
 

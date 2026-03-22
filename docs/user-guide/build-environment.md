@@ -1,27 +1,25 @@
-# Build Environment
+# Build Environment variables
 
-[Custom tools](../operator-manual/config-management-plugins.md), [Helm](helm.md), [Jsonnet](jsonnet.md), and [Kustomize](kustomize.md) support the following build env vars:
+* supported -- by -- 
+  * [custom tools](../operator-manual/config-management-plugins.md)
+  * [Helm](helm.md)
+  * [Jsonnet](jsonnet.md)
+  * [Kustomize](kustomize.md)
 
-| Variable                            | Description                                                             |
-| ----------------------------------- | ----------------------------------------------------------------------- |
-| `ARGOCD_APP_NAME`                   | The name of the application.                                            |
-| `ARGOCD_APP_NAMESPACE`              | The destination namespace of the application.                           |
-| `ARGOCD_APP_PROJECT_NAME`           | The name of the project the application belongs to.                     |
-| `ARGOCD_APP_REVISION`               | The resolved revision, e.g. `f913b6cbf58aa5ae5ca1f8a2b149477aebcbd9d8`. |
-| `ARGOCD_APP_REVISION_SHORT`         | The resolved short revision, e.g. `f913b6c`.                            |
-| `ARGOCD_APP_REVISION_SHORT_8`       | The resolved short revision with length 8, e.g. `f913b6cb`.             |
-| `ARGOCD_APP_SOURCE_PATH`            | The path of the app within the source repo.                             |
-| `ARGOCD_APP_SOURCE_REPO_URL`        | The source repo URL.                                                    |
-| `ARGOCD_APP_SOURCE_TARGET_REVISION` | The target revision from the spec, e.g. `master`.                       |
-| `KUBE_VERSION`                      | The semantic version of Kubernetes without trailing metadata.           |
-| `KUBE_API_VERSIONS`                 | The version of the Kubernetes API.                                      |
+* AVAILABLE build environment variables
 
-In case you don't want a variable to be interpolated, `$` can be escaped via `$$`.
+| Variable                            | Description                                              |
+|-------------------------------------|----------------------------------------------------------|
+| `ARGOCD_APP_NAME`                   | Argo CD Application name                                 |
+| `ARGOCD_APP_NAMESPACE`              | Argo CD Application's destination namespace              |
+| `ARGOCD_APP_PROJECT_NAME`           | project name / application belongs to                    |
+| `ARGOCD_APP_REVISION`               | Argo CD Application resolved revision                    |
+| `ARGOCD_APP_REVISION_SHORT`         | Argo CD Application resolved short revision              |
+| `ARGOCD_APP_REVISION_SHORT_8`       | Argo CD Application resolved short revision / length = 8 |
+| `ARGOCD_APP_SOURCE_PATH`            | Argo CD Application's path \| source repo                |
+| `ARGOCD_APP_SOURCE_REPO_URL`        | Argo CD Application's source repo URL                    |
+| `ARGOCD_APP_SOURCE_TARGET_REVISION` | Argo CD Application's source target revision (== \| spec) |
+| `KUBE_VERSION`                      | Kubernetes semantic version / WITHOUT trailing metadata  |
+| `KUBE_API_VERSIONS`                 | Kubernetes API version                                   |
 
-```
-command:
-  - sh
-  - -c
-  - |
-    echo $$FOO
-```
+* ❌if you do NOT want to interpolate a variable -> escape `$` == `$$`❌

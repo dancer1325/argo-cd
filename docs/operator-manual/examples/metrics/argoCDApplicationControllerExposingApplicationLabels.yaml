@@ -1,0 +1,24 @@
+# argocd-application-controller deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-application-controller
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-application-controller
+  template:
+    spec:
+      containers:
+        - name: argocd-application-controller
+          # add `--metrics-application-labels` / EACH label
+          command:
+            - argocd-application-controller
+            - --metrics-application-labels
+            - team-name
+            - --metrics-application-labels
+            - business-unit
+            - --metrics-application-labels
+            - cost-center
+            - --metrics-application-labels
+            - criticality

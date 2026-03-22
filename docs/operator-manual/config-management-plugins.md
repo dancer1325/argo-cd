@@ -1,4 +1,3 @@
-
 # Config Management Plugins
 
 * Argo CD's config management tools
@@ -6,7 +5,7 @@
     * [Helm](../user-guide/helm.md)
     * [Jsonnet](../user-guide/jsonnet.md)
     * [Kustomize](../user-guide/kustomize.md)
-  * others
+  * custom
     * -- via -- Config Management Plugin (CMP)
 
 TODO:

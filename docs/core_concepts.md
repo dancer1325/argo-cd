@@ -9,13 +9,14 @@
   * == Custom Resource Definition (CRD) 
     * == group of Kubernetes resources / defined -- by a -- manifest 
 * **Application source type**
-  * == **Tool** / used -- to -- build the application
+  * == tool + source location
   * [here](user-guide/application_sources.md)
 * **Target state** 
   * application's desired state
   * == files | Git repository
 * **Live state**
   * application's live state
+  * application's state | cluster
 * **Sync status**
   * live state vs target state
 * **Sync**
@@ -33,7 +34,4 @@
 * **Tool** 
   * == tool /
     * FROM a directory of files, create manifests
-  * _Example:_ Kustomize
-* **Configuration management tool**
-* **Configuration management plugin**
-  * == custom tool
+  * [here](user-guide/application_sources.md)

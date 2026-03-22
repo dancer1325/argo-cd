@@ -1,8 +1,10 @@
 # Custom Tooling
 
 Argo CD bundles preferred versions of its supported templating tools (helm, kustomize, ks, jsonnet)
-as part of its container images. Sometimes, it may be desired to use a specific version of a tool
-other than what Argo CD bundles. Some reasons to do this might be:
+as part of its container images
+* Sometimes, it may be desired to use a specific version of a tool
+other than what Argo CD bundles
+* Some reasons to do this might be:
 
 * To upgrade/downgrade to a specific version of a tool due to bugs or bug fixes.
 * To install additional dependencies to be used by kustomize's configmap/secret generators.
@@ -15,7 +17,8 @@ can be customized to use alternative toolchain required by your environment.
 ## Adding Tools Via Volume Mounts
 
 The first technique is to use an `init` container and a `volumeMount` to copy a different version of
-a tool into the repo-server container. In the following example, an init container is overwriting
+a tool into the repo-server container
+* In the following example, an init container is overwriting
 the helm binary with a different version than what is bundled in Argo CD:
 
 ```yaml
@@ -46,7 +49,8 @@ the helm binary with a different version than what is bundled in Argo CD:
 
 ## BYOI (Build Your Own Image)
 
-Sometimes replacing a binary isn't sufficient, and you need to install other dependencies. The
+Sometimes replacing a binary isn't sufficient, and you need to install other dependencies
+* The
 following example builds an entirely customized repo-server from a Dockerfile, installing extra
 dependencies that may be needed for generating manifests.
 
