@@ -131,7 +131,7 @@
     * [JSON pointers](https://tools.ietf.org/html/rfc6902)
     * [JQ path expressions](https://stedolan.github.io/jq/manual/#path(path_expression))
 
-### Using ignoreDifferences to ignore reconcile
+### -- via -- `ignoreDifferences`
 
 * `ignoreDifferences` 
   * allows
@@ -140,6 +140,7 @@
     * 👀`ignoreDifferences` customizations -> apply | `ignoreResourceUpdates`👀
       * Reason:🧠reduce config management -- by -- preventing you to copy duplicated🧠
       * if you want to disable it `ignoreDifferencesOnResourceUpdates: false`
+  * [source code](/pkg/apis/application/v1alpha1/types.go)'s `ResourceIgnoreDifferences`
 
 * | "argocd-cm" ConfigMap,
   * `resource.customizations.ignoreDifferences.all`
@@ -152,6 +153,8 @@
           - /path/to/field                                                                                                                                                                                                                     
           jqPathExpressions:         # [JQPathExpressions]                                                                                                                                                                      
           - .path.to.field  
+          managedFieldsManagers:
+          - someManagedFieldManager
       ```
   * `resource.customizations.ignoreDifferences.<group>_<kind>`
     * ⚠️override `resource.customizations.ignoreDifferences.all`⚠️
@@ -164,7 +167,9 @@
           - /path/to/field                                                                                                                                                                                                                     
           jqPathExpressions:         # [JQPathExpressions]                                                                                                                                                                      
           - .path.to.field  
-      ```
+          managedFieldsManagers:
+          - someManagedFieldManager
+        ```
 
 ## Default Configuration
 

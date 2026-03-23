@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+data:
+  resource.compareoptions: |
+    # 2. ignoreAggregatedRoles 
+    ignoreAggregatedRoles: true
+
+  # 1.  ignoreDifferences
+  # 1.1   | 1 specific Kubernetes object
+  # 1.1.1   -- via -- jqPathExpressions
+  resource.customizations.ignoreDifferences.admissionregistration.k8s.io_MutatingWebhookConfiguration:
+    |
+    jqPathExpressions:
+    - '.webhooks[]?.clientConfig.caBundle'
+  # 1.1.2   -- via -- managedFieldsManagers
+  resource.customizations.ignoreDifferences.apps_Deployment: |
+    managedFieldsManagers:
+    - kube-controller-manager
+
+  # 1.2   | ALL
+  resource.customizations.ignoreDifferences.all: |
+    jsonPointers:
+    - /status
+
+  # 3. knownTypeFields
+  resource.customizations.knownTypeFields.argoproj.io_Rollout: |
+    - field: spec.template.spec
+      type: core/v1/PodSpec

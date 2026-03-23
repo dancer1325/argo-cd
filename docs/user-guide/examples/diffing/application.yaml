@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application                    # ← Custom Resource de Argo CD
+metadata:
+  name: guestbook
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/example/repo.git
+    targetRevision: HEAD
+    path: guestbook
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: guestbook
+
+  ignoreDifferences:
+    # ways to filter
+    # 1. -- via -- jsonPointers
+    # 1.1 ignore differences | `spec.replicas` -- for -- ALL deployment
+    # group     ==  Kubernetes API group
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+
+    # 1.2 ignore differences | `spec.replicas` -- for -- deploymentS / name == guestbook & namespace == default
+    - group: apps
+      kind: Deployment
+      name: guestbook
+      namespace: default
+      jsonPointers:
+        - /spec/replicas
+
+    # 1.3 scape "/"
+    - kind: Node
+      jsonPointers:
+        - /metadata/labels/node-role.kubernetes.io~1worker
+        # metadata.labels.node-role.kubernetes.io/worker
+
+    # 2. -- via -- jqPathExpressions
+    - group: apps
+      kind: Deployment
+      jqPathExpressions:
+        - .spec.template.spec.initContainers[] | select(.name == "injected-init-container")
+
+    # 3. -- via -- managedFieldsManagers
+    - group: '*'
+      kind: '*'
+      managedFieldsManagers:
+        - kube-controller-manager

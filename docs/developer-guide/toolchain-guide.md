@@ -8,10 +8,6 @@
 
 ## Local vs Virtualized toolchain
 
-
-
-
-
 Most relevant targets for the build & test cycles in the `Makefile` provide two variants, one of them suffixed with `-local`
 * For example, `make test` will run unit tests in the Docker container (virtualized toolchain), `make test-local` (local toolchain) will run it natively on your local system.
 

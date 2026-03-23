@@ -6,14 +6,18 @@
 3. [Development Cycle](development-cycle.md)
 
 ## Preface
-During development, it is recommended to start with Argo CD running locally (outside of a K8s cluster). This will greatly speed up development, as you don't have to constantly build, push and install new Argo CD Docker images with your latest changes.
 
-After you have tested locally, you can move to the second phase of building a docker image, running Argo CD in your cluster and testing further.
+* run Argo CD LOCALLY (== outside of a K8s cluster)
+  * Reason:🧠faster
+    * you do NOT constantly build + push + install NEW Argo CD Docker images 🧠
 
-For both cases, you will need a working K8s cluster, where Argo CD will store all of its resources and configuration.
+* build a docker image + run Argo CD | your cluster
 
-In order to have all the required resources in your cluster, you will deploy Argo CD from your development branch and then scale down all it's instances.
-This will ensure you have all the relevant configuration (such as Argo CD Config Maps and CRDs) in the cluster while the instances themselves are stopped.
+TODO: 
+In order to have all the required resources in your cluster, 
+you will deploy Argo CD from your development branch and then scale down all it's instances.
+This will ensure you have all the relevant configuration (such as Argo CD Config Maps and CRDs) in the cluster 
+while the instances themselves are stopped.
 
 ### Deploy Argo CD resources to your cluster
 
@@ -24,7 +28,8 @@ kubectl create namespace argocd
 kubectl apply -n argocd --server-side --force-conflicts -f manifests/install.yaml
 ```
 
-The services you will start later assume you are running in the namespace where Argo CD is installed. You can set the current context default namespace as follows:
+The services you will start later assume you are running in the namespace where Argo CD is installed
+* You can set the current context default namespace as follows:
 
 ```bash
 kubectl config set-context --current --namespace=argocd
@@ -57,7 +62,8 @@ cd argo-cd
 make start
 ```
 
-By default, Argo CD uses Docker. To use Podman instead, set the `DOCKER` environment variable to `podman` before running the `make` command:
+By default, Argo CD uses Docker
+* To use Podman instead, set the `DOCKER` environment variable to `podman` before running the `make` command:
 
 ```shell
 cd argo-cd
@@ -70,7 +76,9 @@ This will start all Argo CD services and the UI in a Docker container and expose
 * The Argo CD UI server on port 4000
 * The Helm registry server on port 5000
 
-You can now use either the web UI by pointing your browser to `http://localhost:4000` or use the CLI against the API at `http://localhost:8080`. Be sure to use the `--insecure` and `--plaintext` options to the CLI. Webpack will take a while to bundle resources initially, so the first page load can take several seconds or minutes.
+You can now use either the web UI by pointing your browser to `http://localhost:4000` or use the CLI against the API at `http://localhost:8080`
+* Be sure to use the `--insecure` and `--plaintext` options to the CLI
+* Webpack will take a while to bundle resources initially, so the first page load can take several seconds or minutes.
 
 As an alternative to using the above command line parameters each time you call `argocd` CLI, you can set the following environment variables:
 
@@ -116,9 +124,13 @@ $ goreman run status
 [...]
 ```
 
-If some of the processes fail to start (not marked with `*`), check logs to see why they are not running. The logs are on `DEBUG` level by default. If the logs are too noisy to find the problem, try editing log levels for the commands in the `Procfile` in the root of the Argo CD repo.
+If some of the processes fail to start (not marked with `*`), check logs to see why they are not running
+* The logs are on `DEBUG` level by default
+* If the logs are too noisy to find the problem, try editing log levels for the commands in the `Procfile` in the root of the Argo CD repo.
 
-You can now use either use the web UI by pointing your browser to `http://localhost:4000` or use the CLI against the API at `http://localhost:8080`. Be sure to use the `--insecure` and `--plaintext` options to the CLI. Webpack will take a while to bundle resources initially, so the first page load can take several seconds or minutes.
+You can now use either use the web UI by pointing your browser to `http://localhost:4000` or use the CLI against the API at `http://localhost:8080`
+* Be sure to use the `--insecure` and `--plaintext` options to the CLI
+* Webpack will take a while to bundle resources initially, so the first page load can take several seconds or minutes.
 
 As an alternative to using the above command line parameters each time you call `argocd` CLI, you can set the following environment variables:
 
@@ -152,7 +164,8 @@ goreman run restart repo-server
 
 #### CLI Changes
 
-Modifying the CLI requires restarting the current `make start` or `make start-local` session to reflect the changes. Those targets also rebuild the CLI.
+Modifying the CLI requires restarting the current `make start` or `make start-local` session to reflect the changes
+* Those targets also rebuild the CLI.
 
 To test most CLI commands, you will need to log in.
 
@@ -189,7 +202,8 @@ For your final tests, it might be necessary to build your own images and run the
 
 #### Create Docker account and login
 
-You might need to create an account on [Docker Hub](https://hub.docker.com) if you don't have one already. Once you created your account, login from your development environment:
+You might need to create an account on [Docker Hub](https://hub.docker.com) if you don't have one already
+* Once you created your account, login from your development environment:
 
 ```bash
 docker login
@@ -204,14 +218,16 @@ export IMAGE_REGISTRY=docker.io
 export IMAGE_NAMESPACE=youraccount
 ```
 
-If you don't set `IMAGE_TAG` in your environment, the default of `:latest` will be used. To change the tag, export the variable in the environment:
+If you don't set `IMAGE_TAG` in your environment, the default of `:latest` will be used
+* To change the tag, export the variable in the environment:
 
 ```bash
 export IMAGE_TAG=1.5.0-myrc
 ```
 
 > [!NOTE]
-> The image will be built for `linux/amd64` platform by default. If you are running on Mac with Apple chip (ARM),
+> The image will be built for `linux/amd64` platform by default
+* If you are running on Mac with Apple chip (ARM),
 > you need to specify the correct buld platform by running:
 > ```bash
 > export TARGET_ARCH=linux/arm64 
@@ -252,7 +268,9 @@ make manifests-local
 (depending on your toolchain) to build a new set of installation manifests which include your specific image reference.
 
 > [!NOTE]
-> Do not commit these manifests to your repository. If you want to revert the changes, the easiest way is to unset `IMAGE_REGISTRY`, `IMAGE_NAMESPACE` and `IMAGE_TAG` from your environment and run `make manifests` again. This will re-create the default manifests.
+> Do not commit these manifests to your repository
+* If you want to revert the changes, the easiest way is to unset `IMAGE_REGISTRY`, `IMAGE_NAMESPACE` and `IMAGE_TAG` from your environment and run `make manifests` again
+* This will re-create the default manifests.
 
 #### Configure your cluster with custom manifests
 
