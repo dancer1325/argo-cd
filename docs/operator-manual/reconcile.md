@@ -9,39 +9,39 @@
         * ignored & resource's [health status](./health.md) changes -> reconcile
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
+┌─────────────────────────────────────────────────────────────────-┐
 │                    Kubernetes Cluster                            │
 │                                                                  │
-│  Resource changes (Pod restart, HPA scaling, etc.)              │
+│  Resource changes (Pod restart, HPA scaling, etc.)               │
 └────────────────────────────┬─────────────────────────────────────┘
                              ↓
-╔═════════════════════════════════════════════════════════════════╗
-║              Application Controller (watches & processes)       ║
-╠═════════════════════════════════════════════════════════════════╣
-║                    ┌────────────────────┐                       ║
-║                    │  1. Watch Resources │                      ║
-║                    │  (Kubernetes API)   │                      ║
-║                    └────────┬────────────┘                      ║
-║                             ↓                                   ║
-║                    ┌────────────────────┐                       ║
-║                    │  2. Detect Change  │                       ║
-║                    │  (Watch event)      │                      ║
-║                    └────────┬────────────┘                      ║
-║                             ↓                                   ║
-║              ┌──────────────────────────────┐                   ║
-║              │  3. ignoreResourceUpdates?   │                   ║
-║              │  • System-level config       │                   ║
-║              │  • Resource annotation       │                   ║
-║              └──────┬───────────────┬───────┘                   ║
+╔══════════════════════════════════════════════════════════════════╗
+║              Application Controller (watches & processes)        ║
+╠══════════════════════════════════════════════════════════════════╣
+║                    ┌────────────────────┐                        ║
+║                    │  1. Watch Resources │                       ║
+║                    │  (Kubernetes API)   │                       ║
+║                    └────────┬────────────┘                       ║
+║                             ↓                                    ║
+║                    ┌────────────────────┐                        ║
+║                    │  2. Detect Change  │                        ║
+║                    │  (Watch event)      │                       ║
+║                    └────────┬────────────┘                       ║
+║                             ↓                                    ║
+║              ┌──────────────────────────────┐                    ║
+║              │  3. ignoreResourceUpdates?   │                    ║
+║              │  • System-level config       │                    ║
+║              │  • Resource annotation       │                    ║
+║              └──────┬───────────────┬───────┘                    ║
 ║                     │               │                            ║
 ║                 YES │               │ NO                         ║
 ║                     ↓               ↓                            ║
 ║              ┌──────────┐   ┌─────────────────────────┐          ║
-║              │   STOP   │   │ 4. Enqueue Application  │           ║
+║              │   STOP   │   │ 4. Enqueue Application  │          ║
 ║              │          |   │    (== added to queue)  │          ║
 ║              └──────────┘   └────────┬────────────────┘          ║
 ║                                      ↓                           ║
-║                             ⏱️  Wait until:                       ║
+║                             ⏱️  Wait until:                      ║
 ║                             • timeout.reconciliation (default 3m)║
 ║                             • Manual refresh                     ║
 ║                             • Webhook event                      ║
@@ -61,8 +61,9 @@
 ║                    │  │ • Get live state       │  │              ║
 ║                    │  │   (via Kube API)       │  │              ║
 ║                    │  │                        │  │              ║
-║                    │  │ • Compare both with    │  │              ║
-║                    │  │   ignoreDifferences:   │  │              ║
+║                    │  │ • Diffing (==          │  │              ║
+║                    |  |   Compare both with    │  │              ║
+║                    │  │   ignoreDifferences):  │  │              ║
 ║                    │  │   - System-level       │  │              ║
 ║                    │  │   - Per-app config     │  │              ║
 ║                    │  └────────────────────────┘  │              ║
@@ -76,12 +77,12 @@
 ║                    Synced │         │ OutOfSync                  ║
 ║                           ↓         ↓                            ║
 ║                      ┌────────┐  ┌──────────────────────┐        ║
-║                      │  END   │  │ 7. Auto-Sync         │        ║
-║                      └────────┘  │    (if enabled)      │        ║
+║                      │  END   │  │ 7. Auto-Sync OR      │        ║
+║                      └────────┘  │    MANUAL sync       │        ║
 ║                                  └──────────────────────┘        ║
 ║                                            ↓                     ║
 ║                                          END                     ║
-╚═════════════════════════════════════════════════════════════════╝
+╚══════════════════════════════════════════════════════════════════╝
 ```
 
 * Argo CD Application

@@ -1,7 +1,7 @@
 # Diffing Customization
 
 * diffing 
-  * == phase / 
+  * == 💡reconciliation phase💡 / 
     * compare desired state vs live state
   * customization
     * 👀ways to configure 👀

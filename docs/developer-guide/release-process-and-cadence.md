@@ -4,59 +4,71 @@
 
 ### Schedule
 
-These are the upcoming releases dates:
 
-| Release | Release Candidate 1   | General Availability | Release Champion                                        | Release Approver                                      | Checklist                                                     |
-|---------|-----------------------|----------------------|---------------------------------------------------------|-------------------------------------------------------|---------------------------------------------------------------|
-| v2.6    | Monday, Dec. 19, 2022 | Monday, Feb. 6, 2023 | [William Tam](https://github.com/wtam2018)              | [William Tam](https://github.com/wtam2018)            | [checklist](https://github.com/argoproj/argo-cd/issues/11563) |
-| v2.7    | Monday, Mar. 20, 2023 | Monday, May 1, 2023  | [Pavel Kostohrys](https://github.com/pasha-codefresh)   | [Pavel Kostohrys](https://github.com/pasha-codefresh) | [checklist](https://github.com/argoproj/argo-cd/issues/12762) |
-| v2.8    | Monday, Jun. 26, 2023 | Monday, Aug. 7, 2023 | [Keith Chong](https://github.com/keithchong)            | [Keith Chong](https://github.com/keithchong)          | [checklist](https://github.com/argoproj/argo-cd/issues/13742) |
-| v2.9    | Monday, Sep. 18, 2023 | Monday, Nov. 6, 2023 | [Leonardo Almeida](https://github.com/leoluz)           | [Leonardo Almeida](https://github.com/leoluz)         | [checklist](https://github.com/argoproj/argo-cd/issues/14078) |
-| v2.10   | Monday, Dec. 18, 2023 | Monday, Feb. 5, 2024 | [Katie Lamkin](https://github.com/kmlamkin9)            |                                                       | [checklist](https://github.com/argoproj/argo-cd/issues/16339) |
-| v2.11   | Friday, Apr. 5,  2024 | Monday, May 6, 2024  | [Pavel Kostohrys](https://github.com/pasha-codefresh)   | [Pavel Kostohrys](https://github.com/pasha-codefresh) | [checklist](https://github.com/argoproj/argo-cd/issues/17726) |
-| v2.12   | Monday, Jun. 17, 2024 | Monday, Aug. 5, 2024 | [Ishita Sequeira](https://github.com/ishitasequeira)    | [Pavel Kostohrys](https://github.com/pasha-codefresh) | [checklist](https://github.com/argoproj/argo-cd/issues/19063) |
-| v2.13   | Monday, Sep. 16, 2024 | Monday, Nov. 4, 2024 | [Regina Voloshin](https://github.com/reggie-k)          | [Pavel Kostohrys](https://github.com/pasha-codefresh) | [checklist](https://github.com/argoproj/argo-cd/issues/19513) |
-| v2.14   | Monday, Dec. 16, 2024 | Monday, Feb. 3, 2025 | [Ryan Umstead](https://github.com/rumstead)             | [Pavel Kostohrys](https://github.com/pasha-codefresh) | [checklist](https://github.com/argoproj/argo-cd/issues/20869) |
-| v3.0    | Monday, Mar. 17, 2025 | Tuesday, May 6, 2025 | [Regina Voloshin](https://github.com/reggie-k)          | [Regina Voloshin](https://github.com/reggie-k)        | [checklist](https://github.com/argoproj/argo-cd/issues/21735) |
+| Release | Release Candidate 1   | General Availability | Release Champion                                        | Release Approver                                       | Checklist                                                     |
+|---------|-----------------------|----------------------|---------------------------------------------------------|--------------------------------------------------------|---------------------------------------------------------------|
+| v2.6    | Monday, Dec. 19, 2022 | Monday, Feb. 6, 2023 | [William Tam](https://github.com/wtam2018)              | [William Tam](https://github.com/wtam2018)             | [checklist](https://github.com/argoproj/argo-cd/issues/11563) |
+| v2.7    | Monday, Mar. 20, 2023 | Monday, May 1, 2023  | [Pavel Kostohrys](https://github.com/pasha-codefresh)   | [Pavel Kostohrys](https://github.com/pasha-codefresh)  | [checklist](https://github.com/argoproj/argo-cd/issues/12762) |
+| v2.8    | Monday, Jun. 26, 2023 | Monday, Aug. 7, 2023 | [Keith Chong](https://github.com/keithchong)            | [Keith Chong](https://github.com/keithchong)           | [checklist](https://github.com/argoproj/argo-cd/issues/13742) |
+| v2.9    | Monday, Sep. 18, 2023 | Monday, Nov. 6, 2023 | [Leonardo Almeida](https://github.com/leoluz)           | [Leonardo Almeida](https://github.com/leoluz)          | [checklist](https://github.com/argoproj/argo-cd/issues/14078) |
+| v2.10   | Monday, Dec. 18, 2023 | Monday, Feb. 5, 2024 | [Katie Lamkin](https://github.com/kmlamkin9)            |                                                        | [checklist](https://github.com/argoproj/argo-cd/issues/16339) |
+| v2.11   | Friday, Apr. 5,  2024 | Monday, May 6, 2024  | [Pavel Kostohrys](https://github.com/pasha-codefresh)   | [Pavel Kostohrys](https://github.com/pasha-codefresh)  | [checklist](https://github.com/argoproj/argo-cd/issues/17726) |
+| v2.12   | Monday, Jun. 17, 2024 | Monday, Aug. 5, 2024 | [Ishita Sequeira](https://github.com/ishitasequeira)    | [Pavel Kostohrys](https://github.com/pasha-codefresh)  | [checklist](https://github.com/argoproj/argo-cd/issues/19063) |
+| v2.13   | Monday, Sep. 16, 2024 | Monday, Nov. 4, 2024 | [Regina Voloshin](https://github.com/reggie-k)          | [Pavel Kostohrys](https://github.com/pasha-codefresh)  | [checklist](https://github.com/argoproj/argo-cd/issues/19513) |
+| v2.14   | Monday, Dec. 16, 2024 | Monday, Feb. 3, 2025 | [Ryan Umstead](https://github.com/rumstead)             | [Pavel Kostohrys](https://github.com/pasha-codefresh)  | [checklist](https://github.com/argoproj/argo-cd/issues/20869) |
+| v3.0    | Monday, Mar. 17, 2025 | Tuesday, May 6, 2025 | [Regina Voloshin](https://github.com/reggie-k)          | [Regina Voloshin](https://github.com/reggie-k)         | [checklist](https://github.com/argoproj/argo-cd/issues/21735) |
 | v3.1    | Monday, Jun. 16, 2025 | Monday, Aug. 4, 2025 | [Christian Hernandez](https://github.com/christianh814) | [Alexandre Gaudreault](https://github.com/agaudreault) | [checklist](https://github.com/argoproj/argo-cd/issues/23347) |
-| v3.2    | Monday, Sep. 15, 2025 | Monday, Nov. 3, 2025 | [Nitish Kumar](https://github.com/nitishfy)             |  [Michael Crenshaw](https://github.com/crenshaw-dev) | [checklist](https://github.com/argoproj/argo-cd/issues/24539) |
+| v3.2    | Monday, Sep. 15, 2025 | Monday, Nov. 3, 2025 | [Nitish Kumar](https://github.com/nitishfy)             | [Michael Crenshaw](https://github.com/crenshaw-dev)    | [checklist](https://github.com/argoproj/argo-cd/issues/24539) |
 | v3.3    | Monday, Dec. 15, 2025 | Monday, Feb. 2, 2026 | [Peter Jiang](https://github.com/pjiang-dev)            | [Regina Voloshin](https://github.com/reggie-k)         | [checklist](https://github.com/argoproj/argo-cd/issues/25211) |
-| v3.4    | Monday, Mar. 16, 2026 | Monday, May. 4, 2026 | [Codey Jenkins](https://github.com/FourFifthsCode) | [Regina Voloshin](https://github.com/reggie-k) | [checklist](https://github.com/argoproj/argo-cd/issues/26527)
-| v3.5    | Monday, Jun. 15, 2026 | Monday, Aug. 3, 2026 | | |
+| v3.4    | Monday, Mar. 16, 2026 | Monday, May. 4, 2026 | [Codey Jenkins](https://github.com/FourFifthsCode)      | [Regina Voloshin](https://github.com/reggie-k)         | [checklist](https://github.com/argoproj/argo-cd/issues/26527) |
+| v3.5    | Monday, Jun. 15, 2026 | Monday, Aug. 3, 2026 |                                                         |                                                        |                                                               |
 
-Actual release dates might differ from the plan by a few days.
+* REAL release dates
+  * might differ -- from the -- planS
 
 ### Release Process
 
 #### Minor Releases (e.g. 2.x.0)
 
-A minor Argo CD release occurs four times a year, once every three months. Each General Availability (GA) release is
-preceded by several Release Candidates (RCs). The first RC is released seven weeks before the scheduled GA date. This
-effectively means that there is a seven-week feature freeze.
+* minor Argo CD release
+  * _Example:_ X.Y
+  * 4 times / year
+    * _Examples:_
+      * FIRST Monday of February
+      * FIRST Monday of May
+      * FIRST Monday of August
+      * FIRST Monday of November
 
-These are the approximate release dates:
+TODO: 
+* Each General Availability (GA) release is preceded by several Release Candidates (RCs)
+* The first RC is released seven weeks before the scheduled GA date
+* This effectively means that there is a seven-week feature freeze.
 
-* The first Monday of February
-* The first Monday of May
-* The first Monday of August
-* The first Monday of November
-
-Dates may be shifted slightly to accommodate holidays. Those shifts should be minimal.
+Dates may be shifted slightly to accommodate holidays
+* Those shifts should be minimal.
 
 #### Patch Releases (e.g. 2.5.x)
 
-Argo CD patch releases occur on an as-needed basis. Only the three most recent minor versions are eligible for patch
-releases. Versions older than the three most recent minor versions are considered EOL and will not receive bug fixes or
+Argo CD patch releases occur on an as-needed basis
+* Only the three most recent minor versions are eligible for patch
+releases
+* Versions older than the three most recent minor versions are considered EOL and will not receive bug fixes or
 security updates.
 
 #### Release Champion
 
-To help manage all the steps involved in a release, we will have a Release Champion. The Release Champion will be
-responsible for a checklist of items for their release. The checklist is an issue template in the Argo CD repository.
+* == people / 
+  * help manage ALL release's steps
+  * responsible for
+    * release's checklist of items 
+  * ANYONE | Argo CD community
 
-The Release Champion can be anyone in the Argo CD community. Some tasks (like cherry-picking bug fixes and cutting
+* [checklist](/.github/ISSUE_TEMPLATE/release.md)
+
+* TODO: Some tasks (like cherry-picking bug fixes and cutting
 releases) require [Approver](https://github.com/argoproj/argoproj/blob/master/community/membership.md#community-membership)
-membership. The Release Champion can delegate tasks when necessary and will be responsible for coordinating with the
+membership
+* The Release Champion can delegate tasks when necessary and will be responsible for coordinating with the
 Approver.
 
 ### Feature Acceptance Criteria
@@ -75,11 +87,13 @@ The feature PR must include:
 * The PR must be reviewed, approved, and merged by an Approver.
 
 If these criteria are not met by the RC date, the feature will be ineligible for inclusion in the RC series or GA for
-that minor release. It will have to wait for the next minor release.
+that minor release
+* It will have to wait for the next minor release.
 
 ### Security Patch Policy
 
-CVEs in Argo CD code will be patched for all supported versions. Read more about supported versions in the [security policy for Argo CD](https://github.com/argoproj/argo-cd/security/policy#supported-versions).
+CVEs in Argo CD code will be patched for all supported versions
+* Read more about supported versions in the [security policy for Argo CD](https://github.com/argoproj/argo-cd/security/policy#supported-versions).
 
 ### Dependencies Lifecycle Policy
 
@@ -93,4 +107,5 @@ These evaluations vary from dependency to dependencies.
 Dependencies are also scheduled for removal if the project has been deprecated or if the project is no longer maintained.
 
 CVEs in dependencies will be patched for all supported versions if the CVE is applicable and is assessed by Snyk to be
-of high or critical severity. Automation generates a [new Snyk scan weekly](../snyk/index.md).
+of high or critical severity
+* Automation generates a [new Snyk scan weekly](../snyk/index.md).

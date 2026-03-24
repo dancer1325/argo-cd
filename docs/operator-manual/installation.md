@@ -25,8 +25,9 @@ resources:
 For an example of this, see the [kustomization.yaml](https://github.com/argoproj/argoproj-deployments/blob/master/argocd/kustomization.yaml)
 used to deploy the [Argoproj CI/CD infrastructure](https://github.com/argoproj/argoproj-deployments#argoproj-deployments).
 
-#### Installing Argo CD in a Custom Namespace
-If you want to install Argo CD in a namespace other than the default argocd, you can use Kustomize to apply a patch that updates the ClusterRoleBinding to reference the correct namespace for the ServiceAccount
+#### Installing Argo CD | CUSTOM namespace
+If you want to install Argo CD in a namespace other than the default argocd,
+you can use Kustomize to apply a patch that updates the ClusterRoleBinding to reference the correct namespace for the ServiceAccount
 * This ensures that the necessary permissions are correctly set in your custom namespace.
 
 Below is an example of how to configure your kustomization.yaml to install Argo CD in a custom namespace:
@@ -48,17 +49,16 @@ patches:
       kind: ClusterRoleBinding
 ```
 
-This patch ensures that the ClusterRoleBinding correctly maps to the ServiceAccount in your custom namespace, preventing any permission-related issues during the deployment.
+This patch ensures that the ClusterRoleBinding correctly maps to the ServiceAccount in your custom namespace, 
+preventing any permission-related issues during the deployment.
 
 ## Helm
 
-The Argo CD can be installed using [Helm](https://helm.sh/)
-* The Helm chart is currently community maintained and available at
-[argo-helm/charts/argo-cd](https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd).
+* [Helm chart](https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd)
 
 ## Supported versions
 
-For detailed information regarding Argo CD's version support policy, please refer to the [Release Process and Cadence documentation](../developer-guide/release-process-and-cadence.md).
+* [here](../developer-guide/release-process-and-cadence.md)
 
 ## Tested versions
 

@@ -60,24 +60,31 @@
 
 ## Using
 
-TODO: 
-Once Argo CD Core is installed, users will be able to interact with it
-by relying on GitOps. The available Kubernetes resources will be the
-`Application` and the `ApplicationSet` CRDs. By using those resources,
-users will be able to deploy and manage applications in Kubernetes.
+* AVAILABLE Kubernetes resources
+  * Argo CD Application
+  * Argo CD ApplicationSet
 
-It is still possible to use Argo CD CLI even when running Argo CD
-Core. In this case, the CLI will spawn a local API server process that
-will be used to handle the CLI command. Once the command is concluded,
-the local API Server process will also be terminated. This happens
-transparently for the user with no additional command required. Note
+* use cases
+  * deploy & manage applications | Kubernetes / 
+    * ⚠️ONLY -- through -- GitOps⚠️
+      * Reason:🧠REST of features are disabled it🧠
+
+* Argo CD CLI
+  * In this case, the CLI will spawn a local API server process that
+  will be used to handle the CLI command
+* Once the command is concluded,
+the local API Server process will also be terminated
+* This happens
+transparently for the user with no additional command required
+* Note
 that Argo CD Core will rely only on Kubernetes RBAC and the user (or
 the process) invoking the CLI needs to have access to the Argo CD
 namespace with the proper permission in the `Application` and
 `ApplicationSet` resources for executing a given command.
 
 To use [Argo CD CLI](https://argo-cd.readthedocs.io/en/stable/cli_installation) in core mode, it is required to pass the `--core`
-flag with the `login` subcommand. The `--core` flag is responsible for spawning a local Argo CD API server
+flag with the `login` subcommand
+* The `--core` flag is responsible for spawning a local Argo CD API server
 process that handles CLI and Web UI requests.
 
 Example:
@@ -88,7 +95,8 @@ argocd login --core
 ```
 
 Similarly, users can also run the Web UI locally if they prefer to
-interact with Argo CD using this method. The Web UI can be started
+interact with Argo CD using this method
+* The Web UI can be started
 locally by running the following command:
 
 ```
