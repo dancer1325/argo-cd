@@ -1,108 +1,65 @@
-# Running Argo CD locally
+* goal
+  * [how to run Argo CD locally?](#how-to-run-argo-cd-locally)
+  * [how to run Argo CD | K8s cluster?](#how-to-run-argo-cd--k8s-cluster)
 
-## Prerequisites
-1. [Development Environment](development-environment.md)   
-2. [Toolchain Guide](toolchain-guide.md)
-3. [Development Cycle](development-cycle.md)
+# how to run Argo CD locally?
 
-## Preface
+* goal
+  * 👀run Argo CD LOCALLY (== outside of a K8s cluster) + configuration | your cluster👀
+    * configuration == CRDs + ConfigMaps + Secrets + ServiceAccount + Service
+    * Reason:🧠faster
+      * you do NOT constantly build + push + install NEW Argo CD Docker images 🧠
 
-* run Argo CD LOCALLY (== outside of a K8s cluster)
-  * Reason:🧠faster
-    * you do NOT constantly build + push + install NEW Argo CD Docker images 🧠
+### Prerequisites
 
-* build a docker image + run Argo CD | your cluster
+* see
+  1. [Development Environment](development-environment.md)
+  2. [Toolchain Guide](toolchain-guide.md)
+  3. [Development Cycle](development-cycle.md)
 
-TODO: 
-In order to have all the required resources in your cluster, 
-you will deploy Argo CD from your development branch and then scale down all it's instances.
-This will ensure you have all the relevant configuration (such as Argo CD Config Maps and CRDs) in the cluster 
-while the instances themselves are stopped.
+* | your cluster,
+  * deploy Argo CD resources 
 
-### Deploy Argo CD resources to your cluster
+    ```shell
+    kubectl create namespace argocd
+    kubectl apply -n argocd --server-side --force-conflicts -f manifests/install.yaml
+  
+    # set the CURRENT context -- to the -- "argocd" namespace
+    #   Reason:🧠services / run locally can access -- to the -- configuration | argocd namespace
+    kubectl config set-context --current --namespace=argocd
+    ```
 
-First push the installation manifest into argocd namespace:
+  * scale down ANY Argo CD instance
 
-```shell
-kubectl create namespace argocd
-kubectl apply -n argocd --server-side --force-conflicts -f manifests/install.yaml
-```
+    ```shell
+    # | your cluster, scale down ANY Argo CD instance
+    #     ==  scale down ALL Argo CD deployments
+    kubectl -n argocd scale statefulset/argocd-application-controller --replicas 0
+    kubectl -n argocd scale deployment/argocd-dex-server --replicas 0
+    kubectl -n argocd scale deployment/argocd-repo-server --replicas 0
+    kubectl -n argocd scale deployment/argocd-server --replicas 0
+    kubectl -n argocd scale deployment/argocd-redis --replicas 0
+    kubectl -n argocd scale deployment/argocd-applicationset-controller --replicas 0
+    kubectl -n argocd scale deployment/argocd-notifications-controller --replicas 0
+    ```
 
-The services you will start later assume you are running in the namespace where Argo CD is installed
-* You can set the current context default namespace as follows:
-
-```bash
-kubectl config set-context --current --namespace=argocd
-```
-
-### Scale down any Argo CD instance in your cluster
-
-Make sure that Argo CD is not running in your development cluster by scaling down the deployments:
-
-```shell
-kubectl -n argocd scale statefulset/argocd-application-controller --replicas 0
-kubectl -n argocd scale deployment/argocd-dex-server --replicas 0
-kubectl -n argocd scale deployment/argocd-repo-server --replicas 0
-kubectl -n argocd scale deployment/argocd-server --replicas 0
-kubectl -n argocd scale deployment/argocd-redis --replicas 0
-kubectl -n argocd scale deployment/argocd-applicationset-controller --replicas 0
-kubectl -n argocd scale deployment/argocd-notifications-controller --replicas 0
-```
-
-## Running Argo CD locally, outside of K8s cluster
-#### Prerequisites
-1. [Deploy Argo CD resources to your cluster](running-locally.md#deploy-argo-cd-resources-to-your-cluster)   
-2. [Scale down any Argo CD instance in your cluster](running-locally.md#scale-down-any-argo-cd-instance-in-your-cluster)
-
-### Start local services (virtualized toolchain)
-When you use the virtualized toolchain, starting local services is as simple as running
-
-```bash
-cd argo-cd
-make start
-```
-
-By default, Argo CD uses Docker
-* To use Podman instead, set the `DOCKER` environment variable to `podman` before running the `make` command:
-
-```shell
-cd argo-cd
-DOCKER=podman make start
-```
-
-This will start all Argo CD services and the UI in a Docker container and expose the following ports to your host:
-
-* The Argo CD API server on port 8080
-* The Argo CD UI server on port 4000
-* The Helm registry server on port 5000
-
-You can now use either the web UI by pointing your browser to `http://localhost:4000` or use the CLI against the API at `http://localhost:8080`
-* Be sure to use the `--insecure` and `--plaintext` options to the CLI
-* Webpack will take a while to bundle resources initially, so the first page load can take several seconds or minutes.
-
-As an alternative to using the above command line parameters each time you call `argocd` CLI, you can set the following environment variables:
-
-```bash
-export ARGOCD_SERVER=127.0.0.1:8080
-export ARGOCD_OPTS="--plaintext --insecure"
-```
-
-### Start local services (local toolchain)
+### Start local services
+#### -- as -- local toolchain
 When you use the local toolchain, starting local services can be performed in 3 ways:
 
-#### With "make start-local"
+##### -- via -- "make start-local"
 ```shell
 cd argo-cd
 make start-local ARGOCD_GPG_ENABLED=false
 ```
 
-#### With "make run"
+##### -- via -- "make run"
 ```shell
 cd argo-cd
 make run ARGOCD_GPG_ENABLED=false
 ```
 
-#### With "goreman start"
+##### -- via -- "goreman start"
 ```shell
 cd argo-cd
 ARGOCD_GPG_ENABLED=false && goreman start
@@ -138,6 +95,43 @@ As an alternative to using the above command line parameters each time you call 
 export ARGOCD_SERVER=127.0.0.1:8080
 export ARGOCD_OPTS="--plaintext --insecure"
 ```
+
+#### -- as -- virtualized toolchain
+
+TODO: 
+When you use the virtualized toolchain, starting local services is as simple as running
+
+```bash
+cd argo-cd
+make start
+```
+
+By default, Argo CD uses Docker
+* To use Podman instead, set the `DOCKER` environment variable to `podman` before running the `make` command:
+
+```shell
+cd argo-cd
+DOCKER=podman make start
+```
+
+This will start all Argo CD services and the UI in a Docker container and expose the following ports to your host:
+
+* The Argo CD API server on port 8080
+* The Argo CD UI server on port 4000
+* The Helm registry server on port 5000
+
+You can now use either the web UI by pointing your browser to `http://localhost:4000` or use the CLI against the API at `http://localhost:8080`
+* Be sure to use the `--insecure` and `--plaintext` options to the CLI
+* Webpack will take a while to bundle resources initially, so the first page load can take several seconds or minutes.
+
+As an alternative to using the above command line parameters each time you call `argocd` CLI, you can set the following environment variables:
+
+```bash
+export ARGOCD_SERVER=127.0.0.1:8080
+export ARGOCD_OPTS="--plaintext --insecure"
+```
+
+
 ### Making code changes while Argo CD is running on your machine
 
 #### Docs Changes
@@ -181,10 +175,11 @@ Then log in using that password and username `admin`:
 dist/argocd login localhost:8080
 ```
 
-## Running Argo CD inside of K8s cluster
+# how to run Argo CD | K8s cluster?
 ### Scale up Argo CD in your cluster
 
-Once you have finished testing your changes locally and want to bring back Argo CD in your development cluster, simply scale the deployments up again:
+Once you have finished testing your changes locally and want to bring back Argo CD in your development cluster, 
+simply scale the deployments up again:
 
 ```bash
 kubectl -n argocd scale statefulset/argocd-application-controller --replicas 1

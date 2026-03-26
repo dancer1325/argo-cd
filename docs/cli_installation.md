@@ -1,7 +1,11 @@
 # Installation
 
-* [Argo CD releases](https://github.com/argoproj/argo-cd/releases/latest)
-* if you download ArgoCD -> it includes `argocd` CLI
+* [Argo CD CLI releases](https://github.com/argoproj/argo-cd/releases/latest)
+
+## | ANY OS
+
+* download your chosen | [releases](https://github.com/argoproj/argo-cd/releases/latest)
+* unpack & install
 
 ## Linux and WSL
 
