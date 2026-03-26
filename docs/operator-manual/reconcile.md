@@ -143,34 +143,48 @@
       * if you want to disable it `ignoreDifferencesOnResourceUpdates: false`
   * [source code](/pkg/apis/application/v1alpha1/types.go)'s `ResourceIgnoreDifferences`
 
-* | "argocd-cm" ConfigMap,
-  * `resource.customizations.ignoreDifferences.all`
+* -- based on -- scope
+  * global: | "argocd-cm" ConfigMap,
+    * `resource.customizations.ignoreDifferences.all`
 
-      ```yaml
-      data:
-        resource.customizations.ignoreDifferences.all: |                                                                                                                                                                                
-          # ways to specify the resource updates / ignore
-          jsonPointers:              # [JSON Pointer]                                                                                                                                                                   
-          - /path/to/field                                                                                                                                                                                                                     
-          jqPathExpressions:         # [JQPathExpressions]                                                                                                                                                                      
-          - .path.to.field  
-          managedFieldsManagers:
-          - someManagedFieldManager
-      ```
-  * `resource.customizations.ignoreDifferences.<group>_<kind>`
-    * ⚠️override `resource.customizations.ignoreDifferences.all`⚠️
-
-      ```yaml
-      data:
-        resource.customizations.ignoreDifferences.<group>_<kind>: |                                                                                                                                                                                
-          # ways to specify the resource updates / ignore
-          jsonPointers:              # [JSON Pointer]                                                                                                                                                                   
-          - /path/to/field                                                                                                                                                                                                                     
-          jqPathExpressions:         # [JQPathExpressions]                                                                                                                                                                      
-          - .path.to.field  
-          managedFieldsManagers:
-          - someManagedFieldManager
+        ```yaml
+        data:
+          resource.customizations.ignoreDifferences.all: |                                                                                                                                                                                
+            # ways to specify the resource updates / ignore
+            jsonPointers:              # [JSON Pointer]                                                                                                                                                                   
+            - /path/to/field                                                                                                                                                                                                                     
+            jqPathExpressions:         # [JQPathExpressions]                                                                                                                                                                      
+            - .path.to.field  
+            managedFieldsManagers:
+            - someManagedFieldManager
         ```
+    * `resource.customizations.ignoreDifferences.<group>_<kind>`
+      * ⚠️override `resource.customizations.ignoreDifferences.all`⚠️
+
+        ```yaml
+        data:
+          resource.customizations.ignoreDifferences.<group>_<kind>: |                                                                                                                                                                                
+            # ways to specify the resource updates / ignore
+            jsonPointers:              # [JSON Pointer]                                                                                                                                                                   
+            - /path/to/field                                                                                                                                                                                                                     
+            jqPathExpressions:         # [JQPathExpressions]                                                                                                                                                                      
+            - .path.to.field  
+            managedFieldsManagers:
+            - someManagedFieldManager
+          ```
+  * Argo CD Application,
+
+    ```yaml
+    apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    spec:
+  
+      ignoreDifferences:
+        - group: "API_GROUP"
+          kind: "API_KIND"
+          jsonPointers:
+            - /path/to/field
+    ```
 
 ## Default Configuration
 

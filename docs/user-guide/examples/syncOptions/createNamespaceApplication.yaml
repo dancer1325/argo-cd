@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  namespace: test   # namespace | live Argo CD Application
+spec:
+  destination:
+    namespace: namespaceForApplicationChildManifests
+  syncPolicy:
+    managedNamespaceMetadata:
+      labels: # The labels to set on the application namespace
+        any: label
+        you: like
+      annotations: # The annotations to set on the application namespace
+        the: same
+        applies: for
+        annotations: on-the-namespace
+
+        # track Application's child's namespace
+        argocd.argoproj.io/tracking-id: "your-application-name:/Namespace:/your-namespace-name"
+    syncOptions:
+      # if the namespace "namespaceForApplicationChildManifests" does NOT exist -> AUTOMATICALLY create it
+      - CreateNamespace=true

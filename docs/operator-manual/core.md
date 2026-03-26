@@ -70,7 +70,7 @@
       * Reason:🧠REST of features are disabled it🧠
 
 * Argo CD CLI
-  * In this case, the CLI will spawn a local API server process that
+  * TODO: In this case, the CLI will spawn a local API server process that
   will be used to handle the CLI command
 * Once the command is concluded,
 the local API Server process will also be terminated

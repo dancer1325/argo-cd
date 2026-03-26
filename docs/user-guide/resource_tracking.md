@@ -1,7 +1,7 @@
 # Resource Tracking
 
 * goal
-  * how to track Kubernetes resources -- by -- annotation
+  * how Argo CD can track the Kubernetes resources / it manages
 
 * ways to track resources
   * [-- by -- annotation](#---by----annotation)

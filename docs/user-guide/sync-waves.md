@@ -5,28 +5,139 @@
   * [sync phases](#sync-phases)
   * [sync hook](#sync-hook)
   * [how to clean up sync hook?](#cleanup-sync-hooks)
+  * [sync waves](#sync-waves)
+  * 💡sync order execution is -- based on --💡
+    1. sync phase
+    2. sync wave
+    3. kind
+       * order: namespaces, other Kubernetes resources, Kubernetes CR
+    4. name
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│            COMPLETE SYNC HOOK LIFECYCLE                      │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  1. SYNC PHASE (argocd.argoproj.io/hook)                     │
-│     ↓                                                        │
-│     Determines: WHEN the hook is CREATED & EXECUTED          │
-│     Values: PreSync, Sync, Skip, PostSync, SyncFail,         │
-│             PreDelete, PostDelete                            │
-│                                                              │
-│  2. EXECUTION                                                │
-│     ↓                                                        │
-│     The hook runs (Job executes, Pod runs, etc.)             │
-│                                                              │
-│  3. CLEANUP (argocd.argoproj.io/hook-delete-policy)          │
-│     ↓                                                        │
-│     Determines: WHEN the hook is DELETED                     │
-│     Values: HookSucceeded, HookFailed, BeforeHookCreation    │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                            SYNC PROCESS: PHASES & WAVES                                                                    │
+│                                  (Left to Right: Sequential Phases  |  Top to Bottom: Waves within each phase)                            │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+TIME →
+
+┌──────────────────┬──────────────────┬──────────────────┬──────────────────┬──────────────────┬──────────────────┐
+│    PRESYNC       │      SYNC        │    POSTSYNC      │    SYNCFAIL      │   PREDELETE      │   POSTDELETE     │
+│   (hooks only)   │ (hooks+resources)│   (hooks only)   │   (hooks only)   │   (hooks only)   │   (hooks only)   │
+├──────────────────┼──────────────────┼──────────────────┼──────────────────┼──────────────────┼──────────────────┤
+│                  │                  │                  │                  │                  │                  │
+│ Wave -2          │ Wave -5          │ Wave -1          │ Wave 0           │ Wave -1          │ Wave 0           │
+│ ┌──────────────┐ │ ┌──────────────┐ │ ┌──────────────┐ │ ┌──────────────┐ │ ┌──────────────┐ │ ┌──────────────┐ │
+│ │  🔧 Hook A   │ │ │  📦 Namespace│ │ │  🔧 Hook P   │ │ │  🔧 Hook X   │ │ │  🔧 Hook M   │ │ │  🔧 Hook Z   │ │
+│ │  [execute]   │ │ │  [apply]     │ │ │  [execute]   │ │ │  [execute]   │ │ │  [execute]   │ │ │  [execute]   │ │
+│ │  [cleanup]   │ │ │  [keep]      │ │ │  [cleanup]   │ │ │  [cleanup]   │ │ │  [cleanup]   │ │ │  [cleanup]   │ │
+│ └──────────────┘ │ └──────────────┘ │ └──────────────┘ │ └──────────────┘ │ └──────────────┘ │ └──────────────┘ │
+│        ↓         │        ↓         │        ↓         │        ↓         │        ↓         │        ↓         │
+│     ⏱️ 2s        │     ⏱️ 2s        │     ⏱️ 2s        │     ⏱️ 2s        │     ⏱️ 2s        │     ⏱️ 2s        │
+│        ↓         │        ↓         │        ↓         │        ↓         │        ↓         │        ↓         │
+│                  │                  │                  │                  │                  │                  │
+│ Wave 0           │ Wave -1          │ Wave 0           │ Wave 1           │ Wave 0           │ Wave 5           │
+│ ┌──────────────┐ │ ┌──────────────┐ │ ┌──────────────┐ │ ┌──────────────┐ │ ┌──────────────┐ │ ┌──────────────┐ │
+│ │  🔧 Hook B   │ │ │  📦 ConfigMap│ │ │  🔧 Hook Q   │ │ │  🔧 Hook Y   │ │ │  🔧 Hook N   │ │ │  🔧 Hook W   │ │
+│ │  [execute]   │ │ │  [apply]     │ │ │  [execute]   │ │ │  [execute]   │ │ │  [execute]   │ │ │  [execute]   │ │
+│ │  [cleanup]   │ │ │  [keep]      │ │ │  [cleanup]   │ │ │  [cleanup]   │ │ │  [cleanup]   │ │ │  [cleanup]   │ │
+│ └──────────────┘ │ └──────────────┘ │ └──────────────┘ │ └──────────────┘ │ └──────────────┘ │ └──────────────┘ │
+│   (default)      │ ┌──────────────┐ │   (default)      │                  │   (default)      │                  │
+│                  │ │  📦 Secret   │ │                  │                  │                  │                  │
+│                  │ │  [apply]     │ │                  │                  │                  │                  │
+│                  │ │  [keep]      │ │                  │                  │                  │                  │
+│                  │ └──────────────┘ │                  │                  │                  │                  │
+│        ↓         │        ↓         │        ↓         │        ↓         │        ↓         │        ↓         │
+│     ⏱️ 2s        │     ⏱️ 2s        │     ⏱️ 2s        │     ⏱️ 2s        │     ⏱️ 2s        │                  │
+│        ↓         │        ↓         │        ↓         │        ↓         │        ↓         │                  │
+│                  │                  │                  │                  │                  │                  │
+│ Wave 3           │ Wave 0           │ Wave 10          │                  │                  │                  │
+│ ┌──────────────┐ │ ┌──────────────┐ │ ┌──────────────┐ │                  │                  │                  │
+│ │  🔧 Hook C   │ │ │  🔧 Hook E   │ │ │  🔧 Hook R   │ │                  │                  │                  │
+│ │  [execute]   │ │ │  [execute]   │ │ │  [execute]   │ │                  │                  │                  │
+│ │  [cleanup]   │ │ │  [cleanup]   │ │ │  [cleanup]   │ │                  │                  │                  │
+│ └──────────────┘ │ └──────────────┘ │ └──────────────┘ │                  │                  │                  │
+│        ↓         │ ┌──────────────┐ │        ↓         │                  │                  │                  │
+│     ⏱️ 2s        │ │  📦 Rsrc D   │ │                  │                  │                  │                  │
+│        ↓         │ │  [apply]     │ │                  │                  │                  │                  │
+│                  │ │  [keep]      │ │                  │                  │                  │                  │
+│                  │ └──────────────┘ │                  │                  │                  │                  │
+│                  │        ↓         │                  │                  │                  │                  │
+│                  │     ⏱️ 2s        │                  │                  │                  │                  │
+│                  │        ↓         │                  │                  │                  │                  │
+│                  │                  │                  │                  │                  │                  │
+│                  │ Wave 1           │                  │                  │                  │                  │
+│                  │ ┌──────────────┐ │                  │                  │                  │                  │
+│                  │ │  📦 Deploy   │ │                  │                  │                  │                  │
+│                  │ │  [apply]     │ │                  │                  │                  │                  │
+│                  │ │  [wait       │ │                  │                  │                  │                  │
+│                  │ │   healthy]   │ │                  │                  │                  │                  │
+│                  │ └──────────────┘ │                  │                  │                  │                  │
+│                  │        ↓         │                  │                  │                  │                  │
+│                  │     ⏱️ 2s        │                  │                  │                  │                  │
+│                  │        ↓         │                  │                  │                  │                  │
+│                  │                  │                  │                  │                  │                  │
+│                  │ Wave 2           │                  │                  │                  │                  │
+│                  │ ┌──────────────┐ │                  │                  │                  │                  │
+│                  │ │  📦 Service  │ │                  │                  │                  │                  │
+│                  │ │  [apply]     │ │                  │                  │                  │                  │
+│                  │ │  [keep]      │ │                  │                  │                  │                  │
+│                  │ └──────────────┘ │                  │                  │                  │                  │
+│                  │        ↓         │                  │                  │                  │                  │
+│                  │     ⏱️ 2s        │                  │                  │                  │                  │
+│                  │        ↓         │                  │                  │                  │                  │
+│                  │                  │                  │                  │                  │                  │
+│                  │ Wave 10          │                  │                  │                  │                  │
+│                  │ ┌──────────────┐ │                  │                  │                  │                  │
+│                  │ │  📦 Ingress  │ │                  │                  │                  │                  │
+│                  │ │  [apply]     │ │                  │                  │                  │                  │
+│                  │ │  [keep]      │ │                  │                  │                  │                  │
+│                  │ └──────────────┘ │                  │                  │                  │                  │
+│                  │                  │                  │                  │                  │                  │
+└──────────────────┴──────────────────┴──────────────────┴──────────────────┴──────────────────┴──────────────────┘
+        ↓                  ↓                  ↓             (only if            (only on          (only on
+   Phase ends        Phase ends        Phase ends        sync fails)         app delete)       app delete)
+        ↓                  ↓                  ↓                  ↓                  ↓                  ↓
+        └──────────────────┴──────────────────┴──────────────────┴──────────────────┴──────────────────┘
+                                                    ↓
+                                        SYNC OPERATION COMPLETE
+
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+                                         ┌────────────────────────────────────────┐
+                                         │  SKIP (excluded from temporal flow)    │
+                                         ├────────────────────────────────────────┤
+                                         │  Resources marked with:                │
+                                         │  argocd.argoproj.io/hook: Skip         │
+                                         │                                        │
+                                         │  Are NOT executed in any phase         │
+                                         │  Remain in Git but not applied         │
+                                         │  Can be hooks or normal resources      │
+                                         └────────────────────────────────────────┘
+
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+LEGEND:
+───────
+🔧 = Sync Hook (ephemeral)
+   [execute] = Dry-run valiation + Hook executes (Job/Pod runs)
+   [cleanup] = -- based on -- hook-delete-policy
+
+📦 = Normal Resource (permanent)
+   [apply] = Dry-run valiation + Apply | cluster
+   [keep]  = Remains in cluster (no cleanup)
+   [wait healthy] = Wait for healthy before next wave
+
+⏱️ = Delay between waves (ARGOCD_SYNC_WAVE_DELAY, default: 2 seconds)
+
+KEY POINTS:
+───────────
+• LEFT TO RIGHT: Phases execute sequentially
+• TOP TO BOTTOM: Waves execute sequentially | EACH phase
+• Wave numbers are INDEPENDENT / phase
+• Skip is NOT part of the temporal execution flow
+• SyncFail only executes if sync operation fails
+• PreDelete/PostDelete only execute during application deletion
 ```
 
 ## sync phases
@@ -37,15 +148,15 @@
       * == WAIT BEFORE switching to NEXT one
   * == WHEN creating & executing the sync hook
 
-| Argo CD's built-in sync phases | Description                                                                                                                                                                                                                                                                                                                             |
-|--------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `PreSync`                      | executes PREVIOUS -- to -- sync OutOfSync Kubernetes objects <br/> if it fails -> WHOLE sync process <br/> &nbsp;&nbsp; stop <br/> &nbsp;&nbsp; marked -- as -- failed <br/> use cases: validations                                                                                                                                     |
-| `Sync`                         | executes <br/> &nbsp;&nbsp; AFTER ALL `PreSync` hooks were completed & successful <br/> &nbsp;&nbsp; SAME time -- as -- sync OutOfSync Kubernetes objects                                                                                                                                                                               |
-| `Skip`                         | == skip synchronizing OutOfSync Kubernetes object                                                                                                                                                                                                                                                                                       |
-| `PostSync`                     | executes AFTER ALL `Sync` hooks completed & successful + successful application + ALL resources' state == `Healthy` <br/> if it fails -> WHOLE sync process <br/> &nbsp;&nbsp; stop <br/> &nbsp;&nbsp; marked -- as -- failed  <br/> use case: smoke tests                                                                              |
-| `SyncFail`                     | executes \| (ONLY) sync operation fails  <br/> uses: <br/> &nbsp;&nbsp; cleanup actions <br/> &nbsp;&nbsp; &nbsp;&nbsp; _Example:_ revert partial changes, backups <br/> &nbsp;&nbsp; other housekeeping tasks <br/> &nbsp;&nbsp; &nbsp;&nbsp; _Example:_ send notifications  <br/> if it fails -> Argo CD does NOT do anything special |
-| `PreDelete`                    | executes BEFORE deleting ALL Application resources <br/> &nbsp;&nbsp;  _Example:_ `kubectl delete application` OR `argocd app delete` <br/> != \| normal sync operations (EVEN pruning enabled ) <br/> [MORE](#predelete)                                                                                                               |
-| `PostDelete`                   | executes AFTER deleting ALL Application resources <br/> requirements: v2.10+  <br/> use cases: cleanup, notifications, remove external resources  <br/> [MORE](#postdelete)                                                                                                                                                             |
+| Argo CD's built-in sync phases | Description                                                                                                                                                                                                                                                                                                                                                                                                |
+|--------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `PreSync`                      | executes PREVIOUS -- to -- sync OutOfSync Kubernetes objects <br/> &nbsp;&nbsp; ⚠️ONLY execute sync hooks ⚠️ <br/> if it fails -> WHOLE sync process <br/> &nbsp;&nbsp; stop <br/> &nbsp;&nbsp; marked -- as -- failed <br/> use cases: validations                                                                                                                                                        |
+| `Sync`                         | executes <br/> &nbsp;&nbsp; ⚠️sync hooks + normal Kubernetes resources ⚠️ <br/> &nbsp;&nbsp; AFTER ALL `PreSync` hooks were completed & successful <br/> &nbsp;&nbsp; SAME time -- as -- sync OutOfSync Kubernetes objects                                                                                                                                                                                 |
+| `Skip`                         | == skip synchronizing OutOfSync Kubernetes object <br/> &nbsp;&nbsp; ⚠️ALLOWED \| sync hooks & normal Kubernetes resources ⚠️                                                                                                                                                                                                                                                                              |
+| `PostSync`                     | executes AFTER ALL `Sync` hooks completed & successful + successful application + ALL resources' state == `Healthy` <br/> &nbsp;&nbsp; ⚠️ONLY execute sync hooks ⚠️ <br/> if it fails -> WHOLE sync process <br/> &nbsp;&nbsp; stop <br/> &nbsp;&nbsp; marked -- as -- failed  <br/> use case: smoke tests                                                                                                 |
+| `SyncFail`                     | executes <br/> &nbsp;&nbsp;  \| (ONLY) sync operation fails <br/> &nbsp;&nbsp; ⚠️ONLY execute sync hooks ⚠️ <br/> uses: <br/> &nbsp;&nbsp; cleanup actions <br/> &nbsp;&nbsp; &nbsp;&nbsp; _Example:_ revert partial changes, backups <br/> &nbsp;&nbsp; other housekeeping tasks <br/> &nbsp;&nbsp; &nbsp;&nbsp; _Example:_ send notifications  <br/> if it fails -> Argo CD does NOT do anything special |
+| `PreDelete`                    | executes BEFORE deleting ALL Application resources <br/> &nbsp;&nbsp; ⚠️ONLY execute sync hooks ⚠️ <br/> &nbsp;&nbsp;  _Example:_ `kubectl delete application` OR `argocd app delete` <br/> != \| normal sync operations (EVEN pruning enabled ) <br/> [MORE](#predelete)                                                                                                                                  |
+| `PostDelete`                   | executes AFTER deleting ALL Application resources <br/> &nbsp;&nbsp; ⚠️ONLY execute sync hooks ⚠️  <br/> requirements: v2.10+  <br/> use cases: cleanup, notifications, remove external resources  <br/> [MORE](#postdelete)                                                                                                                                                                               |
 
 ![sync phases](how_phases_work.png)
 
@@ -72,14 +183,16 @@
 ## sync hook
 
 * sync hooks
-  * == 💡Kubernetes resource💡 /
-    * contain `metadata.annotations.argocd.argoproj.io/hook`
+  * == 💡Kubernetes resource /
+    * contain `metadata.annotations.argocd.argoproj.io/hook`💡
   * == WHICH
   * _ExampleS:_ Pod, Job or Argo Workflows
+  * [MORE](resource_hooks.md)
 
 * sync phases & sync hooks
   * == 👀ManyToMany relation👀
     * == MANY sync phases can be related -- to -- MANY sync hooks
+    * 💡execution order of sync hooks -- depend on -- sync wave💡
 
 ## cleanup sync hooks
 
@@ -94,110 +207,39 @@
 | `HookFailed`         | AFTER failing the hook -> delete the hook resource                                                                                                                                                                                                            |
 | `BeforeHookCreation` | requirements: ⚠️v1.3⚠️ <br/> BEFORE creating the NEW one, the EXISTING hook resource is deleted <br/> &nbsp;&nbsp; identify the EXISTING one -- based on -- `/metadata/name` <br/> default one <br/> &nbsp;&nbsp; == if NONE is specified -> this one is used |
 
-## How sync waves work?
+## sync waves
 
-* Argo CD 
-  * sync order execution
-    * 👀defined -- by -- `argocd.argoproj.io/sync-wave` annotation👀
-      * Hooks & resources,
-        * 👀by default, 0👀
-  * sync operation
-    1. order ALL resources -- based on -- their wave
-       * lowest -- to -- highest
-    2. Apply the resources -- based on -- sync order execution 
+* sync waves
+  * == 💡Integer (ALSO <0)💡 / 
+    * by default, 
+      * 0
+    * 👀specify the execution order of sync hooks (TODO: OR ALL?) | EACH sync phase👀
+      * Reason:🧠sync phases & sync hooks == ManyToMany relation🧠
+      * execute OR deploy FIRST sync hooks / LOWEST -- to -- HIGHEST
+      * BETWEEN EACH execution,
+        * there is a delay
+          * Reason: 🧠other controllers can react -- to the -- spec change / applied | PREVIOUS wave🧠
+          * by default,
+            * 2"
+          * if you want to configure -> set `ARGOCD_SYNC_WAVE_DELAY` environment variable
+  * ⚠️ONCE ALL Kubernetes resources | waveX are sync & healthy -> execute waveX+1⚠️
+    * ❌TILL ALL Kubernetes resources | waveX are NOT sync & healthy -> NOT execute waveX+1❌
+      * -> retry | NEXT reconciliation
+  * how to configure?
+    * | sync hook,
 
-* `argocd.argoproj.io/sync-wave`
-  * == integer /
-    * start deploying FROM the lowest -- to -- the highest number
-    * ⚠️ALLOWED ALSO <0⚠️
+      ```yaml
+      metadata:
+        annotations:
+          argocd.argoproj.io/sync-wave: "SOMEINTEGER"
+      ```
 
-* TODO: 
-There is currently a delay between each sync wave in order to give other controllers a chance to react to the spec change that was just applied
-* This also prevents Argo CD from assessing resource health too quickly (against the stale object), causing hooks to fire prematurely
-* The current delay between each sync wave is 2 seconds and can be configured via the environment variable ARGOCD_SYNC_WAVE_DELAY.
-
-## Combining Sync waves and hooks
-
-While you can use sync waves on their own, for maximum flexibility you can combine them with hooks
-* This way you can use sync phases for coarse grained ordering and sync waves for defining the exact order of a resource within an individual phase.
+* sync phases vs sync waves
+  * sync phases
+    * enable
+      * configure macro-ordering
+  * sync waves
+    * enable
+      * configure micro-ordering
 
 ![waves](how_waves_work.png)
-
-When Argo CD starts a sync, it orders the resources in the following precedence:
-
-1. The phase
-2. The wave they are in (lower values first)
-3. By kind (e.g. namespaces first and then other Kubernetes resources, followed by custom resources)
-4. By name
-
-Once the order is defined:
-
-1. First Argo CD determines the number of the first wave to apply
-   * This is the first number where any resource is out-of-sync or unhealthy.
-2. It applies resources in that wave.
-3. It repeats this process until all phases and waves are in-sync and healthy.
-
-Because an application can have resources that are unhealthy in the first wave, it may be that the app can never get to healthy.
-
-## How Do I Configure Phases?
-
-Pre-sync and post-sync can only contain hooks
-* Apply the hook annotation:
-
-```yaml
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-```
-
-[Read more about hooks](resource_hooks.md).
-
-## How Do I Configure Waves?
-
-Specify the wave using the following annotation:
-
-```yaml
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "5"
-```
-
-Hooks and resources are assigned to wave zero by default
-* The wave can be negative, so you can create a wave that runs before all other resources.
-
-## Examples
-
-### Work around ArgoCD sync failure
-TODO: 
-
-* use case
-  * | upgrade ingress-nginx controller (/ managed by helm) -- via -- ArgoCD 2.x,
-    * SOMETIMES fails
-
-| .         | .                                                                       |
-|-----------|-------------------------------------------------------------------------|
-| OPERATION | Sync                                                                    |
-| PHASE     | Running                                                                 |
-| MESSAGE   | waiting for completion of hook batch/Job/ingress-nginx-admission-create |
-
-| .         | .                              |
-|-----------|--------------------------------|
-| KIND      | batch/v1/Job                   |
-| NAMESPACE | ingress-nginx                  |
-| NAME      | ingress-nginx-admission-create |
-| STATUS    | Running                        |
-| HOOK      | PreSync                        |
-| MESSAGE   | Pending deletion               |
-
-* SOLUTION:
-  * TODO: helm user can add:
-
-```yaml
-ingress-nginx:
-  controller:
-    admissionWebhooks:
-      annotations:
-        argocd.argoproj.io/hook: Skip
-```
-
-Which results in a successful sync.
