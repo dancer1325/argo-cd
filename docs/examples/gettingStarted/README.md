@@ -82,6 +82,23 @@ kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubuse
 
 * `argocd login --core`
   * [configure](../../user-guide/commands/argocd_login.md) CLI access
+  * -> | "~/.config/argocd/config", saves `core: true` 
+    * subsequent commands flow:
+      ```
+      argocd <command>
+          │
+          ▼
+      reads ~/.config/argocd/config
+          │
+          └── core: true?
+                │
+                ▼  YES
+              spawns local temporary API server
+                │
+                ▼
+              Kubernetes API server  ← uses kubeconfig directly
+              (❌NO argocd-server needed❌)
+      ```
 
 * Redis' default installation
   * -- is using -- password authentication 
@@ -170,40 +187,71 @@ kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubuse
   * enter `admin` & PREVIOUS password
   * if [Argo CD API server is DIRECTLY accessible](/docs/user-guide/commands/argocd_login.md)
   * if [Argo CD API server is ❌NOT❌ DIRECTLY accessible](#ways-to-expose)
+    * requirements
+      * | "~/.config/argocd/config", `core: false`
     * -> ways to access
       1) add `--port-forward-namespace argocd` flag | EVERY CLI command; OR
-         * 
+         * _Example:_ `argocd cluster list --port-forward-namespace argocd`
+         * Problems:
+           * Problem1: "{"level":"fatal","msg":"rpc error: code = Unauthenticated desc = no session information""
+             * Solution: 
+               * `argocd login --port-forward --port-forward-namespace argocd --insecure`
+                 * user: admin
+                 * password: adminPassword
+             * Reason: 🧠token expired 
       2) `export ARGOCD_OPTS='--port-forward-namespace argocd'`
 
 ## 5. Register A Cluster -- to -- Deploy Apps
+
+* goal
+  * cluster | deploy Argo CD Applications != cluster | Argo CD is installed
+    ```
+    ┌─────────────────────────────┐       ┌─────────────────────────────┐
+    │  Cluster A  (hub)           │       │  Cluster B  (spoke)         │
+    │                             │       │                             │
+    │  - ArgoCD installed         │       │  - ArgoCD Applications      │
+    │  - argocd-manager SA        │──────▶│    deployed here            │
+    │    credentials stored       │       │  - argocd-manager SA        │
+    │    as Secret                │       │    installed here           │
+    └─────────────────────────────┘       └─────────────────────────────┘
+    ```
+
+* local recommendations
+  * 2 Kind clusters
+
 * 👀OPTIONAL 👀
+  * if you deploy INTERNALLY (== SAME cluster | Argo CD runs) ->
+    * https://kubernetes.default.svc == application's K8s API server address
+
 * registers a cluster's credentials | Argo CD
-* use cases
-  * deploy | EXTERNAL cluster
-* if you deploy INTERNALLY (== SAME cluster | Argo CD runs) ->
-  * https://kubernetes.default.svc == application's K8s API server address
+
 * steps
+  * create another cluster
+    * [requirements](#requirements)
   * `kubectl config get-contexts -o name`
     * list ALL clusters contexts | your CURRENT kubeconfig
-  * `argocd cluster add CONTEXTNAME`
+  * `argocd cluster add <CONTEXTNAME>`
     * choose a context name -- from the -- list
     * installs a ServiceAccount (`argocd-manager`)
       * | that kubectl context's kube-system namespace
       * bound -- to an -- admin-level ClusterRole
       * uses
         * by Argo CD, -- to -- perform Argo CD's management tasks (_Example:_ deploy/monitoring)
+
 * `argocd-manager-role` role
   * `create`, `update`, `patch`, `delete` privileges -- can be -- modified | limited set of namespaces, groups, kinds
   * required to work Argo CD,
     * | cluster-scope,
       * `get`, `list`, `watch` privileges
 
-## 6. Create An Application -- from A -- Git Repository
+## 6. Create an Application -- from a -- Git Repository
 
-* _Example:_ [sample git repository](https://github.com/argoproj/argocd-example-apps.git)
+* _Example:_ [sample git repository](https://github.com/dancer1325/argocd-example-apps)
 
 TODO:
-> The following example application may only be compatible with AMD64 architecture. If you are running on a different architecture (such as ARM64 or ARMv7), you may encounter issues with dependencies or container images that are not built for your platform. Consider verifying the compatibility of the application or building architecture-specific images if necessary.
+> The following example application may only be compatible with AMD64 architecture
+> If you are running on a different architecture (such as ARM64 or ARMv7), you may encounter issues with dependencies or container images that are not built for your platform
+> Consider verifying the compatibility of the application or building architecture-specific images if necessary.
 
 ### Creating Apps -- via -- CLI
 
@@ -220,10 +268,7 @@ TODO:
 
 * | browser,
   * "argocd-server'sIP:argocd-server'sport"
-    * if you [exposed it](#3-access-argo-cd-api-server) -- by --
-      * service type LoadBalancer -> TODO: How?
-      * Ingress -> TODO: How?
-      * Port Forwarding -> "localhost:8080"
+    * -- depend on -- [way of exposing](#ways-to-expose)
   * [pass admin credentials](#4-login----via----cli)
   * | Applications, click **+ New App** button
 
