@@ -20,6 +20,22 @@ TODO: check if to refactor
 
 * allows
   * manage & deploy AUTOMATICALLY applications -- to -- specified MULTIPLE clusters
+    * _Example:_ hub-spoke pattern
+      ```
+      ┌─────────────────────────────┐
+      │   Cluster A  (hub)          │
+      │   - ArgoCD installed        │
+      │   - credentials of B and C  │
+      │   stored -- as -- Secrets   │
+      └──────────────┬──────────────┘
+                     │ syncs via bearer token
+            ┌────────┴────────┐
+            ▼                 ▼
+      ┌───────────┐     ┌───────────┐
+      │ Cluster B │     │ Cluster C │
+      │  (spoke)  │     │  (spoke)  │
+      └───────────┘     └───────────┘
+      ```
   * Rollback/Roll-anywhere -- to -- any application configuration / committed | Git repository
 * support
   * MULTIPLE config management/templating tools

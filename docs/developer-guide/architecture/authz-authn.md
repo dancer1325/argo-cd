@@ -12,7 +12,11 @@
         - port: 8080
         - dispatch -- , based on request headers, to the -- proper server
           - gRPC
+            - used by
+              - Argo CD CLI
           - standard HTTP
+            - used by
+              - Argo CD UI
     - [**gRPC**](https://grpc.io/)
       - groups the logical elements / responsible for: gRPC implementation
     - **AuthN**

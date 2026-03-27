@@ -1,7 +1,7 @@
 # Cluster Management
 
 * goal
-  * how to manage clusters | CLI
+  * how to manage clusters -- through -- CLI
 * audience
   * operators
 
@@ -12,13 +12,21 @@
 ## Adding a cluster
 
 * `argocd cluster add contextName`
-  * `contextName`
-    * check the AVAILABLE one -- via -- `kubectl config get-contexts`
-  * how does it work?
-    * connect -- to the -- cluster
-    * install the necessary resources / ArgoCD can connect -- to -- it 
-  * requirements
-    * privileged access -- to the -- cluster 
+  * allows
+    * 💡Argo CD can deploy Applications | MULTIPLE clusters (EVEN != cluster | Argo CD is installed)💡
+      * Reason:🧠
+        * ArgoCD does NOT have access -- to your -- local kubeconfig
+        * OTHERWISE, Argo CD can NOT install Applications | OTHER clusters🧠
+  * ⚠️requirements⚠️
+    * privileged access -- to the -- cluster
+    * `contextName` MUST ALREADY exist
+      * check the AVAILABLE one -- via -- `kubectl config get-contexts`
+  * what does Argo CD under the hood?
+    1. creates SA "argocd-manager" | target cluster / FULL cluster RBAC
+    2. gets its bearer token
+    3. stores token + server URL + TLS -- as a -- Secret | "argocd" namespace
+       * label `argocd.argoproj.io/secret-type: cluster`
+    4. | sync an `Application` / `destination.server: https://...`, Application Controller connect -- , via that Secret, to -- that cluster 
 
 ## Skipping cluster reconciliation
 

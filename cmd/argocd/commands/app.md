@@ -5,14 +5,7 @@ TODO:
 	command := &cobra.Command{
 		Use:   "app",
 		Short: "Manage applications",
-		Example: `  # List all the applications.
-  argocd app list
-
-  # Get the details of a application
-  argocd app get my-app
-
-  # Set an override parameter
-  argocd app set my-app -p image.tag=v1.0.1`,
+		Example: ``,
 		Run: func(c *cobra.Command, args []string) {
 			c.HelpFunc()(c, args)
 			os.Exit(1)
@@ -45,6 +38,19 @@ TODO:
 	return command
 }
 
+* _Examples:_
+
+	```
+	# List all the applications.
+	argocd app list
+	
+	# Get the details of a application
+	argocd app get my-app
+	
+	# Set an override parameter
+	argocd app set my-app -p image.tag=v1.0.1
+	```
+
 type watchOpts struct {
 	sync      bool
 	health    bool
@@ -70,26 +76,7 @@ type watchOpts struct {
 	command := &cobra.Command{
 		Use:   "create APPNAME",
 		Short: "Create an application",
-		Example: `  # Create a directory app
-  argocd app create guestbook --repo https://github.com/argoproj/argocd-example-apps.git --path guestbook --dest-namespace default --dest-server https://kubernetes.default.svc --directory-recurse
-
-## Create aJsonnet app
-  argocd app create jsonnet-guestbook --repo https://github.com/argoproj/argocd-example-apps.git --path jsonnet-guestbook --dest-namespace default --dest-server https://kubernetes.default.svc --jsonnet-ext-str replicas=2
-
-## Create aHelm app
-  argocd app create helm-guestbook --repo https://github.com/argoproj/argocd-example-apps.git --path helm-guestbook --dest-namespace default --dest-server https://kubernetes.default.svc --helm-set replicaCount=2
-
-## Create aHelm app from a Helm repo
-  argocd app create nginx-ingress --repo https://charts.helm.sh/stable --helm-chart nginx-ingress --revision 1.24.3 --dest-namespace default --dest-server https://kubernetes.default.svc
-
-## Create aKustomize app
-  argocd app create kustomize-guestbook --repo https://github.com/argoproj/argocd-example-apps.git --path kustomize-guestbook --dest-namespace default --dest-server https://kubernetes.default.svc --kustomize-image quay.io/argoprojlabs/argocd-e2e-container:0.1
-
-## Create aMultiSource app while yaml file contains an application with multiple sources
-  argocd app create guestbook --file <path-to-yaml-file>
-
-## Create aapp using a custom tool:
-  argocd app create kasane --repo https://github.com/argoproj/argocd-example-apps.git --path plugins/kasane --dest-namespace default --dest-server https://kubernetes.default.svc --config-management-plugin kasane`,
+		Example: ``,
 		Run: func(c *cobra.Command, args []string) {
 			ctx := c.Context()
 
@@ -157,32 +144,31 @@ type watchOpts struct {
 	return command
 }
 
-// getInfos converts a list of string key=value pairs to a list of Info objects.
-func getInfos(infos []string) []*argoappv1.Info {
-	mapInfos, err := label.Parse(infos)
-	errors.CheckError(err)
-	sliceInfos := make([]*argoappv1.Info, len(mapInfos))
-	i := 0
-	for key, element := range mapInfos {
-		sliceInfos[i] = &argoappv1.Info{Name: key, Value: element}
-		i++
-	}
-	return sliceInfos
-}
+* _Example:_ 
 
-func getRefreshType(refresh bool, hardRefresh bool) *string {
-	if hardRefresh {
-		refreshType := string(argoappv1.RefreshTypeHard)
-		return &refreshType
-	}
+	```
+	# Create a directory app
+	argocd app create guestbook --repo https://github.com/argoproj/argocd-example-apps.git --path guestbook --dest-namespace default --dest-server https://kubernetes.default.svc --directory-recurse
+	
+	## Create aJsonnet app
+	argocd app create jsonnet-guestbook --repo https://github.com/argoproj/argocd-example-apps.git --path jsonnet-guestbook --dest-namespace default --dest-server https://kubernetes.default.svc --jsonnet-ext-str replicas=2
+	
+	## Create aHelm app
+	argocd app create helm-guestbook --repo https://github.com/argoproj/argocd-example-apps.git --path helm-guestbook --dest-namespace default --dest-server https://kubernetes.default.svc --helm-set replicaCount=2
+	
+	## Create aHelm app from a Helm repo
+	argocd app create nginx-ingress --repo https://charts.helm.sh/stable --helm-chart nginx-ingress --revision 1.24.3 --dest-namespace default --dest-server https://kubernetes.default.svc
+	
+	## Create aKustomize app
+	argocd app create kustomize-guestbook --repo https://github.com/argoproj/argocd-example-apps.git --path kustomize-guestbook --dest-namespace default --dest-server https://kubernetes.default.svc --kustomize-image quay.io/argoprojlabs/argocd-e2e-container:0.1
+	
+	## Create aMultiSource app while yaml file contains an application with multiple sources
+	argocd app create guestbook --file <path-to-yaml-file>
+	
+	## Create aapp using a custom tool:
+	argocd app create kasane --repo https://github.com/argoproj/argocd-example-apps.git --path plugins/kasane --dest-namespace default --dest-server https://kubernetes.default.svc --config-management-plugin kasane
+	```
 
-	if refresh {
-		refreshType := string(argoappv1.RefreshTypeNormal)
-		return &refreshType
-	}
-
-	return nil
-}
 
 func hasAppChanged(appReq, appRes *argoappv1.Application, upsert bool) bool {
 	// upsert==false, no change occurred from create command

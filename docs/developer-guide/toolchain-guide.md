@@ -8,31 +8,53 @@
 * prerequisites
   * [Development Environment](development-environment.md)
 
-* _Example:_ MOST relevant [Makefile targets](/Makefile) provide -- for the -- 2 variants 
+* _Example:_ MOST relevant [Makefile targets](/Makefile) provide -- for the -- 2 variants
   * `make test`
     * run unit tests | Docker container (== virtualized toolchain)
   * `make test-local`
     * run unit tests | your local system (== local toolchain)
 
+## local vs virtualized
+
+```
+LOCAL TOOLCHAIN                    VIRTUALIZED TOOLCHAIN
+─────────────────                  ────────────────────
+
+Your Machine:                      Your Machine:
+├─ Go 1.26 ✅                      └─ Docker ✅
+├─ Node.js ✅
+├─ yarn ✅
+├─ kubectl ✅
+├─ helm ✅                         💡When you run make:💡
+├─ kustomize ✅                    1. Creates temp container
+├─ goreman ✅                      2. Mounts your code
+├─ Git LFS ✅                      3. Runs command inside
+├─ GnuPG v2 ✅                     4. Deletes container
+└─ ...
+                                   Pros:
+When you run make:                 ✅ Consistent environment
+→ Runs directly on your OS         ✅ NO tool installation
+→ Fast iteration                   ✅ == production (containers)
+→ IDE debugger works               ✅ repeatable
+
+Pros:                             Cons:
+✅ Faster execution                ❌ Slower
+✅ Better for debugging            ❌ | install local k8s, requires K8s IP config
+
+Cons:
+❌ Complex setup
+❌ "Works on my machine"
+```
+
 ## local
 
 * local toolchain
   * ==💡install the [development environment](development-environment.md) | your local machine💡
-  * pros
-    * faster development & testing cycle
-    * use IDE debugger
   * use cases
     * macOS hosts
       * Reason:🧠Docker & Linux kernel run | VM🧠
 
 * install ADDITIONAL tools
-  * [node](https://nodejs.org/en/download)
-  * [yarn](https://classic.yarnpkg.com/lang/en/docs/install/)
-  * [goreman](https://github.com/mattn/goreman#getting-started)
-    * allows
-      * start ALL needed processes / get a working Argo CD development environment (defined in `Procfile`)
-  * Git LFS plugin
-  * GnuPG v2
   * `make install-tools-local`
     * install required dependencies & build-tools
       * by default, | "/usr/local/bin"
@@ -45,17 +67,10 @@
 ## virtualized
 
 * virtualized toolchain
-  * == 💡| containers,
-    * install the development environment
-    * run the build & programs💡
-  * pros
-    * == final product
-      * Reason:🧠ArgoCD is deployed | k8s -> -- via -- container🧠
-    * makes it repeatable
-    * development environment is DYNAMICALLY changing
-  * ADDITIONAL requirement
-    * | install a local K8s cluster,
-      * configure the default K8s API URL
+  * == 💡| containers, 
+    * run ALL
+      * install the development environment
+      * run the build & programs💡
   * local (== | your machine) mounts / content can be modified
     * `~/go/src`
       * == your Go workspace's source directory
@@ -122,6 +137,7 @@
 * approach
   * Kubernetes run | docker container
 
+TODO: 
 * you're dealing with docker's internal networking rules when using k3d
 * A typical Kubernetes cluster running on your local machine is part of the same network that you're on, so you can access it using **kubectl**
 * However, a Kubernetes cluster running within a docker container (in this case, the one launched by make) cannot access 0.0.0.0 

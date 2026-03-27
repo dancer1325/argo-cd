@@ -1,15 +1,22 @@
 # Ingress Configuration
 
-Argo CD API server runs both a gRPC server (used by the CLI), as well as an HTTP/HTTPS server (used by the UI).
-Both protocols are exposed by the argocd-server service object on the following ports:
+* goal
+  * 👀ways to configure your Ingress / "argocd-server" service is exposed outside the cluster 👀
 
-* 443 - gRPC/HTTPS
-* 80 - HTTP (redirects to HTTPS)
+* [Argo CD API server](/docs/developer-guide/architecture/authz-authn.md)
+  * exposed -- by the -- ["argocd-server" service](/manifests/install.yaml) 
+    * |
+      * 443 - gRPC/HTTPS
+      * 80 - HTTP 
+        * redirects -- to -- HTTPS
+    * ONLY | cluster
 
-There are several ways to configure Ingress.
+* "argocd-server" service
+  * 💡if you want to expose outside the cluster -> use an ingress💡
 
 ## [Ambassador](https://www.getambassador.io/)
 
+TODO: 
 The Ambassador Edge Stack can be used as a Kubernetes ingress controller with [automatic TLS termination](https://www.getambassador.io/docs/latest/topics/running/tls/#host) and routing capabilities for both the CLI and the UI.
 
 The API server should be run with TLS disabled. Edit the `argocd-server` deployment to add the `--insecure` flag to the argocd-server command, or simply set `server.insecure: "true"` in the `argocd-cmd-params-cm` ConfigMap [as described here](server-commands/additional-configuration-method.md). Given the `argocd` CLI includes the port number in the request `host` header, two Mappings are required.
@@ -226,6 +233,9 @@ spec:
 
 ## [kubernetes/ingress-nginx](https://github.com/kubernetes/ingress-nginx)
 
+* ⚠️[deprecated](https://github.com/kubernetes/ingress-nginx?tab=readme-ov-file#ingress-nginx-retirement)⚠️
+  * ⚠️use [Gateway API](#gateway-api)⚠️
+ 
 ### Option 1: SSL-Passthrough
 
 Argo CD serves multiple protocols (gRPC/HTTPS) on the same port (443), this provides a
@@ -408,79 +418,120 @@ spec:
 ```
 
 ## AWS Application Load Balancers (ALBs) And Classic ELB (HTTP Mode)
-AWS ALBs can be used as an L7 Load Balancer for both UI and gRPC traffic, whereas Classic ELBs and NLBs can be used as L4 Load Balancers for both.
 
-When using an ALB, you'll want to create a second service for argocd-server. This is necessary because we need to tell the ALB to send the GRPC traffic to a different target group than the UI traffic, since the backend protocol is HTTP2 instead of HTTP1.
+* types of ALBs -- for -- Argo CD UI (HTTP) & Argo CD gRPC (gRPC/HTTPS)
+  * [AWS ALBs](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) 
+    * -- as -- L7 Load Balancer
+    * requirements
+      * ⚠️another service -- for -- "argocd-server"⚠️
+        * Reason:🧠
+          * UI -- HTTP/1.1
+          * CLI -- HTTP/2 (gRPC)🧠
+    * [MORE](#---via----aws-alb)
+  * AWS [Classic](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/introduction.html) ELBs & [NLBs](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html)
+    * -- as -- L4 Load Balancers
 
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    alb.ingress.kubernetes.io/backend-protocol-version: GRPC # This tells AWS to send traffic from the ALB using GRPC. Plain HTTP2 can be used, but the health checks won't be available because argo currently downgrades non-grpc calls to HTTP1
-  labels:
-    app: argogrpc
-  name: argogrpc
-  namespace: argocd
-spec:
-  ports:
-  - name: "443"
-    port: 443
-    protocol: TCP
-    targetPort: 8080
-  selector:
-    app.kubernetes.io/name: argocd-server
-  sessionAffinity: None
-  type: NodePort
+### -- via -- AWS ALB
+
 ```
-
-Once we create this service, we can configure the Ingress to conditionally route all `application/grpc` traffic to the new HTTP2 backend, using the `alb.ingress.kubernetes.io/conditions` annotation, as seen below. Note: The value after the . in the condition annotation _must_ be the same name as the service that you want traffic to route to - and will be applied on any path with a matching serviceName.
-
-Also note that we can configure the health check to return the gRPC health status code `OK - 0` from the argocd-server by setting the health check path to `/grpc.health.v1.Health/Check`. By default, the ALB health check for gRPC returns the status code `UNIMPLEMENTED - 12` on health check path `/AWS.ALB/healthcheck`.
-
-```yaml
-  apiVersion: networking.k8s.io/v1
-  kind: Ingress
-  metadata:
-    annotations:
-      alb.ingress.kubernetes.io/backend-protocol: HTTPS
-      # Use this annotation (which must match a service name) to route traffic to HTTP2 backends.
-      alb.ingress.kubernetes.io/conditions.argogrpc: |
-        [{"field":"http-header","httpHeaderConfig":{"httpHeaderName": "Content-Type", "values":["application/grpc"]}}]
-      alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
-      # Use this annotation to receive OK - 0 instead of UNIMPLEMENTED - 12 for gRPC health check.
-      alb.ingress.kubernetes.io/healthcheck-path: /grpc.health.v1.Health/Check
-      alb.ingress.kubernetes.io/success-codes: '0'
-    name: argocd
-    namespace: argocd
-  spec:
-    rules:
-    - host: argocd.argoproj.io
-      http:
-        paths:
-        - path: /
-          backend:
-            service:
-              name: argogrpc # The grpc service must be placed before the argocd-server for the listening rules to be created in the correct order
-              port:
-                number: 443
-          pathType: Prefix
-        - path: /
-          backend:
-            service:
-              name: argocd-server
-              port:
-                number: 443
-          pathType: Prefix
-    tls:
-    - hosts:
-      - argocd.argoproj.io
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              CLIENTS                                        │
+├─────────────────────────────────────┬───────────────────────────────────────┤
+│                                     │                                       │
+│  🌐 Browser (UI)                    │   💻 argocd CLI                       │
+│                                     │                                       │
+│  https://argocd.example.com:443     │   argocd login argocd.example.com    │
+│                                     │   (port 443)                          │
+│  GET /applications                  │   argocd app list                     │
+│  HTTP/1.1                           │   HTTP/2                              │
+│  Content-Type: text/html            │   Content-Type: application/grpc      │
+│                                     │                                       │
+└──────────────┬──────────────────────┴───────────────┬─────────────────────┘
+               │                                      │
+               │   HTTPS (Port 443)                   │   HTTPS (Port 443)
+               │                                      │
+               └──────────────┬───────────────────────┘
+                              │
+                              ▼
+         ┌────────────────────────────────────────────────────────┐
+         │           AWS Application Load Balancer (ALB)          │
+         │                                                        │
+         │  Listen Port: 443 (HTTPS)                             │
+         │  Inspects Header: Content-Type                        │
+         │                                                        │
+         │  ┌──────────────────────────────────────────────┐     │
+         │  │ Routing Rule (Ingress annotations):          │     │
+         │  │                                              │     │
+         │  │ IF Content-Type == "application/grpc"        │     │
+         │  │    → Target Group: argogrpc (HTTP/2)        │     │
+         │  │ ELSE                                         │     │
+         │  │    → Target Group: argocd-server (HTTP/1)   │     │
+         │  └──────────────────────────────────────────────┘     │
+         └──────────────┬─────────────────────┬───────────────────┘
+                        │                     │
+         ┌──────────────┘                     └──────────────┐
+         │                                                   │
+         ▼                                                   ▼
+┌─────────────────────────────┐       ┌─────────────────────────────┐
+│   Target Group 1            │       │   Target Group 2            │
+│                             │       │                             │
+│   Protocol: HTTPS (HTTP/1)  │       │   Protocol: GRPC (HTTP/2)   │
+│   Port: 443                 │       │   Port: 443                 │
+│   Health: /                 │       │   Health: /grpc.health...   │
+└──────────────┬──────────────┘       └──────────────┬──────────────┘
+               │                                     │
+               │                                     │
+┏━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━┓
+┃              KUBERNETES CLUSTER                                  ┃
+┃                                                                  ┃
+┃  ┌────────────────────────────┐   ┌────────────────────────────┐┃
+┃  │ Service: argocd-server     │   │ Service: argogrpc          │┃
+┃  │ Type: NodePort             │   │ Type: NodePort             │┃
+┃  │ Port: 443 → 8080           │   │ Port: 443 → 8080           │┃
+┃  │                            │   │                            │┃
+┃  │ Annotations:               │   │ Annotations:               │┃
+┃  │ (default HTTP/1)           │   │ backend-protocol-version:  │┃
+┃  │                            │   │   GRPC                     │┃
+┃  │                            │   │                            │┃
+┃  │ Selector:                  │   │ Selector:                  │┃
+┃  │   app: argocd-server       │   │   app: argocd-server       │┃
+┃  └──────────────┬─────────────┘   └──────────────┬─────────────┘┃
+┃                 │                                 │              ┃
+┃                 └─────────────┬───────────────────┘              ┃
+┃                               │                                  ┃
+┃                               │ Same selector                    ┃
+┃                               │ Same pod set                     ┃
+┃                               ▼                                  ┃
+┃         ┌────────────────────────────────────────────┐           ┃
+┃         │  Pod: argocd-server                        │           ┃
+┃         │  Labels: app=argocd-server                 │           ┃
+┃         │                                            │           ┃
+┃         │  Port 8080                                 │           ┃
+┃         │    ↓                                       │           ┃
+┃         │  ┌──────────────────────────────────────┐ │           ┃
+┃         │  │ Cmux (Connection Multiplexer)        │ │           ┃
+┃         │  │                                      │ │           ┃
+┃         │  │ Detects protocol:                    │ │           ┃
+┃         │  │                                      │ │           ┃
+┃         │  │ ┌─────────────┐  ┌────────────────┐ │ │           ┃
+┃         │  │ │ HTTP/1.1?   │  │ HTTP/2 + gRPC? │ │ │           ┃
+┃         │  │ │      ↓      │  │       ↓        │ │ │           ┃
+┃         │  │ │  HTTP Mux   │  │  gRPC Server   │ │ │           ┃
+┃         │  │ │      ↓      │  │       ↓        │ │ │           ┃
+┃         │  │ │   UI/REST   │  │   CLI API      │ │ │           ┃
+┃         │  │ └─────────────┘  └────────────────┘ │ │           ┃
+┃         │  └──────────────────────────────────────┘ │           ┃
+┃         └────────────────────────────────────────────┘           ┃
+┃                                                                  ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
 ## [Istio](https://www.istio.io)
-You can put Argo CD behind Istio using the following configuration. This example serves Argo CD behind Istio and uses a subpath (for example, `/argocd`).
+You can put Argo CD behind Istio using the following configuration
+* This example serves Argo CD behind Istio and uses a subpath (for example, `/argocd`).
 
-First we need to make sure that we can run Argo CD with subpath (ie /argocd). For this we have used install.yaml from argocd project as is
+First we need to make sure that we can run Argo CD with subpath (ie /argocd)
+* For this we have used install.yaml from argocd project as is
 
 ```bash
 curl -kLs -o install.yaml https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
@@ -536,7 +587,8 @@ Install Argo CD (there should be only the three YAML files defined above in the 
 kubectl apply -k ./ -n argocd --wait=true
 ```
 
-Be sure you create secret for Istio ( in our case secretname is argocd-server-tls on argocd Namespace). After that we create Istio Resources
+Be sure you create secret for Istio ( in our case secretname is argocd-server-tls on argocd Namespace)
+* After that we create Istio Resources
 
 ```yaml
 apiVersion: networking.istio.io/v1alpha3
@@ -624,7 +676,9 @@ Edit the `--insecure` flag in the `argocd-server` command of the argocd-server d
 
 ### Creating a service
 
-Now you need an externally accessible service. This is practically the same as the internal service Argo CD has, but with Google Cloud annotations. Note that this service is annotated to use a [Network Endpoint Group](https://cloud.google.com/load-balancing/docs/negs) (NEG) to allow your load balancer to send traffic directly to your pods without using kube-proxy, so remove the `neg` annotation if that's not what you want.
+Now you need an externally accessible service
+* This is practically the same as the internal service Argo CD has, but with Google Cloud annotations
+* Note that this service is annotated to use a [Network Endpoint Group](https://cloud.google.com/load-balancing/docs/negs) (NEG) to allow your load balancer to send traffic directly to your pods without using kube-proxy, so remove the `neg` annotation if that's not what you want.
 
 The service:
 
@@ -688,13 +742,15 @@ spec:
 
 ---
 > [!NOTE]
-> The next two steps (the certificate secret and the Ingress) are described supposing that you manage the certificate yourself, and you have the certificate and key files for it. In the case that your certificate is Google-managed, fix the next two steps using the [guide to use a Google-managed SSL certificate](https://cloud.google.com/kubernetes-engine/docs/how-to/managed-certs#creating_an_ingress_with_a_google-managed_certificate).
+> The next two steps (the certificate secret and the Ingress) are described supposing that you manage the certificate yourself, and you have the certificate and key files for it
+* In the case that your certificate is Google-managed, fix the next two steps using the [guide to use a Google-managed SSL certificate](https://cloud.google.com/kubernetes-engine/docs/how-to/managed-certs#creating_an_ingress_with_a_google-managed_certificate).
 
 ---
 
 ### Creating a certificate secret
 
-We need now to create a secret with the SSL certificate we want in our load balancer. It's as easy as executing this command on the path you have your certificate keys stored:
+We need now to create a secret with the SSL certificate we want in our load balancer
+* It's as easy as executing this command on the path you have your certificate keys stored:
 
 ```
 kubectl -n argocd create secret tls secret-yourdomain-com \
@@ -703,11 +759,13 @@ kubectl -n argocd create secret tls secret-yourdomain-com \
 
 ### Creating an Ingress
 
-And finally, to top it all, our Ingress. Note the reference to our frontend config, the service, and to the certificate secret.
+And finally, to top it all, our Ingress
+* Note the reference to our frontend config, the service, and to the certificate secret.
 
 ---
 > [!NOTE]
-> GKE clusters running versions earlier than `1.21.3-gke.1600`, [the only supported value for the pathType field](https://cloud.google.com/kubernetes-engine/docs/how-to/load-balance-ingress#creating_an_ingress) is `ImplementationSpecific`. So you must check your GKE cluster's version. You need to use different YAML depending on the version.
+> GKE clusters running versions earlier than `1.21.3-gke.1600`, [the only supported value for the pathType field](https://cloud.google.com/kubernetes-engine/docs/how-to/load-balance-ingress#creating_an_ingress) is `ImplementationSpecific`
+* So you must check your GKE cluster's version. You need to use different YAML depending on the version.
 
 ---
 
@@ -880,13 +938,21 @@ http {
 }
 ```
 
-## Gateway API Example
+## [Gateway API](https://kubernetes.io/docs/concepts/services-networking/gateway/)
 
-This section discusses using Gateway API to expose the Argo CD server in various TLS configurations,
-accommodating both HTTP and gRPC traffic, possibly using HTTP/2.
+* ALLOWED TLS configurations
+  * [TLS termination | Gateway](#tls-termination--gateway)
+  * [TLS passthrough](#tls-passthrough)
 
-### TLS termination at the Gateway
+* enable
+  * HTTP traffic
+    * can (OPTIONAL) use HTTP/2
+  * gRPC traffic
+    * use (MANDATORY) HTTP/2
 
+### TLS termination | Gateway
+
+TODO: 
 Assume the following cluster-wide `Gateway` resource,
 that terminates the TLS connection with a certificate stored in a `Secret` in the same namespace:
 
@@ -916,7 +982,7 @@ spec:
 
 To automate certificate management, `cert-manager` supports [gateway annotations](https://cert-manager.io/docs/usage/gateway/).
 
-#### Securing traffic between Argo CD and the gateway
+#### Securing traffic BETWEEN Argo CD -- & -- gateway
 
 If your security requirements allow it, the Argo CD API server can be run with TLS disabled: pass the `--insecure` flag to the `argocd-server` command,
 or set `server.insecure: "true"` in the `argocd-cmd-params-cm` ConfigMap [as described here](server-commands/additional-configuration-method.md).
@@ -971,7 +1037,8 @@ spec:
 
 #### Routing gRPC requests
 
-The `argocd` CLI operates at full capability when using gRPC over HTTP/2 to communicate with the API server, falling back to HTTP/1.1. (`--grpc-web` flag).
+The `argocd` CLI operates at full capability when using gRPC over HTTP/2 to communicate with the API server, 
+falling back to HTTP/1.1. (`--grpc-web` flag).
 
 gRPC can be configured using a `GRPCRoute`, and HTTP/2 requested as the application protocol on the `argocd-server` service:
 

@@ -12,6 +12,9 @@
   * login | Argo CD -- via -- SSO 
 * `argocd login cd.argoproj.io --core`
   * login | Argo CD -- via -- Kubernetes API server
+    * ❌NO use ArgoCD API server❌
+  * ❌NO request username NOR password❌
+    * Reason: 🧠-- based on -- Kube config file🧠
 
 ### Options
 

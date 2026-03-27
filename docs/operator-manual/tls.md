@@ -1,5 +1,8 @@
 # TLS configuration
 
+* goal
+  * how to configure TLS | Argo CD components?
+
 * Argo CD
   * provides
     * 3 inbound TLS endpoints / 

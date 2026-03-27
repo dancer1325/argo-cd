@@ -49,21 +49,47 @@ kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubuse
 * ⚠️if you are NOT interested in UI, SSO & multi-cluster features -> install ONLY the Argo CD [core components](/docs/operator-manual/core.md#installing) ⚠️
   * requirements
     * self-signed certificate
-      * follow [these instructions](/docs/operator-manual/tls.md)
-      * configure the client
-      * use `--insecure`
+      * Reason:🧠| Argo CD Core installation, there is NO permanent Argo CD API Server / generates certificate🧠
+      * | server side,
+        * [here](/docs/operator-manual/tls.md)
+      * | client side,
+        * `.. --insecure`, OR
+        * `--server-crt /path/to/cert.pem`
+  
+    ```
+    FULL install                          CORE install
+    ─────────────────────────────         ──────────────────────────────────
+    argocd-server (permanent)             NO permanent argocd-server
+      - manages TLS automatically           │
+      - auto-generated cert                 │ argocd login --core
+      - serves UI + SSO + API               │
+                                            ▼
+                                          CLI spawns a LOCAL temporary
+                                          API server process
+                                            │
+                                            │ needs TLS to work
+                                            │ NO cert-manager
+                                            │ NO ingress
+                                            ▼
+                                          self-signed certificate required
+                                            │
+                                            ├── option 1: configure client to trust it
+                                            └── option 2: use --insecure flag
+    ```
 
 * `kubectl config set-context --current --namespace=argocd`
-  * TODO: check kubectl context
-  * set CURRENT namespace
+  * set CURRENT context / namespace=argocd
 
 * `argocd login --core`
   * [configure](../../user-guide/commands/argocd_login.md) CLI access
 
 * Redis' default installation
-  * -- is using -- password authentication /
-    * password stored | Kubernetes secret `argocd-redis`
-    * key `auth` | namespace / Argo CD is installed
+  * -- is using -- password authentication 
+    * see it [here](/manifests/install.yaml)'s `kind: Deployment` -- for -- "argocd-server"
+    * /
+      * password stored | Kubernetes secret `argocd-redis`
+      * key `auth` | namespace / Argo CD is installed
+        * `kubectl get secret argocd-redis -n argocd -o jsonpath='{.data.auth}' | base64 -d`
 
 ## 2. Download Argo CD CLI
 
@@ -73,6 +99,7 @@ kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubuse
 
 * Argo CD
   * ❌by default, NOT exposed outside the cluster❌
+    * `kubectl get svc -n argocd` ALL are TYPE == ClusterIP & `kubectl get ingress` is EMPTY
 
 ### ways to expose
 #### Service Type Load Balancer
@@ -81,11 +108,8 @@ kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubuse
     ```bash
     kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
     ```
-After a short wait, your cloud provider will assign an external IP address to the service. You can retrieve this IP with:
-
-```bash
-kubectl get svc argocd-server -n argocd -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'
-```
+  * AFTER a while -> your cloud provider will assign an external IP address
+    * `kubectl get svc argocd-server -n argocd -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'`
 
 #### Ingress
 * [here](operator-manual/ingress.md)
@@ -96,42 +120,60 @@ kubectl get svc argocd-server -n argocd -o=jsonpath='{.status.loadBalancer.ingre
 
 * steps
   * `kubectl port-forward svc/argocd-server -n argocd 8080:443`
+  * `kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d`
+    * copy the password
   * | browser, opens https://localhost:8080
+    * user: admin
+    * password: previouslyCopied
 
 ## 4. login -- via -- CLI
 
 * `admin` account
   * 's INITIAL password
     * auto-generated
+      * ⚠️EACH time the ArgoCD Server pod is rebooted⚠️
     * 💡stored as clear text | secret `argocd-initial-admin-secret`'s field `password` 💡
-      * 👀if you want to retrieve it -> `argocd admin initial-password -n argocd` 👀
+    * ways to retrieve
+      * `argocd admin initial-password -n argocd` OR
+        * Problems:
+          * Problem1: {"level":"fatal","msg":"secrets \"argocd-initial-admin-secret\" not found"
+            * Solution: `argocd login --core`
+            * Reason:🧠ArgoCD config file ("$HOME/.config/argocd") was NOT configured properly 🧠
+      * `kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d`
     * recommendations
       * change the password -- via -- `argocd account update-password`
+        * requirements
+          * 's length == [8,32]
+        * steps:
+          * `argocd login localhost:8080 --insecure`
+            * user: admin
+            * password: previouslyCopied
+          * `argocd account update-password`
+            * password: previouslyCopied
+            * new password: aaaaaaaa
+        * Problem:
+          * Problem1: "{"level":"fatal","msg":"configmap \"argocd-cm\" not found" 
+            * Solution: `kubectl config set-context --current --namespace=argocd`
+              * Reason:🧠NOT specified namespace | current-context -> default one🧠
       * delete `argocd-initial-admin-secret`
-    * if a NEW admin password MUST be re-generated -> it will be re-created -- by Argo CD, -- on demand
-
-TODO:
-> [!WARNING]
-> You should delete the `argocd-initial-admin-secret` from the Argo CD
-> namespace once you changed the password. The secret serves no other
-> purpose than to store the initially generated password in clear and can
-> safely be deleted at any time. It will be re-created on demand by Argo CD
-> if a new admin password must be re-generated.
-
+        * steps
+          * `kubectl delete secret argocd-initial-admin-secret -n argocd`
+  * if you loose the admin password ->
+    * `htpasswd -bnBC 10 "" nuevaPassword | tr -d ':\n' | sed 's/$2y/$2a/'`
+      * generate a NEW hash bcrypt
+    * `kubectl -n argocd patch secret argocd-secret -p '{"stringData": {"admin.password":        
+  "$2a$10$8/xsS0Bdr95FvZlo4sZh7e660kYJ8LxVQP5xeesgTO8iBOJcArgXK", "admin.passwordMtime":    
+  "'$(date +%FT%T%Z)'"}}'`
+  * if a NEW admin password MUST be re-generated -> it will be re-created -- by Argo CD, -- on demand
 
 * `argocd login <ARGOCD_SERVER>`
   * enter `admin` & PREVIOUS password
-  * if [Argo CD API server is DIRECTLY accessible](#3-access-the-argo-cd-api-server) -- by --
-    * service type LoadBalancer -> TODO: How?
-    * Ingress -> TODO: How?
-    * Port Forwarding -> `argocd login localhost:8080`
-  * if [Argo CD API server is ❌NOT❌ DIRECTLY accessible](#3-access-the-argo-cd-api-server)
+  * if [Argo CD API server is DIRECTLY accessible](/docs/user-guide/commands/argocd_login.md)
+  * if [Argo CD API server is ❌NOT❌ DIRECTLY accessible](#ways-to-expose)
     * -> ways to access
-      1) add `--port-forward-namespace argocd` flag | EVERY CLI command; or
+      1) add `--port-forward-namespace argocd` flag | EVERY CLI command; OR
+         * 
       2) `export ARGOCD_OPTS='--port-forward-namespace argocd'`
-    * Problems:
-      * Problem1: "FATA[0000] dial tcp: lookup cd.argoproj.io: no such host"
-        * Solution: TODO:
 
 ## 5. Register A Cluster -- to -- Deploy Apps
 * 👀OPTIONAL 👀
@@ -241,4 +283,7 @@ apps   Deployment  default    guestbook-ui  OutOfSync  Missing
     ![guestbook app](assets/guestbook-app.png)
   * | panel opened, click on "Synchronize"
 
+## 8. how to uninstall Argo CD?
 
+* `kubectl delete -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml`
+* `kubectl delete namespace argocd`

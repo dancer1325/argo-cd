@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    # communication protocol BETWEEN ALB -- & -- Service
+    alb.ingress.kubernetes.io/backend-protocol: HTTPS
+
+    # conditional rule for "argogrpc" service
+    alb.ingress.kubernetes.io/conditions.argogrpc: |
+      [{"field":"http-header","httpHeaderConfig":{"httpHeaderName": "Content-Type", "values":["application/grpc"]}}]
+
+    # port | Ingress export ALL
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+
+    # default health check: /AWS.ALB/healthcheck
+    #     https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-health-checks.html --
+    alb.ingress.kubernetes.io/healthcheck-path: /grpc.health.v1.Health/Check
+
+    # health check default codes
+    #    | HTTP, 200
+    #       https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-health-checks.html
+    #    | Grpc, 0
+    alb.ingress.kubernetes.io/success-codes: '0'
+  name: argocd
+  namespace: argocd
+spec:
+  rules:
+    - host: argocd.argoproj.io
+      http:
+        paths:
+          - path: /
+            backend:
+              service:
+                name: argogrpc # The grpc service must be placed before the argocd-server for the listening rules to be created in the correct order
+                port:
+                  number: 443
+            pathType: Prefix
+          - path: /
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  number: 443
+            pathType: Prefix
+  tls:
+    - hosts:
+        - argocd.argoproj.io
