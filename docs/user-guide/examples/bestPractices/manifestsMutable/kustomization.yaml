@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # 1. depend -- on -- external manifest
+  #   1.1 HEAD   == MUTABLE                     -- ❌NOT RECOMMENDED❌ --
+  # - github.com/argoproj/argo-cd//manifests/cluster-install
+  #   1.2 specific version   == IMMUTABLE       -- RECOMMENDED --
+  - github.com/argoproj/argo-cd//manifests/cluster-install?ref=v0.11.1

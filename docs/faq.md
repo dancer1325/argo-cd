@@ -2,6 +2,7 @@
 
 ## I've deleted/corrupted my repo and can NOT delete my app.
 
+TODO: 
 Argo CD can't delete an app if it cannot generate manifests. You need to either:
 
 1. Reinstate/fix your repo.

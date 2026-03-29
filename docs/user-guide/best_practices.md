@@ -1,79 +1,37 @@
 # Best Practices
 
-## Separating Config Vs. Source Code Repositories
+## 💡Separate source code repositories & config repository 💡
 
-Using a separate Git repository to hold your Kubernetes manifests, keeping the config separate
-from your application source code, is highly recommended for the following reasons:
+* Reasons:🧠
 
-1. It provides a clean separation of application code vs. application config. There will be times
-   when you wish to modify just the manifests without triggering an entire CI build. For example,
-   you likely do _not_ want to trigger a build if you simply wish to bump the number of replicas in
-   a Deployment spec.
+  1. clean separation of application code vs. application config
+     * enable
+       * modify ONLY the manifests / WITHOUT triggering an entire CI build
+         * _Example:_ if you change the Deployment spec's number of replicas -> likely you do NOT want to trigger a build
 
-2. Cleaner audit log. For auditing purposes, a repo which only holds configuration will have a much
-   cleaner Git history of what changes were made, without the noise coming from check-ins due to
-   normal development activity.
+  2. Cleaner audit log
+     * NOT mix audit logs
 
-3. Your application may comprise services built from multiple Git repositories, but is
-   deployed as a single unit. Oftentimes, microservices applications comprise services
-   with different versioning schemes, and release cycles (e.g. ELK, Kafka + ZooKeeper). It may not
-   make sense to store the manifests in one of the source code repositories of a single component.
+  3. application / built from MULTIPLE Git repositories & deployed as a 1! unit
+     * _Example:_ Kafka + ZooKeeper
+     * NOT sense to store the manifests | 1 one of the source code repositories
 
-4. Separation of access. The developers who are developing the application, may not necessarily be 
-   the same people who can/should push to production environments, either intentionally or
-   unintentionally. By having separate repos, commit access can be given to the source code repo,
-   and not the application config repo.
+  4. Separation of access
+     * people / have got access to source code != people / have got access to the manifests
 
-5. If you are automating your CI pipeline, pushing manifest changes to the same Git repository can
-   trigger an infinite loop of build jobs and Git commit triggers. Having a separate repo to push
-   config changes to, prevents this from happening.
+  5. | automate your CI pipeline & source code + manifest | SAME Git repository, POSSIBLE INFINITE loop🧠
 
+## Leaving room for dynamism
 
-## Leaving Room For Imperativeness
+* == ❌NOT manage ALL | Git❌
+  * _Example:_ your deployment's replicas number is managed -- by -- [Horizontal Pod Autoscaler](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
+    * -> you do NOT want to track `replicas` | Git
 
-It may be desired to leave room for some imperativeness/automation, and not have everything defined
-in your Git manifests. For example, if you want the number of your deployment's replicas to be
-managed by [Horizontal Pod Autoscaler](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/),
-then you would not want to track `replicas` in Git.
+## specify EXTERNAL manifests -- with -- IMMUTABLE Git revisions 
 
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-spec:
-  # do not include replicas in the manifests if you want replicas to be controlled by HPA
-  # replicas: 1
-  template:
-    spec:
-      containers:
-      - image: nginx:1.7.9
-        name: nginx
-        ports:
-        - containerPort: 80
-...
-```
+* EXTERNAL
+  * != your source code
+* OTHERWISE, 
+  * ⚠️output would change ⚠️
 
-## Ensuring Manifests At Git Revisions Are Truly Immutable
-
-When using templating tools like `helm` or `kustomize`, it is possible for manifests to change
-their meaning from one day to the next. This is typically caused by changes made to an upstream helm
-repository or kustomize base.
-
-For example, consider the following kustomization.yaml
-
-```yaml
-resources:
-- github.com/argoproj/argo-cd//manifests/cluster-install
-```
-
-The above kustomization has a remote base to the HEAD revision of the argo-cd repo. Since this
-is not a stable target, the manifests for this kustomize application can suddenly change meaning, even without
-any changes to your own Git repository.
-
-A better version would be to use a Git tag or commit SHA. For example:
-
-```yaml
-bases:
-- github.com/argoproj/argo-cd//manifests/cluster-install?ref=v0.11.1
-```
+* _Example:_ manifests point to EXTERNAL repo's HEAD revision & they are updated -> your manifests change without awareness
