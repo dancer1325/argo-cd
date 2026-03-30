@@ -33,6 +33,9 @@
 
 * steps
   * `kubectl apply -f install.yaml`
+    * Problems:
+      * Problem1: "too long"
+        * Solution: `kubectl apply --server-side --force-conflicts -f install.yaml`
 
 #### -- via -- 2 steps
 

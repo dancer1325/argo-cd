@@ -1,13 +1,50 @@
+# requirements
+* download software / enable you to run local Kubernetes clusters
+  * [Docker desktop](https://docs.docker.com/get-started/introduction/get-docker-desktop/)
+  * [kind](https://kind.sigs.k8s.io/) + [install Kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl)
+  * [minikube](https://minikube.sigs.k8s.io/docs/)
+    * `kubectl` commands are wrapped -- via -- `minikube kubectl`
+  * [microk8s](https://canonical.com/microk8s)
+    * `kubectl` commands are wrapped -- via -- `microk8s kubectl`
+* run a local Kubernetes cluster
+  * -- via --
+    * [Docker Desktop](https://docs.docker.com/desktop/use-desktop/kubernetes/#enable-kubernetes)
+      * | Docker Desktop
+        * Kubernetes > Create cluster > choose any cluster type
+    * [Kind](https://kind.sigs.k8s.io/#installation-and-usage)
+      * `kind create cluster`
+    * minikube
+      * `minikube start`
+    * microk8s
+  * `kubectl config current-context`
+    * check Kubectl points to a context
+
 # Application
 ## == CRD 
+* PREVIOUS to install Argo CD
+  * `kubectl get crd`
+    * NO resources found
+  * `kubectl get application`
+    * "error: the server doesn't have a resource type "application"
+* [install Argo CD](../../operator-manual/installation.md)
+  * `kubectl get crd` 
+    * return installed Argo CD CRD
+  * `kubectl get application`
+    * "No resources found in default namespace."
+
 ### == group of Kubernetes resources / defined -- by a -- manifest
-* [here](/manifests/crds/application-crd.yaml)
-  * group
-    * Reason: 🧠define `spec.group`🧠
+* ways to check
+  * [here](/manifests/crds/application-crd.yaml)
+    * group
+      * Reason: 🧠define `spec.group`🧠
+  * AFTER installing Argo CD
+    * `kubectl get crd`
+      * check ALL CRDs / SAME group
+        * Reason: 🧠NAME == `specName.groupName`🧠
 
 # Application Source Type
 ## == tool / used -- to -- build the application
-TODO: 
+* [here](../../user-guide/examples/applicationSources)
 
 # Target State
 
@@ -42,3 +79,4 @@ The health status of an application, indicating:
 - Can it serve requests?
 
 # Tool
+* [here](#application-source-type)

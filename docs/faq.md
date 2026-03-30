@@ -173,7 +173,7 @@ See [#1482](https://github.com/argoproj/argo-cd/issues/1482).
             * misconfiguration🧠
     * `data.timeout.reconciliation.jitter`
 
-* ⭐️ways / Argo CD detect changes -- from -- Git OR helm repository ⭐️
+* ⭐️ways to trigger reconcile process ⭐️
   * Argo CD poll configuration
   * [webhooks](operator-manual/webhook.md)
   * MANUAL refresh
@@ -185,6 +185,32 @@ See [#1482](https://github.com/argoproj/argo-cd/issues/1482).
 * recommendations
   * if you set Argo CD poll + Git webhook -> set `timeout.reconciliation` = low (_Example:_ `15m`, `1h`)
     * Reason:🧠improve Argo CD performance / resource consumption🧠
+
+```mermaid
+flowchart TB
+    subgraph Triggers["Ways to trigger a Git refresh in ArgoCD"]
+        direction TB
+        Poll["🕐 Polling<br/>timeout.reconciliation<br/>(default: 3m)"]
+        Webhook["🔔 Git Webhook<br/>Push event from<br/>GitHub / GitLab / Bitbucket"]
+        Manual["👤 Manual Refresh<br/>argocd app get APPNAME --refresh<br/>OR via UI"]
+    end
+
+    GitRepo["📁 Git / Helm Repository"]
+    ArgoCD["⚙️ ArgoCD<br/>Git Refresh"]
+
+    GitRepo -->|change detected via| Poll
+    GitRepo -->|notifies| Webhook
+    Manual -->|triggers| ArgoCD
+    Poll -->|triggers| ArgoCD
+    Webhook -->|triggers| ArgoCD
+
+    style Triggers fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Poll fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style Webhook fill:#fce4ec,stroke:#c62828,stroke-width:2px
+    style Manual fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style GitRepo fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style ArgoCD fill:#ffe0b2,stroke:#f57c00,stroke-width:2px
+```
 
 ## Why is my ArgoCD application `Out Of Sync` when there are no actual changes to the resource limits (or other fields with unit values)?
 

@@ -43,6 +43,15 @@ kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubuse
   * ['s size < 256kb](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/api/validation/objectmeta.go#L36)
 * `--force-conflicts`
   * [here](https://kubernetes.io/docs/reference/using-api/server-side-apply/)
+* Problems:
+  * Problem1: "Failed to pull image "quay.io/argoproj/argocd:"
+    * Attempt1: insecure some image registry
+      * _Example:_ | minikube, 
+        * `minikube start --insecure-registry="quay.io"`
+    * Attempt2: embed company certs
+      * _Example:_ | minikube,
+        * `minikube start --embed-certs`
+      * 
 
 * ⚠️if you install Argo CD | DIFFERENT namespace -> update `ClusterRoleBinding.subjects.namespace` | [install.yaml](/manifests/install.yaml) ⚠️
 
