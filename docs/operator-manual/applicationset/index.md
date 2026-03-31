@@ -8,7 +8,11 @@
   * allows,
     * about managing Argo CD Applications | ACROSS clusters & [monorepos](Use-Cases.md#use-case-monorepos),
       * automation
+        * == generate OR remove -- AUTOMATICALLY, based on `ApplicationSet` CR's contents, -- Argo CD Applications
+        * == 💡managing MULTIPLE Argo CD Applications 💡
       * greater flexibility
+        * INDEPENDENTLY create -- WITHOUT cluster-administrator intervention -- Applications
+          * POSSIBLE [security risk](./Security.md)
   * | Argo CD v2.3, 
     * ApplicationSet controller is bundled | Argo CD
   * provides -- TODO: how to mix with "allows" -- 
@@ -21,7 +25,7 @@
       - easily individual cluster tenants can deploy applications /
         - ❌NOT need cluster administrators enable the destination clusters/namespaces❌
   * cons
-    * [security implications](./Security.md)
+    * ⚠️[security implications](./Security.md)⚠️
 
 * [Generators](Generators.md)
 

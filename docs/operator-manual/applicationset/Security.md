@@ -1,7 +1,5 @@
 # ApplicationSet Security
 
-ApplicationSet is a powerful tool, and it is crucial to understand its security implications before using it.
-
 ## Only admins may create/update/delete ApplicationSets
 
 ApplicationSets can create Applications under arbitrary [Projects](../../user-guide/projects.md). Argo CD setups often

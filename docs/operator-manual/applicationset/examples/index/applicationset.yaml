@@ -5,8 +5,8 @@ metadata:
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
+  # create 1 Argo CD application / EACH generator's element
   generators:
-    # list generator
     - list:
         elements:
           - cluster: engineering-dev
@@ -17,7 +17,7 @@ spec:
             url: https://9.8.7.6
   template:
     metadata:
-      name: '{{.cluster}}-guestbook'
+      name: '{{.cluster}}-guestbook'    # {{.cluster}}    generator's parameter
     spec:
       project: my-project
       source:
@@ -25,5 +25,5 @@ spec:
         targetRevision: HEAD
         path: guestbook/{{.cluster}}
       destination:
-        server: '{{.url}}'
+        server: '{{.url}}'      # {{.url}}    generator's parameter
         namespace: guestbook
