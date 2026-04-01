@@ -1,9 +1,12 @@
 # API Docs
 
-You can find the Swagger docs by setting the path to `/swagger-ui` in your Argo CD UI. E.g. [http://localhost:8080/swagger-ui](http://localhost:8080/swagger-ui).
+* | your Argo CD UI,
+  * "/swagger-ui"
+    * _Example:_ http://localhost:8080/swagger-ui
 
 ## Authorization
 
+TODO: 
 You'll need to authorize your API using a bearer token. To get a token:
 
 ```bash

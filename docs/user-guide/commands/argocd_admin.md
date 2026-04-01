@@ -1,5 +1,8 @@
 # `argocd admin` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/admin/admin.go)'s `func NewAdminCommand(`👀
+
 ## argocd admin
 
 Contains a set of commands useful for Argo CD administrators and requires direct Kubernetes access

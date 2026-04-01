@@ -34,8 +34,12 @@
   * `argocd account list --server localhost:8080 --insecure`
     * ALREADY exist admin
 ### FULL access to the system
-* TODO:
-### TODO
+* `argocd admin settings rbac can admin create applications '*/guestbook' --namespace argocd`
+  * 's return: Yes
+* `argocd admin settings rbac can admin delete clusters '*' --namespace argocd`
+  * 's return: Yes
+* `argocd admin settings rbac can admin update accounts '*' --namespace argocd`
+  * 's return: Yes
 
 # Local users/accounts
 

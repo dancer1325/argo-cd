@@ -1,5 +1,8 @@
 # `argocd admin initial-password` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/admin/initial_password.go)'s `func NewInitialPasswordCommand(`👀
+
 ## argocd admin initial-password
 
 Prints initial password to log in to Argo CD for the first time

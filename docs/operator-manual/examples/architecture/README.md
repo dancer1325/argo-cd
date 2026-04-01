@@ -38,6 +38,7 @@
     * EXISTING gRPC services
 
 # Argo CD API Server 
+* `kubectl get all -n argocd | grep "argocd-server"`
 ## == gRPC/REST server / exposes the API
 * "*.proto" | [server](/server)
   * _Examples:_ 
@@ -59,30 +60,39 @@
 ### delegate authentication & auth -- to -- external identity providers
 * [here](../../user-management/index.md) 
 ### RBAC enforcement
-* TODO: 
-crea un usuario de solo lectura:
-
-  # 1. Añadir usuario readonly en argocd-cm
-  kubectl patch configmap argocd-cm -n argocd --type merge -p '{"data":{"accounts.readonly":"login"}}'
-
-  # 2. Establecer su password
-  argocd account update-password --account readonly --new-password readonly123 --server localhost:8080
-  --insecure
-
-  # 3. Añadir política RBAC de solo lectura en argocd-rbac-cm
-  kubectl patch configmap argocd-rbac-cm -n argocd --type merge -p '{"data":{"policy.csv":"p,          
-  role:readonly, applications, get, */*, allow\ng, readonly, role:readonly"}}'
-
-  # 4. Login como readonly
-  argocd login localhost:8080 --insecure --username readonly --password readonly123
-
-  # 5. Intenta borrar una app → debería fallar con PermissionDenied
-  argocd app delete example.guestbook --server localhost:8080 --insecure
-argocd CLI → gRPC → API Server → PermissionDenied
-### TODO: 
+* `argocd proj role --help`
+  * see help RBAC-related
+### listener/forwarder -- for -- Git webhook events
+* [here](/server/server.go)'s  `mux.HandleFunc("/api/webhook", acdWebhookHandler.Handler)`
+## API
+* https://localhost:8080/swagger-ui
+  * Swagger UI
+### consumed by
+#### ArgoCD UI
+* | browser,
+  * open developer settings
+  * https://localhost:8080/applications
+    * user: admin
+    * password: copiedFrom `argocd admin initial-password -n argocd`
+  * | developer settings > network,
+    * check URL
+#### CLI
+* `argocd version`
+  * check `argocd-server` output
+#### CI/CD systems
+* can be call -- through -- [gRPC REST](#grpc-rest)
 
 # Repository Server 
-* TODO: 
+* `kubectl get all -n argocd | grep "argocd-repo-server"`
+## internal service
+* `kubectl get svc -n argocd | grep "argocd-repo-server"`
+  * check it's `ClusterIP` 
+### maintains a local cache -- about the -- Git repository
+* `kubectl logs -n argocd deploy/argocd-repo-server | grep -i "cache\|clone\|fetch" | head -20`
+### hold the application manifests
+TODO: 
+## responsible for
+### internal service
 
 # Application Controller 
 ## == Kubernetes controller
