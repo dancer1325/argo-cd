@@ -1,4 +1,4 @@
-# Introduction to ApplicationSet controller
+# ApplicationSet controller
 
 ## Introduction
 

@@ -18,6 +18,7 @@
     * microk8s
   * `kubectl config current-context`
     * check Kubectl points to a context
+* [install Argo CD](../../operator-manual/installation.md)
 
 # Application
 ## == CRD 
@@ -52,9 +53,23 @@
   * `kubectl get application`
     * "No resources found in default namespace."
 ### FROM 1! Argo CD Application template, generate -- , via generators, -- MULTIPLE Applications
-* TODO: 
+* [here](../../operator-manual/applicationset/examples/index)
 
 # Project
+## == CRD
+* PREVIOUS to install Argo CD
+  * `kubectl get crd`
+    * NO resources found
+  * `kubectl get appproject`
+    * "error: the server doesn't have a resource type " appproject"
+* [install Argo CD](../../operator-manual/installation.md)
+  * `kubectl get crd`
+    * return installed Argo CD CRD
+  * `kubectl get application`
+    * "default" one
+### group Argo CD ApplicationS
+* [demo / default project](https://cd.apps.argoproj.io/applications?proj=default&sync=&autoSync=&health=&namespace=&cluster=&labels=&annotations=&operation=)
+* [demo / sync project](https://cd.apps.argoproj.io/applications?proj=sync&sync=&autoSync=&health=&namespace=&cluster=&labels=&annotations=&operation=)
 
 # Target State
 ## == files | Git repository

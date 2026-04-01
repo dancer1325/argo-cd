@@ -15,7 +15,8 @@
   * == Custom Resource Definition (CRD) /
     * FROM 1! Argo CD Application template, generate -- , via generators, -- MULTIPLE Applications
 * **Project**
-  * TODO:
+  * == Custom Resource Definition (CRD) /
+    * group Argo CD ApplicationS
 * **Target state** 
   * application's desired state
   * == files | Git repository

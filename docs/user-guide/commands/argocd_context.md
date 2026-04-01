@@ -1,5 +1,8 @@
 # `argocd context` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/context.md)'s `func NewContextCommand(`👀
+
 ## argocd context
 
 Switch between contexts

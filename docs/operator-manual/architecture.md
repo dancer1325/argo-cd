@@ -2,16 +2,6 @@
 
 ![Argo CD Architecture](../assets/argocd_architecture.png)
 
-* Argo CD
-  * == ⭐️Kubernetes controller⭐️ / 
-    * CONTINUOUSLY monitors running applications
-    * compares the current, live state vs desired target state (== | Git repo)
-      * `OutOfSync` == deployed application's status / 's live state != target state
-        * if it's `OutOfSync` -> Argo CD reports & visualizes the differences
-      * if you modify the target state -> AUTOMATICALLY reflected | specified target environments
-  * provide
-    * facilities to AUTOMATICALLY OR MANUALLY sync the live state -- & -- desired target state
-
 ## Components
 
 * goal
@@ -23,11 +13,10 @@
   * == gRPC/REST server / exposes the API
   * responsibilities
     * application management & status reporting
-    * invoke application operations
-      * _Examples:_ sync, rollback, user-defined actions
+      * _Examples of management:_ create, delete, sync, rollback, user-defined actions
     * repository & cluster credential management
       * stored -- as -- K8s secrets
-    * authentication & auth delegation -- to -- external identity providers
+    * delegate authentication & auth -- to -- external identity providers
     * RBAC enforcement
     * listener/forwarder -- for -- Git webhook events
 
@@ -53,11 +42,10 @@
 ### Application Controller
 * application controller
   * == Kubernetes controller / 
-    * continuously monitors running applications
-    * compares the current, live state vs desired target state
-      * desired target state 
-        * specified | repo
+    * CONTINUOUSLY monitors running applications
+    * compares the current, live state vs desired target state (== | Git repo)
   * detects `OutOfSync` application state
-    * if it's out of sync -> OPTIONALLY takes corrective action
+    * OPTIONALLY takes corrective action
+    * == deployed application's status / 's live state != target state
   * responsible for
     * invoking any user-defined hooks for lifecycle events (PreSync, Sync, PostSync)

@@ -1,5 +1,8 @@
 # `argocd account` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/account.md)'s `func NewAccountCommand(`👀
+
 ## argocd account
 
 Manage account settings

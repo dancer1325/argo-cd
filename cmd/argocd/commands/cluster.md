@@ -210,76 +210,83 @@ const (
 	return conf, nil
 }
 
-// NewClusterSetCommand returns a new instance of an `argocd cluster set` command
+
 # `func NewClusterSetCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
-	var (
-		clusterOptions cmdutil.ClusterOptions
-		clusterName    string
-		labels         []string
-		annotations    []string
-	)
-	command := &cobra.Command{
-		Use:   "set NAME",
-		Short: "Set cluster information",
-		Example: `  # Set cluster information
-  argocd cluster set CLUSTER_NAME --name new-cluster-name --namespace '*'
-  argocd cluster set CLUSTER_NAME --name new-cluster-name --namespace namespace-one --namespace namespace-two`,
-		Run: func(c *cobra.Command, args []string) {
-			ctx := c.Context()
-			if len(args) != 1 {
-				c.HelpFunc()(c, args)
-				os.Exit(1)
-			}
-			// name of the cluster whose fields have to be updated.
-			clusterName = args[0]
-			conn, clusterIf := headless.NewClientOrDie(clientOpts, c).NewClusterClientOrDie()
-			defer utilio.Close(conn)
-			// checks the fields that needs to be updated
-			updatedFields := checkFieldsToUpdate(clusterOptions, labels, annotations)
-			namespaces := clusterOptions.Namespaces
-			// check if all namespaces have to be considered
-			if len(namespaces) == 1 && strings.EqualFold(namespaces[0], allNamespaces) {
-				namespaces[0] = ""
-			}
-			// parse the labels you're receiving from the label flag
-			labelsMap, err := label.Parse(labels)
-			errors.CheckError(err)
-			// parse the annotations you're receiving from the annotation flag
-			annotationsMap, err := label.Parse(annotations)
-			errors.CheckError(err)
-			if updatedFields != nil {
-				clusterUpdateRequest := clusterpkg.ClusterUpdateRequest{
-					Cluster: &argoappv1.Cluster{
-						Name:        clusterOptions.Name,
-						Namespaces:  namespaces,
-						Labels:      labelsMap,
-						Annotations: annotationsMap,
-					},
-					UpdatedFields: updatedFields,
-					Id: &clusterpkg.ClusterID{
-						Type:  clusterIdTypeName,
-						Value: clusterName,
-					},
-				}
-				_, err := clusterIf.Update(ctx, &clusterUpdateRequest)
-				if err != nil {
-					if status.Code(err) == codes.PermissionDenied {
-						log.Error("Ensure that the cluster is present and you have the necessary permissions to update the cluster")
-					}
-					errors.CheckError(err)
-				}
-				fmt.Printf("Cluster '%s' updated.\n", clusterName)
-			} else {
-				fmt.Print("Specify the cluster field to be updated.\n")
-			}
-		},
-	}
-	command.Flags().StringVar(&clusterOptions.Name, "name", "", "Overwrite the cluster name")
-	command.Flags().StringArrayVar(&clusterOptions.Namespaces, "namespace", nil, "List of namespaces which are allowed to manage. Specify '*' to manage all namespaces")
-	command.Flags().StringArrayVar(&labels, "label", nil, "Set metadata labels (e.g. --label key=value)")
-	command.Flags().StringArrayVar(&annotations, "annotation", nil, "Set metadata annotations (e.g. --annotation key=value)")
-	return command
-}
+* 's return
+  * NEW instance -- of -- `argocd cluster set` command
+      var (
+          clusterOptions cmdutil.ClusterOptions
+          clusterName    string
+          labels         []string
+          annotations    []string
+      )
+      command := &cobra.Command{
+          Use:   "set NAME",
+          Short: "Set cluster information",
+          Example: ``,
+          Run: func(c *cobra.Command, args []string) {
+              ctx := c.Context()
+              if len(args) != 1 {
+                  c.HelpFunc()(c, args)
+                  os.Exit(1)
+              }
+              // name of the cluster whose fields have to be updated.
+              clusterName = args[0]
+              conn, clusterIf := headless.NewClientOrDie(clientOpts, c).NewClusterClientOrDie()
+              defer utilio.Close(conn)
+              // checks the fields that needs to be updated
+              updatedFields := checkFieldsToUpdate(clusterOptions, labels, annotations)
+              namespaces := clusterOptions.Namespaces
+              // check if all namespaces have to be considered
+              if len(namespaces) == 1 && strings.EqualFold(namespaces[0], allNamespaces) {
+                  namespaces[0] = ""
+              }
+              // parse the labels you're receiving from the label flag
+              labelsMap, err := label.Parse(labels)
+              errors.CheckError(err)
+              // parse the annotations you're receiving from the annotation flag
+              annotationsMap, err := label.Parse(annotations)
+              errors.CheckError(err)
+              if updatedFields != nil {
+                  clusterUpdateRequest := clusterpkg.ClusterUpdateRequest{
+                      Cluster: &argoappv1.Cluster{
+                          Name:        clusterOptions.Name,
+                          Namespaces:  namespaces,
+                          Labels:      labelsMap,
+                          Annotations: annotationsMap,
+                      },
+                      UpdatedFields: updatedFields,
+                      Id: &clusterpkg.ClusterID{
+                          Type:  clusterIdTypeName,
+                          Value: clusterName,
+                      },
+                  }
+                  _, err := clusterIf.Update(ctx, &clusterUpdateRequest)
+                  if err != nil {
+                      if status.Code(err) == codes.PermissionDenied {
+                          log.Error("Ensure that the cluster is present and you have the necessary permissions to update the cluster")
+                      }
+                      errors.CheckError(err)
+                  }
+                  fmt.Printf("Cluster '%s' updated.\n", clusterName)
+              } else {
+                  fmt.Print("Specify the cluster field to be updated.\n")
+              }
+          },
+      }
+      command.Flags().StringVar(&clusterOptions.Name, "name", "", "Overwrite the cluster name")
+      command.Flags().StringArrayVar(&clusterOptions.Namespaces, "namespace", nil, "List of namespaces which are allowed to manage. Specify '*' to manage all namespaces")
+      command.Flags().StringArrayVar(&labels, "label", nil, "Set metadata labels (e.g. --label key=value)")
+      command.Flags().StringArrayVar(&annotations, "annotation", nil, "Set metadata annotations (e.g. --annotation key=value)")
+      return command
+  }
+
+## _Examples:_ 
+```
+# Set cluster information
+argocd cluster set CLUSTER_NAME --name new-cluster-name --namespace '*'
+argocd cluster set CLUSTER_NAME --name new-cluster-name --namespace namespace-one --namespace namespace-two
+```
 
 // checkFieldsToUpdate returns the fields that needs to be updated
 # `func checkFieldsToUpdate(clusterOptions cmdutil.ClusterOptions, labels []string, annotations []string) []string {

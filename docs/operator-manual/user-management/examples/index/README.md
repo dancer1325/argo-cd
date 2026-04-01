@@ -1,24 +1,62 @@
+# requirements
+* download software / enable you to run local Kubernetes clusters
+  * [Docker desktop](https://docs.docker.com/get-started/introduction/get-docker-desktop/)
+  * [kind](https://kind.sigs.k8s.io/) + [install Kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl)
+  * [minikube](https://minikube.sigs.k8s.io/docs/)
+    * `kubectl` commands are wrapped -- via -- `minikube kubectl`
+  * [microk8s](https://canonical.com/microk8s)
+    * `kubectl` commands are wrapped -- via -- `microk8s kubectl`
+* run ⚠️2⚠️ local Kubernetes cluster
+  * -- via --
+    * [Docker Desktop](https://docs.docker.com/desktop/use-desktop/kubernetes/#enable-kubernetes)
+      * | Docker Desktop
+        * Kubernetes > Create cluster > choose any cluster type
+    * [Kind](https://kind.sigs.k8s.io/#installation-and-usage)
+      * `kind create cluster`
+    * minikube
+      * `minikube start`
+    * microk8s
+  * `kubectl config current-context`
+    * check Kubectl points to a context
+* [install Argo CD](../../../installation.md)
+* login
+  * `kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d`
+    * get initial admin password
+  * `argocd login localhost:8080 --insecure`
+    * user: admin
+    * password: pasteInitialAdminPassword
 
-## Local users/accounts
+# Overview
+## built-in admin user
+* `argocd account list --server localhost:8080 --insecure`
+### created | install Argo CD
+* | IMMEDIATELY AFTER installing ArgoCD,
+  * `argocd account list --server localhost:8080 --insecure`
+    * ALREADY exist admin
+### FULL access to the system
+* TODO:
+### TODO
 
-### Create new user
+# Local users/accounts
+
+## Create new user
 * TODO: use [argocd-cm.yaml](argocd-cm.yaml)
 
-### Delete user
+## Delete user
 * `kubectl patch -n argocd cm argocd-cm --type='json' -p='[{"op": "remove", "path": "/data/accounts.alice"}]'`
   * remove the `argocd-cm` ConfigMap's entry `/data/accounts.alice`
 * `kubectl patch -n argocd secrets argocd-secret --type='json' -p='[{"op": "remove", "path": "/data/accounts.alice.password"}]'`
   * remove the corresponding `argocd-secret` Secret's password entry
 
-### Disable admin user
+## Disable admin user
 * TODO: use [argocd-cm.yaml](argocd-cm.yaml)
 
 
-## SSO
+# SSO
 
 * _Example:_ configure Argo CD SSO -- via -- GitHub (OAuth2)
 
-### Dex
+## Dex
 
 * steps
   * | Github, 
@@ -30,7 +68,7 @@
 
         ![OAuth2 Client Config](/docs/assets/oauth2-config.png "OAuth2 Client Config")
 
-#### steps to configure
+### steps to configure
 
 * `kubectl edit configmap argocd-cm -n argocd`
 
