@@ -5,6 +5,10 @@
 * MOST common way
 * use cases
   * \>1 application developer teams /
+    * Reason: contains🧠
+      * RBAC model &
+      * OIDC authentication🧠
+    * share SAME Argo CD instance
     * maintained -- by a -- platform team
     * can access Argo CD's API server -- via --
       * Web UI OR
