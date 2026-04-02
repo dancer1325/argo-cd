@@ -129,8 +129,11 @@ If set to 0 then limit is disabled
 #### Dex 
 
 * [Dex](https://github.com/dexidp/dex)
-  * == OIDC provider / 
+  * == Identity provider / 
+    * implement OIDC
     * 👀embedded & bundled | ArgoCd👀
+      * ALTHOUGH it can be replaced by your desired one
+        * _Examples:_ [keycloack](keycloak.md), [Microsoft Active Directory](microsoft.md), ...
   * allows
     * delegating authentication -- to an -- external identity provider
       * supported one

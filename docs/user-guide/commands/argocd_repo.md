@@ -1,5 +1,8 @@
 # `argocd repo` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/repo.go)'s `func NewRepoCommand(`👀
+
 ## argocd repo
 
 Manage repository connection parameters

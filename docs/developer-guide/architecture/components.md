@@ -13,7 +13,7 @@
       * ❌!= "components"❌
         * Reason:🧠
           * ArgoCD's core == main logic
-          * MANDATORY == NOT replace 🧠
+          * MANDATORY == NOT replaceable 🧠
 
 * separate the responsibility
   * benefits
@@ -99,6 +99,7 @@
 
 ### Kube API
 
+* == kube-api-server
 * audience
   * Argo CD controllers
 * responsible for
@@ -117,12 +118,4 @@
 
 ### Dex
 
-* tool / provide authentication
-  * [ALLOWED ones](../../operator-manual/user-management/index.md)
-
-* DEX 
-  * POSSIBLE one
-    * ANOTHER AVAILABLE one can be used
-  * provide
-    * authentication -- with -- external OIDC providers
-  * However other tools can be used instead of Dex
+* [here](../../operator-manual/user-management/index.md)

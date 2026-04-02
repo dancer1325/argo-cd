@@ -1,5 +1,8 @@
 # `argocd app` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/app.go)'s `func NewApplicationCommand(`👀
+
 ## argocd app
 
 Manage applications

@@ -90,12 +90,20 @@
 ### maintains a local cache -- about the -- Git repository
 * `kubectl logs -n argocd deploy/argocd-repo-server | grep -i "cache\|clone\|fetch" | head -20`
 ### hold the application manifests
-TODO: 
+* `kubectl logs -n argocd deploy/argocd-repo-server -f | grep -i "manifest\|generate\|guestbook"`
+  * check there are logs "manifest cache"
 ## responsible for
-### internal service
+### generating & returning the Kubernetes manifests
+* `argocd app manifests example.guestbook`
+* `kubectl logs -n argocd -l app.kubernetes.io/name=argocd-repo-server -f`
+  * look up "GenerateManifest" 
 
 # Application Controller 
 ## == Kubernetes controller
+* `kubectl logs -n argocd -l app.kubernetes.io/name=argocd-application-controller | grep -i "reconcil"`
+  * run reconciliation loop -> done -- by -- controller
+### responsible for
+#### invoking any user-defined hooks for lifecycle events (PreSync, Sync, PostSync)
 TODO:
 
 # Sync hooks
