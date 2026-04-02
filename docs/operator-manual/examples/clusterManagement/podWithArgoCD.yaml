@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: argocd-cli
+  namespace: argocd
+spec:
+  restartPolicy: Never
+  containers:
+    - name: argocd-cli
+      image: quay.io/argoproj/argocd:latest
+      command: ["sh"]
+      stdin: true
+      tty: true
+      env:
+        - name: KUBECONFIG
+          value: /tmp/kube/config
+      volumeMounts:
+        - name: kube
+          mountPath: /tmp/kube
+  volumes:
+    - name: kube
+      configMap:
+        name: kind2-kubeconfig

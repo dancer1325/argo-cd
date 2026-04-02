@@ -1,43 +1,14 @@
-const (
-	// type of the cluster ID is 'name'
-	clusterIdTypeName = "name"
-	// cluster field is 'name'
-	clusterFieldName = "name"
-	// cluster field is 'namespaces'
-	clusterFieldNamespaces = "namespaces"
-	// cluster field is 'labels'
-	clusterFieldLabel = "labels"
-	// cluster field is 'annotations'
-	clusterFieldAnnotation = "annotations"
-	// indicates managing all namespaces
-	allNamespaces = "*"
-)
-
-// NewClusterCommand returns a new instance of an `argocd cluster` command
 # `func NewClusterCommand(clientOpts *argocdclient.ClientOptions, pathOpts *clientcmd.PathOptions) *cobra.Command {`
-
-* `argocd cluster [flags]`
-* allows
-  * manage cluster credentials
-
-      command := &cobra.Command{
-          Use:   "cluster",
-          Short: "Manage cluster credentials",
-          Run: func(c *cobra.Command, args []string) {
-              c.HelpFunc()(c, args)
-              os.Exit(1)
-          },
-          Example: ``,
-      }
-
-      command.AddCommand(NewClusterAddCommand(clientOpts, pathOpts))
-      command.AddCommand(NewClusterGetCommand(clientOpts))
-      command.AddCommand(NewClusterListCommand(clientOpts))
-      command.AddCommand(NewClusterRemoveCommand(clientOpts, pathOpts))
-      command.AddCommand(NewClusterRotateAuthCommand(clientOpts))
-      command.AddCommand(NewClusterSetCommand(clientOpts))
-      return command
-  }
+* `argocd cluster [COMMAND]`
+  * allows
+    * manage cluster credentials
+  * `COMMAND`
+    * NewClusterAddCommand(clientOpts, pathOpts)
+    * NewClusterGetCommand(clientOpts)
+    * NewClusterListCommand(clientOpts)
+    * NewClusterRemoveCommand(clientOpts, pathOpts)
+    * NewClusterRotateAuthCommand(clientOpts)
+    * NewClusterSetCommand(clientOpts)
 
 * _Example:_ 
 
@@ -60,393 +31,79 @@ const (
 	argocd cluster set CLUSTER_NAME --name new-cluster-name --namespace namespace-one --namespace namespace-two
 	```
 
-// NewClusterAddCommand returns a new instance of an `argocd cluster add` command
-# `func NewClusterAddCommand(clientOpts *argocdclient.ClientOptions, pathOpts *clientcmd.PathOptions) *cobra.Command {`
-	var (
-		clusterOpts      cmdutil.ClusterOptions
-		skipConfirmation bool
-		labels           []string
-		annotations      []string
-	)
-	command := &cobra.Command{
-		Use:   "add CONTEXT",
-		Short: common.CommandCLI + " cluster add CONTEXT",
-		Run: func(c *cobra.Command, args []string) {
-			ctx := c.Context()
+## `func NewClusterAddCommand(clientOpts *argocdclient.ClientOptions, pathOpts *clientcmd.PathOptions) *cobra.Command {`
+* `argocd cluster add CONTEXT [FLAG]`
+  * `FLAG`
+    * `--upsert`
+      * Override an existing cluster with the same name even if the spec differs
+    * `--service-account`
+      * System namespace service account to use for kubernetes resource management
+      * If not set then default `argocd-manager` SA will be created
+    * `--system-namespace`
+      * Use different system namespace
+    * `--yes`/`-y`
+      * Skip explicit confirmation
+    * `--label`
+      * Set metadata labels (e.g. --label key=value)
+    * `--annotation`
+      * Set metadata annotations (e.g. --annotation key=value)
+    * `--proxy-url`
+      * use proxy to connect cluster
 
-			var configAccess clientcmd.ConfigAccess = pathOpts
-			if len(args) == 0 {
-				log.Error("Choose a context name from:")
-				cmdutil.PrintKubeContexts(configAccess)
-				os.Exit(1)
-			}
+## `func NewClusterSetCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
+* `argocd cluster set NAME [FLAG]`
+  * set cluster information
+  * `FLAG`
+    * `--name`
+      * Overwrite the cluster name
+    * `--namespace`
+      * List of namespaces which are allowed to manage. Specify `*` to manage all namespaces
+    * `--label`
+      * Set metadata labels (e.g. --label key=value)
+    * `--annotation`
+      * Set metadata annotations (e.g. --annotation key=value)
 
-			if clusterOpts.InCluster && clusterOpts.ClusterEndpoint != "" {
-				log.Fatal("Can only use one of --in-cluster or --cluster-endpoint")
-				return
-			}
+* _Examples:_ 
+    ```
+    # Set cluster information
+    argocd cluster set CLUSTER_NAME --name new-cluster-name --namespace '*'
+    argocd cluster set CLUSTER_NAME --name new-cluster-name --namespace namespace-one --namespace namespace-two
+    ```
 
-			contextName := args[0]
-			conf, err := getRestConfig(pathOpts, contextName)
-			errors.CheckError(err)
-			if clusterOpts.ProxyUrl != "" {
-				u, err := argoappv1.ParseProxyUrl(clusterOpts.ProxyUrl)
-				errors.CheckError(err)
-				conf.Proxy = http.ProxyURL(u)
-			}
-			clientset, err := kubernetes.NewForConfig(conf)
-			errors.CheckError(err)
-			managerBearerToken := ""
-			var awsAuthConf *argoappv1.AWSAuthConfig
-			var execProviderConf *argoappv1.ExecProviderConfig
-			switch {
-			case clusterOpts.AwsClusterName != "":
-				awsAuthConf = &argoappv1.AWSAuthConfig{
-					ClusterName: clusterOpts.AwsClusterName,
-					RoleARN:     clusterOpts.AwsRoleArn,
-					Profile:     clusterOpts.AwsProfile,
-				}
-			case clusterOpts.ExecProviderCommand != "":
-				execProviderConf = &argoappv1.ExecProviderConfig{
-					Command:     clusterOpts.ExecProviderCommand,
-					Args:        clusterOpts.ExecProviderArgs,
-					Env:         clusterOpts.ExecProviderEnv,
-					APIVersion:  clusterOpts.ExecProviderAPIVersion,
-					InstallHint: clusterOpts.ExecProviderInstallHint,
-				}
-			default:
-				// Install RBAC resources for managing the cluster
-				if clusterOpts.ServiceAccount != "" {
-					managerBearerToken, err = clusterauth.GetServiceAccountBearerToken(clientset, clusterOpts.SystemNamespace, clusterOpts.ServiceAccount, common.BearerTokenTimeout)
-				} else {
-					isTerminal := isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd())
-					if isTerminal && !skipConfirmation {
-						accessLevel := "cluster"
-						if len(clusterOpts.Namespaces) > 0 {
-							accessLevel = "namespace"
-						}
-						message := fmt.Sprintf("WARNING: This will create a service account `argocd-manager` on the cluster referenced by context `%s` with full %s level privileges. Do you want to continue [y/N]? ", contextName, accessLevel)
-						if !cli.AskToProceed(message) {
-							os.Exit(1)
-						}
-					}
-					managerBearerToken, err = clusterauth.InstallClusterManagerRBAC(clientset, clusterOpts.SystemNamespace, clusterOpts.Namespaces, common.BearerTokenTimeout)
-				}
-				errors.CheckError(err)
-			}
+## `func NewClusterGetCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
+* `argocd cluster get SERVER/NAME [FLAG]`
+  * Get cluster information
+  * `FLAG`
+    * `--output`/`-o`
+      * Output format. One of: `json`|`yaml`|`wide`|`server`
 
-			labelsMap, err := label.Parse(labels)
-			errors.CheckError(err)
-			annotationsMap, err := label.Parse(annotations)
-			errors.CheckError(err)
-
-			conn, clusterIf := headless.NewClientOrDie(clientOpts, c).NewClusterClientOrDie()
-			defer utilio.Close(conn)
-			if clusterOpts.Name != "" {
-				contextName = clusterOpts.Name
-			}
-			clst := cmdutil.NewCluster(contextName, clusterOpts.Namespaces, clusterOpts.ClusterResources, conf, managerBearerToken, awsAuthConf, execProviderConf, labelsMap, annotationsMap)
-			if clusterOpts.InClusterEndpoint() {
-				clst.Server = argoappv1.KubernetesInternalAPIServerAddr
-			} else if clusterOpts.ClusterEndpoint == string(cmdutil.KubePublicEndpoint) {
-				endpoint, caData, err := cmdutil.GetKubePublicEndpoint(clientset)
-				if err != nil || endpoint == "" {
-					log.Warnf("Failed to find the cluster endpoint from kube-public data: %v", err)
-					log.Infof("Falling back to the endpoint '%s' as listed in the kubeconfig context", clst.Server)
-					endpoint = clst.Server
-				}
-				clst.Server = endpoint
-				clst.Config.CAData = caData
-			}
-
-			if clusterOpts.Shard >= 0 {
-				clst.Shard = &clusterOpts.Shard
-			}
-			if clusterOpts.Project != "" {
-				clst.Project = clusterOpts.Project
-			}
-			clstCreateReq := clusterpkg.ClusterCreateRequest{
-				Cluster: clst,
-				Upsert:  clusterOpts.Upsert,
-			}
-			_, err = clusterIf.Create(ctx, &clstCreateReq)
-			errors.CheckError(err)
-			fmt.Printf("Cluster '%s' added\n", clst.Server)
-		},
-	}
-	command.PersistentFlags().StringVar(&pathOpts.LoadingRules.ExplicitPath, pathOpts.ExplicitFileFlag, pathOpts.LoadingRules.ExplicitPath, "use a particular kubeconfig file")
-	command.Flags().BoolVar(&clusterOpts.Upsert, "upsert", false, "Override an existing cluster with the same name even if the spec differs")
-	command.Flags().StringVar(&clusterOpts.ServiceAccount, "service-account", "", fmt.Sprintf("System namespace service account to use for kubernetes resource management. If not set then default %q SA will be created", clusterauth.ArgoCDManagerServiceAccount))
-	command.Flags().StringVar(&clusterOpts.SystemNamespace, "system-namespace", common.DefaultSystemNamespace, "Use different system namespace")
-	command.Flags().BoolVarP(&skipConfirmation, "yes", "y", false, "Skip explicit confirmation")
-	command.Flags().StringArrayVar(&labels, "label", nil, "Set metadata labels (e.g. --label key=value)")
-	command.Flags().StringArrayVar(&annotations, "annotation", nil, "Set metadata annotations (e.g. --annotation key=value)")
-	command.Flags().StringVar(&clusterOpts.ProxyUrl, "proxy-url", "", "use proxy to connect cluster")
-	cmdutil.AddClusterFlags(command, &clusterOpts)
-	return command
-}
-
-# `func getRestConfig(pathOpts *clientcmd.PathOptions, ctxName string) (*rest.Config, error) {`
-	config, err := pathOpts.GetStartingConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	clstContext := config.Contexts[ctxName]
-	if clstContext == nil {
-		return nil, fmt.Errorf("context %s does not exist in kubeconfig", ctxName)
-	}
-
-	overrides := clientcmd.ConfigOverrides{
-		Context: *clstContext,
-	}
-
-	clientConfig := clientcmd.NewDefaultClientConfig(*config, &overrides)
-	conf, err := clientConfig.ClientConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	return conf, nil
-}
+* _Examples:_ 
+    ```
+    argocd cluster get https://12.34.567.89
+    argocd cluster get in-cluster
+    ```
 
 
-# `func NewClusterSetCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
-* 's return
-  * NEW instance -- of -- `argocd cluster set` command
-      var (
-          clusterOptions cmdutil.ClusterOptions
-          clusterName    string
-          labels         []string
-          annotations    []string
-      )
-      command := &cobra.Command{
-          Use:   "set NAME",
-          Short: "Set cluster information",
-          Example: ``,
-          Run: func(c *cobra.Command, args []string) {
-              ctx := c.Context()
-              if len(args) != 1 {
-                  c.HelpFunc()(c, args)
-                  os.Exit(1)
-              }
-              // name of the cluster whose fields have to be updated.
-              clusterName = args[0]
-              conn, clusterIf := headless.NewClientOrDie(clientOpts, c).NewClusterClientOrDie()
-              defer utilio.Close(conn)
-              // checks the fields that needs to be updated
-              updatedFields := checkFieldsToUpdate(clusterOptions, labels, annotations)
-              namespaces := clusterOptions.Namespaces
-              // check if all namespaces have to be considered
-              if len(namespaces) == 1 && strings.EqualFold(namespaces[0], allNamespaces) {
-                  namespaces[0] = ""
-              }
-              // parse the labels you're receiving from the label flag
-              labelsMap, err := label.Parse(labels)
-              errors.CheckError(err)
-              // parse the annotations you're receiving from the annotation flag
-              annotationsMap, err := label.Parse(annotations)
-              errors.CheckError(err)
-              if updatedFields != nil {
-                  clusterUpdateRequest := clusterpkg.ClusterUpdateRequest{
-                      Cluster: &argoappv1.Cluster{
-                          Name:        clusterOptions.Name,
-                          Namespaces:  namespaces,
-                          Labels:      labelsMap,
-                          Annotations: annotationsMap,
-                      },
-                      UpdatedFields: updatedFields,
-                      Id: &clusterpkg.ClusterID{
-                          Type:  clusterIdTypeName,
-                          Value: clusterName,
-                      },
-                  }
-                  _, err := clusterIf.Update(ctx, &clusterUpdateRequest)
-                  if err != nil {
-                      if status.Code(err) == codes.PermissionDenied {
-                          log.Error("Ensure that the cluster is present and you have the necessary permissions to update the cluster")
-                      }
-                      errors.CheckError(err)
-                  }
-                  fmt.Printf("Cluster '%s' updated.\n", clusterName)
-              } else {
-                  fmt.Print("Specify the cluster field to be updated.\n")
-              }
-          },
-      }
-      command.Flags().StringVar(&clusterOptions.Name, "name", "", "Overwrite the cluster name")
-      command.Flags().StringArrayVar(&clusterOptions.Namespaces, "namespace", nil, "List of namespaces which are allowed to manage. Specify '*' to manage all namespaces")
-      command.Flags().StringArrayVar(&labels, "label", nil, "Set metadata labels (e.g. --label key=value)")
-      command.Flags().StringArrayVar(&annotations, "annotation", nil, "Set metadata annotations (e.g. --annotation key=value)")
-      return command
-  }
+## `func NewClusterRemoveCommand(clientOpts *argocdclient.ClientOptions, pathOpts *clientcmd.PathOptions) *cobra.Command {`
+* `argocd cluster rm SERVER/NAME [FLAG]`
+  * remove cluster credentials
+  * `FLAG`
+    * `--yes`/`-y`
+      * Turn off prompting to confirm remove of cluster resources
 
-## _Examples:_ 
-```
-# Set cluster information
-argocd cluster set CLUSTER_NAME --name new-cluster-name --namespace '*'
-argocd cluster set CLUSTER_NAME --name new-cluster-name --namespace namespace-one --namespace namespace-two
-```
+* _Examples:_ 
+    ```
+    argocd cluster rm https://12.34.567.89
+    argocd cluster rm cluster-name
+    ```
 
-// checkFieldsToUpdate returns the fields that needs to be updated
-# `func checkFieldsToUpdate(clusterOptions cmdutil.ClusterOptions, labels []string, annotations []string) []string {
-	var updatedFields []string
-	if clusterOptions.Name != "" {
-		updatedFields = append(updatedFields, clusterFieldName)
-	}
-	if clusterOptions.Namespaces != nil {
-		updatedFields = append(updatedFields, clusterFieldNamespaces)
-	}
-	if labels != nil {
-		updatedFields = append(updatedFields, clusterFieldLabel)
-	}
-	if annotations != nil {
-		updatedFields = append(updatedFields, clusterFieldAnnotation)
-	}
-	return updatedFields
-}
+## `func NewClusterListCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
+* `argocd cluster list [FLAG]`
+  * list configured clusters
+  * `FLAG`
+    * `--output`/`-o`
+      * Output format. One of: `json`|`yaml`|`wide`|`server`
 
-// NewClusterGetCommand returns a new instance of an `argocd cluster get` command
-# `func NewClusterGetCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
-	var output string
-	command := &cobra.Command{
-		Use:   "get SERVER/NAME",
-		Short: "Get cluster information",
-		Example: `argocd cluster get https://12.34.567.89
-argocd cluster get in-cluster`,
-		Run: func(c *cobra.Command, args []string) {
-			ctx := c.Context()
-
-			if len(args) == 0 {
-				c.HelpFunc()(c, args)
-				os.Exit(1)
-			}
-			conn, clusterIf := headless.NewClientOrDie(clientOpts, c).NewClusterClientOrDie()
-			defer utilio.Close(conn)
-			clusters := make([]argoappv1.Cluster, 0)
-			for _, clusterSelector := range args {
-				clst, err := clusterIf.Get(ctx, getQueryBySelector(clusterSelector))
-				errors.CheckError(err)
-				clusters = append(clusters, *clst)
-			}
-			switch output {
-			case "yaml", "json":
-				err := PrintResourceList(clusters, output, true)
-				errors.CheckError(err)
-			case "wide", "":
-				printClusterDetails(clusters)
-			case "server":
-				printClusterServers(clusters)
-			default:
-				errors.CheckError(fmt.Errorf("unknown output format: %s", output))
-			}
-		},
-	}
-	// we have yaml as default to not break backwards-compatibility
-	command.Flags().StringVarP(&output, "output", "o", "yaml", "Output format. One of: json|yaml|wide|server")
-	return command
-}
-
-// NewClusterRemoveCommand returns a new instance of an `argocd cluster rm` command
-# `func NewClusterRemoveCommand(clientOpts *argocdclient.ClientOptions, pathOpts *clientcmd.PathOptions) *cobra.Command {`
-	var noPrompt bool
-	command := &cobra.Command{
-		Use:   "rm SERVER/NAME",
-		Short: "Remove cluster credentials",
-		Example: `argocd cluster rm https://12.34.567.89
-argocd cluster rm cluster-name`,
-		Run: func(c *cobra.Command, args []string) {
-			ctx := c.Context()
-
-			if len(args) == 0 {
-				c.HelpFunc()(c, args)
-				os.Exit(1)
-			}
-			conn, clusterIf := headless.NewClientOrDie(clientOpts, c).NewClusterClientOrDie()
-			defer utilio.Close(conn)
-			numOfClusters := len(args)
-			var isConfirmAll bool
-
-			for _, clusterSelector := range args {
-				clusterQuery := getQueryBySelector(clusterSelector)
-				var lowercaseAnswer string
-				if !noPrompt {
-					if numOfClusters == 1 {
-						lowercaseAnswer = cli.AskToProceedS("Are you sure you want to remove '" + clusterSelector + "'? Any Apps deploying to this cluster will go to health status Unknown.[y/n] ")
-					} else {
-						if !isConfirmAll {
-							lowercaseAnswer = cli.AskToProceedS("Are you sure you want to remove '" + clusterSelector + "'? Any Apps deploying to this cluster will go to health status Unknown.[y/n/A] where 'A' is to remove all specified clusters without prompting. Any Apps deploying to these clusters will go to health status Unknown. ")
-							if lowercaseAnswer == "a" {
-								lowercaseAnswer = "y"
-								isConfirmAll = true
-							}
-						} else {
-							lowercaseAnswer = "y"
-						}
-					}
-				} else {
-					lowercaseAnswer = "y"
-				}
-
-				if lowercaseAnswer == "y" {
-					// get the cluster name to use as context to delete RBAC on cluster
-					clst, err := clusterIf.Get(ctx, clusterQuery)
-					errors.CheckError(err)
-
-					// remove cluster
-					_, err = clusterIf.Delete(ctx, clusterQuery)
-					errors.CheckError(err)
-					fmt.Printf("Cluster '%s' removed\n", clusterSelector)
-
-					// remove RBAC from cluster
-					conf, err := getRestConfig(pathOpts, clst.Name)
-					errors.CheckError(err)
-
-					clientset, err := kubernetes.NewForConfig(conf)
-					errors.CheckError(err)
-
-					err = clusterauth.UninstallClusterManagerRBAC(clientset)
-					errors.CheckError(err)
-				} else {
-					fmt.Println("The command to remove '" + clusterSelector + "' was cancelled.")
-				}
-			}
-		},
-	}
-	command.Flags().BoolVarP(&noPrompt, "yes", "y", false, "Turn off prompting to confirm remove of cluster resources")
-	return command
-}
-
-// NewClusterListCommand returns a new instance of an `argocd cluster rm` command
-# `func NewClusterListCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
-	var output string
-	command := &cobra.Command{
-		Use:   "list",
-		Short: "List configured clusters",
-		Run: func(c *cobra.Command, _ []string) {
-			ctx := c.Context()
-
-			conn, clusterIf := headless.NewClientOrDie(clientOpts, c).NewClusterClientOrDie()
-			defer utilio.Close(conn)
-			clusters, err := clusterIf.List(ctx, &clusterpkg.ClusterQuery{})
-			errors.CheckError(err)
-			switch output {
-			case "yaml", "json":
-				err := PrintResourceList(clusters.Items, output, false)
-				errors.CheckError(err)
-			case "server":
-				printClusterServers(clusters.Items)
-			case "wide", "":
-				printClusterTable(clusters.Items)
-			default:
-				errors.CheckError(fmt.Errorf("unknown output format: %s", output))
-			}
-		},
-		Example: ``,
-	}
-	command.Flags().StringVarP(&output, "output", "o", "wide", "Output format. One of: json|yaml|wide|server")
-	return command
-}
 * _Examples:_
 
 	```
@@ -466,30 +123,11 @@ argocd cluster rm cluster-name`,
 	argocd cluster list -o server <ARGOCD_SERVER_ADDRESS>
 	```
 
-// NewClusterRotateAuthCommand returns a new instance of an `argocd cluster rotate-auth` command
-# `func NewClusterRotateAuthCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
-	command := &cobra.Command{
-		Use:   "rotate-auth SERVER/NAME",
-		Short: common.CommandCLI + " cluster rotate-auth SERVER/NAME",
-		Example: `argocd cluster rotate-auth https://12.34.567.89
-argocd cluster rotate-auth cluster-name`,
-		Run: func(c *cobra.Command, args []string) {
-			ctx := c.Context()
+## `func NewClusterRotateAuthCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
+* `argocd cluster rotate-auth SERVER/NAME`
 
-			if len(args) != 1 {
-				c.HelpFunc()(c, args)
-				os.Exit(1)
-			}
-			conn, clusterIf := headless.NewClientOrDie(clientOpts, c).NewClusterClientOrDie()
-			defer utilio.Close(conn)
-
-			cluster := args[0]
-			clusterQuery := getQueryBySelector(cluster)
-			_, err := clusterIf.RotateAuth(ctx, clusterQuery)
-			errors.CheckError(err)
-
-			fmt.Printf("Cluster '%s' rotated auth\n", cluster)
-		},
-	}
-	return command
-}
+* _Examples:_
+    ```
+    argocd cluster rotate-auth https://12.34.567.89
+    argocd cluster rotate-auth cluster-name
+    ```
