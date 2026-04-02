@@ -490,7 +490,7 @@ argocd app unset my-app -p COMPONENT=PARAM`
   * `FLAG`
     * ALLOWED ones
       * `--cascade`
-        * == perform a cascaded deletion of all application resources
+        * == perform a cascaded deletion of ALL application resources
         * by default,
           * `true`
       * `--propagation-policy` / `-p`
