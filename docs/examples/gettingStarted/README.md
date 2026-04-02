@@ -164,7 +164,9 @@ kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubuse
         * Problems:
           * Problem1: {"level":"fatal","msg":"secrets \"argocd-initial-admin-secret\" not found"
             * Solution: `argocd login --core`
-            * Reason:🧠ArgoCD config file ("$HOME/.config/argocd") was NOT configured properly 🧠
+            * Reason:🧠
+              * ArgoCD config file ("$HOME/.config/argocd") was NOT configured properly
+              * == `argocd context` MUST be set🧠
       * `kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d`
     * recommendations
       * change the password -- via -- `argocd account update-password`
@@ -193,7 +195,9 @@ kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubuse
   * if a NEW admin password MUST be re-generated -> it will be re-created -- by Argo CD, -- on demand
 
 * `argocd login <ARGOCD_SERVER>`
-  * enter `admin` & PREVIOUS password
+  * enter
+    * user:admin
+    * password: PREVIOUS password
   * if [Argo CD API server is DIRECTLY accessible](/docs/user-guide/commands/argocd_login.md)
   * if [Argo CD API server is ❌NOT❌ DIRECTLY accessible](#ways-to-expose)
     * requirements

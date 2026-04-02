@@ -19,6 +19,10 @@
   * `kubectl config current-context`
     * check Kubectl points to a context
 * [install Argo CD](/docs/operator-manual/installation.md)
+  * [expose it ALSO](../../../examples/gettingStarted/README.md#ways-to-expose)
+  * [login](../../../examples/gettingStarted/README.md#4-login----via----cli)
+* [install Argo CD CLI](../../../cli_installation.md)
+* 
 
 # Adding a cluster
 
