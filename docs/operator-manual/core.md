@@ -3,16 +3,18 @@
 ## Introduction
 
 * Argo CD Core
-  * == runs Argo CD / headless mode
+  * [manifest](/manifests/core-install.yaml)
+  * == runs Argo CD / headless mode (== WITHOUT UI)
   * features / 
     * AVAILABLE
       * GitOps functionality
     * ❌NOT AVAILABLE❌
       - Argo CD RBAC model
+        - _Example:_ ANY command / require RBAC, does NOT work
       - Argo CD API
       - Argo CD Notification Controller
       - OIDC based authentication
-    * [partially available](#using)
+    * [partially available](#how-to-use)
       - Argo CD Web UI
       - Argo CD CLI
       - Multi-tenancy 
@@ -22,6 +24,7 @@
     - ONLY rely on 
       - Kubernetes RBAC
       - Kubernetes API
+        - Reason:🧠Argo CD API server does NOT exist🧠
     - NOT provide to developers
       - Argo CD UI
       - Argo CD CLI 
@@ -46,19 +49,26 @@
   * uses
     * as caching mechanism -- by -- Argo CD controller
 
-## Installing
+## how to install?
 
 * steps
 
   ```
+  # 1. specifying version
   export ARGOCD_VERSION=<desired argo cd release version (e.g. v2.7.0)>
   kubectl create namespace argocd
-  kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/$ARGOCD_VERSION/manifests/core-install.yaml
+  # create MANUALLY the project .yaml
+  kubectl apply -f defaultProjectManually.yaml
+  kubectl apply -n argocd --server-side --force-conflicts -f .com/argoproj/argo-cd/$ARGOCD_VERSION/manifests/core-install.yaml
+  
+  # 2. | source code
+  kubectl create namespace argocd
+  # create MANUALLY the project .yaml
+  kubectl apply -f defaultProjectManually.yaml
+  kubectl apply -n argocd --server-side --force-conflicts -f /manifests/core-install.yaml
   ```
 
-* [manifest](/manifests/core-install.yaml)
-
-## Using
+## how to use?
 
 * AVAILABLE Kubernetes resources
   * Argo CD Application

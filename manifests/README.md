@@ -76,11 +76,15 @@
 * recommendations
   * use | production
 
+#### -- via -- 1! step
+
 * [ha/install.yaml](ha/install.yaml)
   * == [install.yaml](install.yaml) + MULTIPLE replicas / supported components
     * MULTIPLE replicas 
       * `spec.replicas` | `kind: StatefulSet`
       * `spec.replicas` | `kind: Deployment`
+
+#### -- via -- 2 steps
 
 * [ha/namespace-install.yaml](ha/namespace-install.yaml) 
   * == [namespace-install.yaml](namespace-install.yaml) + MULTIPLE replicas / supported components

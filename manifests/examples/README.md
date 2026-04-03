@@ -80,7 +80,17 @@
 TODO:
 
 ## High Availability
+* TODO: create cluster / MULTIPLE nodes
+### -- via -- 1! step
+* steps
+  * `kubectl apply --server-side --force-conflicts -f ha/install.yaml`
+    * `kubectl get all`
+      * check 
+        * ALL is installed | `default` namespace
+        * 
+TODO:
+### -- via -- 2 steps
 TODO:
 
 # Core
-* TODO: 
+* [here](/docs/operator-manual/core.md)
