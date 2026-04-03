@@ -1,5 +1,8 @@
 # `argocd login`
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/login.go)'s `func NewLoginCommand(`👀
+
 ## `argocd login SERVER [flags]`
 
 * log in | Argo CD

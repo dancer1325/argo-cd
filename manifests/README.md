@@ -5,9 +5,11 @@
 * MOST common way
 * use cases
   * \>1 application developer teams /
-    * Reason: contains🧠
+    * Reason: 🧠enables you configure (== set the pillars, != PRE configured) 
       * RBAC model &
-      * OIDC authentication🧠
+        * if you want to configure -> [here](/docs/operator-manual/rbac.md)
+      * OIDC authentication
+        * if you want to configure -> [here](/docs/operator-manual/user-management/index.md)🧠
     * share SAME Argo CD instance
     * maintained -- by a -- platform team
     * can access Argo CD's API server -- via --
@@ -45,13 +47,16 @@
 
 * [namespace-install.yaml](namespace-install.yaml) 
   * ❌NOT include ArgoCD CRDs❌
-  * requirements
+  * ⚠️requirements ⚠️
     * namespace level privileges
       * == ❌NOT need cluster roles❌
       * Reason: 🧠manifest contains `Role`🧠
+  * allows
+    * specifying the cluster | install Argo CD
   * uses
     * deploy applications |
       * SAME cluster / Argo CD runs
+        * ❌NOT deployed DIRECTLY❌
         * requirements
           * specify [inputted credentials](/docs/operator-manual/cluster-management.md) 
       * external clusters
@@ -63,8 +68,8 @@
       * EACH instance deploy applications -- to -- external clusters
 
 * steps
-  * `kubectl apply -f manifests/crds`
-  * `kubectl apply -n someNameSpace -f namespace-install.yaml`
+  * `kubectl apply --server-side --force-conflicts -k crds/`
+  * `kubectl apply -f namespace-install.yaml` OR `kubectl create namespace randomname && kubectl apply -n randomname -f namespace-install.yaml`
 
 ### High Availability
 
@@ -83,7 +88,7 @@
       * `spec.replicas` | `kind: StatefulSet`
       * `spec.replicas` | `kind: Deployment`
 
-## Core installation
+## Core
 
 * [manifest](core-install.yaml)
 * [guide](/docs/operator-manual/core.md)

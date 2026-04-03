@@ -36,5 +36,51 @@
     * [here](../)
       * `kubectl create namespace argocd`
       * `kubectl apply --server-side --force-conflicts -f install.yaml -n argocd` 
-## use cases: >1 application developer teams
 
+## use cases: >1 application developer teams
+### enables you configure (== set the pillars, != PRE configured)
+#### RBAC model
+* `kubectl get configmap argocd-rbac-cm -n argocd -o yaml`
+  * exist
+    * ALTHOUGH data is `{}`
+#### OIDC authentication
+* `kubectl get configmap argocd-cm -n argocd -o yaml`
+  * exist
+    * ALTHOUGH NO preconfiguration about OIDC -- `kubectl get configmap argocd-cm -n argocd -o jsonpath='{.data.oidc\.config}'` -- 
+### can access Argo CD's API server -- via --
+#### Web UI OR
+* https://localhost:8080/applications
+#### `argocd` CLI
+* `argocd app list`
+
+## Non-High Availability
+### -- via -- 1! step
+#### deploy applications |
+##### SAME cluster / Argo CD runs
+* follow [here](https://github.com/dancer1325/argocd-example-apps?tab=readme-ov-file#how-to-run-locally)
+##### external clusters
+* [here](/docs/operator-manual/cluster-management.md)
+### -- via -- 2 steps
+#### deploy applications |
+##### SAME cluster / Argo CD runs
+* follow [here](https://github.com/dancer1325/argocd-example-apps?tab=readme-ov-file#how-to-run-locally)
+  * `helm install apps . --namespace randomname`
+###### ❌NOT deployed DIRECTLY❌
+* ways to check
+  * `argocd app list`
+    * check ALL Argo CD Applications' status == UNKNOWN
+  * https://localhost:8080/applications 
+    * 's left pannel's sync status == UNKNOWN
+    * \> click | ANY 
+      * 's sync status == UNKNOWN
+      * app conditions == ERROR
+###### requirements: specify inputted credentials
+* TODO:
+##### external clusters
+TODO:
+
+## High Availability
+TODO:
+
+# Core
+* TODO: 
