@@ -10,9 +10,7 @@
       * 80 - HTTP 
         * redirects -- to -- HTTPS
     * ONLY | cluster
-
-* "argocd-server" service
-  * 💡if you want to expose outside the cluster -> use an ingress💡
+      * ⚠️if you want to expose outside the cluster -> use an ingress⚠️
 
 ## [Ambassador](https://www.getambassador.io/)
 
