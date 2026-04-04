@@ -1,5 +1,10 @@
 # Argo CD Installation Manifests
 
+* goal
+  * types of installation
+    * [multi-tenant](#multi-tenant)
+    * [core](#core)
+
 ## Multi-Tenant
 
 * MOST common way
