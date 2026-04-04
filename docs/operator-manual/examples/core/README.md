@@ -71,8 +71,28 @@ TODO:
 * `kubectl get pods -n argocd | grep argocd-server` fails
 
 # Architecture
-## install fewer components
-* TODO: 
+## install fewer components / non-HA
+* `kubectl get all -n argocd`
+  * check there are fewer components & 1 replica / EACH component
+## Redis
+### STILL included
+* `kubectl get all -n argocd | grep "redis"`
+  * got it
+### it can be uninstalled
+* | [here](/manifests)
+  * `kubectl create namespace withoutredis`
+  * `kubectl create secret generic argocd-redis -n withoutredis --from-literal=auth=""`
+    * create empty "argocd-redis" secret
+      * Reason:🧠Argo CD Application controller & Reposerver use it | bootstrap it🧠
+  * `kubectl apply -n withoutredis --server-side --force-conflicts -k core-install-without-redis/`
+### used -- as -- caching mechanism -- by -- Argo CD controller
+* `REDIS_PASS=$(kubectl get secret argocd-redis -n argocd -o jsonpath='{.data.auth}' | base64 -d)`
+  * get & store redis password -- as -- session variable
+* `kubectl exec -it pod/<REDIS_POD_NAME>-n argocd -- redis-cli -a "$REDIS_PASS" monitor`
+  * monitor Redis workflow
+  * check set queries come from an IP / == argocd controller pod
+    * `kubectl get pod -n argocd -o wide | grep "application-controller"`
+      * check Argo CD controller's IP
 
 # how to install?
 * | [this path](../../../../),
@@ -85,4 +105,8 @@ TODO:
           * `kubectl apply -f defaultProjectManually.yaml`🧠
 
 # how to use? 
-TODO:
+* follow the steps
+
+# how does it work?
+## launches a local API server process /
+* [here](/cmd/argocd/commands/headless/headless.go)'s `MaybeStartLocalServer`

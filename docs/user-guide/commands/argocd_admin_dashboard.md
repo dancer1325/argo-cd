@@ -1,5 +1,8 @@
 # `argocd admin dashboard` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/admin/dashboard.go)'s `func NewDashboardCommand(`👀
+
 ## argocd admin dashboard
 
 Starts Argo CD Web UI locally
