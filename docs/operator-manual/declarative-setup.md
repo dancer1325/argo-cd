@@ -1175,62 +1175,12 @@ Both `resource.includeEventLabelKeys` and `resource.excludeEventLabelKeys` suppo
 * [SSO](./user-management/index.md)
 * [RBAC](./rbac.md)
 
-## Manage Argo CD -- via -- Argo CD
+## "self-managed" Argo CD 
 
-* 💡Argo CD -- is able to -- manage itself 💡
+* requirements
+  * ⚠️FIRSTLY, install Argo CD⚠️
+
+* == 💡Argo CD is managed -- by -- Argo CD 💡
   * Reason: 🧠ALL settings -- are represented by -- Kubernetes manifests 🧠
-  * recommended way
-    * create [Kustomize-based applications](https://github.com/kubernetes-sigs/kustomize) / use [Argo CD-base manifests](https://github.com/argoproj/argo-cd/tree/stable/manifests)
-      * _Example:_ TODO: Create example to test
-          ```yaml, title="kustomization.yaml"
-          # additional resources like ingress rules, cluster and repository secrets.
-          resources:
-          - github.com/argoproj/argo-cd//manifests/cluster-install?ref=stable
-          - clusters-secrets.yaml
-          - repos-secrets.yaml
-          
-          # changes to config maps
-          patches:
-          - path: overlays/argo-cd-cm.yaml
-          ```
-    * apply required changes | them
-  * _Live Examples:_ [here](https://cd.apps.argoproj.io)
-    * requirements
-      * sign-in -- via -- your GitHub account
+  * _Examples:_ [ArgoCD demo](https://cd.apps.argoproj.io)
     * [configuration](https://github.com/argoproj/argoproj-deployments/tree/master/argocd)
-
-* TODO: 
-> [!NOTE]
-> You will need to sign-in using your GitHub account to get access to [https://cd.apps.argoproj.io](https://cd.apps.argoproj.io)
-
-### Server-Side Apply Requirement
-
-When managing Argo CD with Argo CD, you **must** enable the `ServerSideApply=true` sync option. See the [getting started guide](../getting_started.md#1-install-argo-cd) for details on why server-side apply is required.
-
-Example Application for self-managed Argo CD:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: argocd
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: https://github.com/argoproj/argo-cd
-    path: manifests/cluster-install
-    targetRevision: stable
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: argocd
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - ServerSideApply=true
-```
-
-> [!NOTE]
-> To customize Argo CD deployments, use Kustomize patches in your configuration repository rather than manually modifying the live resources. See the [sync options documentation](../user-guide/sync-options.md#server-side-apply) for details on field ownership behavior.
