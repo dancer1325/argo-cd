@@ -101,3 +101,9 @@
 
 * [manifest](core-install.yaml)
 * [guide](/docs/operator-manual/core.md)
+
+
+## Notes
+* [install.yaml](install.yaml)
+  * how is it generated?
+    * `kustomize build manifests/cluster-install > install.yaml`

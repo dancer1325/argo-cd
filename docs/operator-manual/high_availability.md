@@ -1,38 +1,42 @@
 # High Availability
 
-Argo CD is largely stateless
-* All data is persisted as Kubernetes objects, which in turn is stored in Kubernetes' etcd.
-Redis is only used as a disposable cache and can be safely rebuilt without service disruption.
+* Argo CD
+  * is largely stateless
+    * Reason:🧠
+      * pods do NOT store anything | anywhere
+      * data is stored | Kubernetes' etcd🧠
+    * | kill a pod, ALL keeps on working fine 
+    * Redis
+      * is ONLY used -- as a -- disposable cache
 
-A set of [HA manifests](https://github.com/argoproj/argo-cd/tree/stable/manifests/ha) are provided for users who wish to
-run Argo CD in a highly available manner
-* This runs more containers, and runs Redis in HA mode.
-
-> [!NOTE]
-> The HA installation will require at least three different nodes due to pod anti-affinity rule in the
-> specs
-* Additionally, IPv6 only clusters are not supported.
+* Argo CD HA
+  * [overview](/manifests/README.md#high-availability)
+  * runs Redis -- in -- HA mode
+  * ⚠️requirements⚠️
+    * 3 nodes
+      * Reason:🧠pod anti-affinity rule | specs🧠
+  * ❌NOT support❌
+    * IPv6 only clusters
 
 ## Scaling Up
 
 ### argocd-repo-server
 
-**settings:**
+#### settings
 
-The `argocd-repo-server` is responsible for cloning Git repository, keeping it up to date and generating manifests using
+The `argocd-repo-server` is responsible for cloning Git repository, 
+keeping it up to date and generating manifests using
 the appropriate tool.
 
 * `argocd-repo-server` fork/exec config management tools to generate manifests
-  * The fork can fail due to lack of memory
-    or limit on the number of OS threads.
-    The `--parallelismlimit` flag controls how many manifests generations are running concurrently and helps avoid OOM
-    kills.
+  * The fork can fail due to lack of memory or limit on the number of OS threads
+  * The `--parallelismlimit` flag controls how many manifests generations are running concurrently and helps avoid OOM kills
 
 * The `argocd-repo-server` ensures that repository is in the clean state during the manifest generation using config
   management tools such as Kustomize, Helm
   or custom plugin
   * As a result Git repositories with multiple applications might affect repository server performance.
-    Read [Monorepo Scaling Considerations](#monorepo-scaling-considerations) for more information.
+  * [Monorepo Scaling Considerations](#monorepo-scaling-considerations)
 
 * `argocd-repo-server` clones the repository into `/tmp` (or the path specified in the `TMPDIR` env variable)
   * The pod
@@ -77,18 +81,28 @@ the appropriate tool.
   large files. To mitigate this, consider disabling `discovery` or
   using [Plugin tar stream exclusions](./config-management-plugins.md#plugin-tar-stream-exclusions).
 
-**metrics:**
+#### metrics
 
-* `argocd_git_request_total` - Number of git requests. This metric provides two tags:
-    - `repo` - Git repo URL
-    - `request_type` - `ls-remote` or `fetch`.
+* `argocd_git_request_total` 
+  * == number of git requests
+  * provided tags
+    * `repo`
+      * == Git repo URL
+    * `request_type`
+      * ALLOWED values
+        * `ls-remote`
+        * `fetch`
 
-* `ARGOCD_ENABLE_GRPC_TIME_HISTOGRAM` - Is an environment variable that enables collecting RPC performance metrics.
-  Enable it if you need to troubleshoot performance issues. Note: This metric is expensive to both query and store!
+* `ARGOCD_ENABLE_GRPC_TIME_HISTOGRAM`
+  * == environment variable /
+    * enables
+      * collecting RPC performance metrics
+    * 
+      Enable it if you need to troubleshoot performance issues. Note: This metric is expensive to both query and store!
 
 ### argocd-application-controller
 
-**settings:**
+#### settings
 
 The `argocd-application-controller` uses `argocd-repo-server` to get generated manifests and Kubernetes API server to
 get the actual cluster state.
@@ -227,7 +241,7 @@ stringData:
   The default value is 0, which means that the application tree is stored in a single Redis key. The reasonable value is
     100.
 
-**metrics**
+#### metrics
 
 * `argocd_app_reconcile` - reports application reconciliation duration in seconds. Can be used to build reconciliation
   duration heat map to get a high-level reconciliation performance picture.
@@ -258,7 +272,7 @@ spec:
               value: "3"
 ```
 
-**settings:**
+#### settings
 
 * The `ARGOCD_API_SERVER_REPLICAS` environment variable is used to divide [the limit of concurrent login requests (
   `ARGOCD_MAX_CONCURRENT_LOGIN_REQUESTS_COUNT`)](./user-management/index.md#failed-logins-rate-limiting) between each

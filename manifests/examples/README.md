@@ -80,15 +80,13 @@
 TODO:
 
 ## High Availability
-* TODO: create cluster / MULTIPLE nodes
+* `kind create cluster --config multiNodeClusterConfig.yaml`
 ### -- via -- 1! step
-* steps
-  * `kubectl apply --server-side --force-conflicts -f ha/install.yaml`
-    * `kubectl get all`
-      * check 
-        * ALL is installed | `default` namespace
-        * 
-TODO:
+* `kubectl apply --server-side --force-conflicts -f ha/install.yaml`
+#### MULTIPLE replicas
+* `kubectl get all`
+  * check `Statefulset` & `Replicaset`
+
 ### -- via -- 2 steps
 TODO:
 
