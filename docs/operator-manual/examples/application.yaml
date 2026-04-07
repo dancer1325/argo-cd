@@ -2,27 +2,29 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: guestbook
-  # You'll usually want to add your resources to the argocd namespace.
+
+  # namespace | add your Argo CD Application
+  #   NORMALLY, argocd
   namespace: argocd
-  # Add this finalizer ONLY if you want these to cascade delete.
+
   finalizers:
-    # The default behaviour is foreground cascading deletion
     - resources-finalizer.argocd.argoproj.io
-    # Alternatively, you can use background cascading deletion
-    # - resources-finalizer.argocd.argoproj.io/background
-  # Add labels to your application object.
+    # cascade deletion
+    #   by default, foreground cascading deletion
+    #   if you want background cascading deletion -> use      resources-finalizer.argocd.argoproj.io/background
+
   labels:
     name: guestbook
 spec:
-  # The project the application belongs to.
+  # project | application belongs to
   project: default
 
-  # Source of the application manifests
+  # Source -- of the -- application manifests
   source:
     # ALLOWED values
     #   1. Helm chart repo
     #   2. git repo
-    repoURL: https://github.com/argoproj/argocd-example-apps.git
+    repoURL: https://github.com/dancer1325/argocd-example-apps
 
     # == source's revision | sync the application
     # ALLOWED values

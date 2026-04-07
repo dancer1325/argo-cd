@@ -5,30 +5,40 @@
 * audience
   * operators
 
-* MORE
-  * if you want to handle declaratively -> [Declarative Setup](./declarative-setup.md#clusters)
+* ways
+  * [declaratively](./declarative-setup.md#clusters)
   * [`argocd cluster` Command Reference](../user-guide/commands/argocd_cluster.md)
 
-## Adding a cluster
+## how to add a cluster?
 
-* `argocd cluster add contextName`
-  * allows
-    * 💡Argo CD can deploy Applications | MULTIPLE clusters (EVEN != cluster | Argo CD is installed)💡
-      * Reason:🧠
-        * ArgoCD does NOT have access -- to your -- local kubeconfig
-        * OTHERWISE, Argo CD can NOT install Applications | OTHER clusters🧠
-  * ⚠️requirements⚠️
-    * privileged access -- to the -- cluster
-    * `contextName` MUST ALREADY exist
-      * check the AVAILABLE one -- via -- `kubectl config get-contexts`
-  * what does Argo CD under the hood?
-    1. creates SA "argocd-manager" | target cluster / FULL cluster RBAC
-    2. gets its bearer token
-    3. stores token + server URL + TLS -- as a -- Secret | "argocd" namespace
-       * label `argocd.argoproj.io/secret-type: cluster`
-    4. | sync an `Application` / `destination.server: https://...`, Application Controller connect -- , via that Secret, to -- that cluster 
+* allows
+  * 💡Argo CD can deploy Applications | MULTIPLE clusters (EVEN != cluster | Argo CD is installed)💡
+    * Reason:🧠
+      * ArgoCD does NOT have access -- to your -- local kubeconfig
+      * OTHERWISE, Argo CD can NOT install Applications | OTHER clusters🧠
 
-## Skipping cluster reconciliation
+* what does Argo CD under the hood?
+  1. | target cluster,
+     * creates 
+       * SA "argocd-manager"  / FULL cluster RBAC
+       * secret -- with -- bearer token
+  2. | source cluster's "argocd" namespace, stores -- as a -- Secret / label `argocd.argoproj.io/secret-type: cluster`
+     * token
+     * server URL
+     * TLS
+  4. | sync an `Application` / `destination.server: https://...`, Application Controller connect -- , via that Secret, to -- that cluster
+
+### declaratively
+* [here](./declarative-setup.md#clusters)
+
+### `argocd cluster add contextName` 
+
+* ⚠️requirements⚠️
+  * privileged access -- to the -- cluster
+  * `contextName` MUST ALREADY exist
+    * check the AVAILABLE one -- via -- `kubectl config get-contexts`
+
+## how to skip cluster reconciliation?
 
 TODO:
 You can stop the controller from reconciling a cluster without removing it by annotating its secret:
@@ -47,7 +57,7 @@ kubectl -n argocd annotate secret <cluster-secret-name> argocd.argoproj.io/skip-
 
 See [Declarative Setup - Skipping Cluster Reconciliation](./declarative-setup.md#skipping-cluster-reconciliation) for details.
 
-## Removing a cluster
+## how to remove a cluster?
 
 * `argocd cluster rm contextName`
 

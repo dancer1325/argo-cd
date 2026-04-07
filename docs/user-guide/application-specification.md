@@ -1,3 +1,3 @@
 # Application Specification
 
-* [here](/docs/operator-manual/examples/application.yaml)
+* 💡[here](/manifests/crds/application-crd.yaml)'s `spec.versions[*].schema.openAPIV3Schema.properties.spec`💡

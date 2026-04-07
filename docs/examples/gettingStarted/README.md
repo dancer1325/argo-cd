@@ -51,7 +51,6 @@ kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubuse
     * Attempt2: embed company certs
       * _Example:_ | minikube,
         * `minikube start --embed-certs`
-      * 
 
 * ⚠️if you install Argo CD | DIFFERENT namespace -> update `ClusterRoleBinding.subjects.namespace` | [install.yaml](/manifests/install.yaml) ⚠️
 
