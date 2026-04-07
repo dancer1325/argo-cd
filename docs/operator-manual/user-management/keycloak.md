@@ -1,23 +1,23 @@
 # Keycloak
-Keycloak and ArgoCD integration can be configured in two ways with Client authentication and with PKCE.
 
-If you need to authenticate with __argo-cd command line__, you must choose PKCE way.
+* ways to configure Keycloak -- & -- ArgoCD
+  * [-- via -- Client authentication](#---via----client-authentication)
+  * [-- via -- PKCE](#---via----pkce)
+    * use cases
+      * you authenticate -- via -- `argocd` CL
 
-* [Keycloak and ArgoCD with Client authentication](#keycloak-and-argocd-with-client-authentication)
-* [Keycloak and ArgoCD with PKCE](#keycloak-and-argocd-with-pkce)
+## -- via -- Client authentication
 
-## Keycloak and ArgoCD with Client authentication
+* goal
+  * configure ArgoCD application / can authenticate -- with -- Keycloak
+    * steps
+      * create a client | Keycloak
+        * TODO: using groups set in Keycloak to determine privileges in Argo.
+      * configure ArgoCD / can use Keycloak -- for -- authentication
 
-These instructions will take you through the entire process of getting your ArgoCD application authenticating with Keycloak.
+### create a NEW client | Keycloak
 
-You will create a client within Keycloak and configure ArgoCD to use Keycloak for authentication, using groups set in Keycloak
-to determine privileges in Argo.
-
-### Creating a new client in Keycloak
-
-First we need to setup a new client.
-
-Start by logging into your keycloak server, select the realm you want to use (`master` by default)
+TODO: Start by logging into your keycloak server, select the realm you want to use (`master` by default)
 and then go to __Clients__ and click the __Create client__ button at the top.
 
 ![Keycloak add client](../../assets/keycloak-add-client.png "Keycloak add client")
@@ -80,7 +80,7 @@ Make sure that:
 - __requestedScopes__ contains the _groups_ claim if you didn't add it to the Default scopes
 - __refreshTokenThreshold__ is less than the client token lifetime.  If this setting is not less than the token lifetime, a new token will be obtained for every request.  Keycloak sets the client token lifetime to 5 minutes by default.
 
-## Keycloak and ArgoCD with PKCE
+## -- via -- PKCE
 
 These instructions will take you through the entire process of getting your ArgoCD application authenticating with Keycloak.
 
@@ -163,7 +163,8 @@ the groups scope.
 
 In the Tab "Mappers", click on "Configure a new mapper" and choose __Group Membership__.
 
-Make sure to set the __Name__ as well as the __Token Claim Name__ to _groups_. Also disable the "Full group path".
+Make sure to set the __Name__ as well as the __Token Claim Name__ to _groups_
+Also disable the "Full group path".
 
 ![Keycloak groups mapper](../../assets/keycloak-groups-mapper.png "Keycloak groups mapper")
 

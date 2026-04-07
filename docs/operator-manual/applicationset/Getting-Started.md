@@ -4,17 +4,14 @@
   * [Argo CD basic](../../core_concepts.md)
   * install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 
-## install ApplicationSet controller
+## ways to install ApplicationSet controller
 
-### OPTION1: -- as -- part of Argo CD (| Argo CD v2.3+)
+### | Argo CD v2.3+, ALREADY part of Argo CD
 
-* requirements
-  * | Argo CD v2.3+,
-    * ApplicationSet controller is bundled | Argo CD
 * steps
   * [here](../../getting_started.md)
 
-### OPTION2: Install ApplicationSet | EXISTING Argo CD install (pre-Argo CD v2.3)
+### | Argo CD v2.3-, install ApplicationSet
 
 * requirements
   * | Argo CD v2.3.0-
@@ -58,7 +55,8 @@
 
 * TODO:
 See the [Controlling Resource Modification](Controlling-Resource-Modification.md) page for information on additional parameters you may wish to 
-add to the ApplicationSet Resource in `install.yaml`, to provide extra security against any initial, unexpected post-upgrade behaviour. 
+add to the ApplicationSet Resource in `install.yaml`, to provide extra security against any initial, 
+unexpected post-upgrade behaviour. 
 
 For instance, to temporarily prevent the upgraded ApplicationSet controller from making any changes, you could:
 
