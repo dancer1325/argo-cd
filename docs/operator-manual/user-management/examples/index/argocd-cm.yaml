@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/name: argocd-cm
     app.kubernetes.io/part-of: argocd
 data:
+  # ⚠️if you ONLY apply this data -> override ALL default / NO specified here ⚠️
   # 1. create NEW user
   # add alice additional local user
   #   apiKey - allows generating API keys

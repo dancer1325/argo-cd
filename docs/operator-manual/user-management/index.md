@@ -13,6 +13,8 @@
 
 ## Local users/accounts
 
+* == 👀users/accounts created DIRECTLY | Argo CD👀
+
 * use cases
   * Auth tokens -- for -- Argo CD management automation
     * steps
@@ -20,25 +22,26 @@
       * generate an authentication token
     * uses
       * AUTOMATICALLY create applications, projects etc.
-  * Additional users / small team
+  * ADDITIONAL users OR small team
     * Reason:🧠use SSO integration could be considered an overkill🧠
 
 * restrictions
   * ❌NOT provide advanced features ❌
     * _Examples:_ groups, login history, etc
-  * local account's username's lenght <= 32
+  * local account's username's length <= 253
+    * Reason:🧠[Kubernetes restriction]()🧠
 
 * default policy
   * specified | `argocd-rbac-cm` ConfigMap's `policy.default` field
   * if you need ADDITIONAL rules -> configure [RBAC rules](../rbac.md)
 
-### Create new user
+### Create NEW user
 
 * steps 
   * | `argocd-cm` ConfigMap's `.data`,
-    * `accounts.userName.enabled: "trueORfalse"`
+    * `accounts.<USER_NAME>.enabled: "trueORfalse"`
       * by default, `"true"`
-    * `accounts.userName: CAPABILITIESSEPARATEDBYCOMMA`
+    * `accounts.<USER_NAME>: CAPABILITIESSEPARATEDBYCOMMA`
       * `CAPABILITIESSEPARATEDBYCOMMA`
         * apiKey
           * enable
@@ -46,6 +49,8 @@
         * login
           * enable
             * login | UI
+  * if you want to create it's password -> | user / has rights
+    * `argocd account update-password --account alice --new-password <PASSWORD>`
 
 ### Delete user
 
@@ -86,45 +91,61 @@
 
 ### Failed logins rate limiting
 
-TODO: 
-Argo CD rejects login attempts after too many failed in order to prevent password brute-forcing.
-The following environments variables are available to control throttling settings:
+* goal
+  * | login, restrict MAXIMUM NUMBER of failed attempts
+    * -- through -- environments variables
 
-* `ARGOCD_SESSION_FAILURE_MAX_FAIL_COUNT`: Maximum number of failed logins before Argo CD starts
-rejecting login attempts
-* Default: 5.
+* `ARGOCD_SESSION_FAILURE_MAX_FAIL_COUNT`
+  * == MAXIMUM number of failed logins
+    * AFTERWARD, Argo CD rejects login attempts
+  * by default, 
+    * 5
 
-* `ARGOCD_SESSION_FAILURE_WINDOW_SECONDS`: Number of seconds for the failure window.
-Default: 300 (5 minutes)
-* If this is set to 0, the failure window is
-disabled and the login attempts gets rejected after 10 consecutive logon failures,
-regardless of the time frame they happened.
+* `ARGOCD_SESSION_FAILURE_WINDOW_SECONDS`
+  * == number of seconds -- for the -- failure window
+    * == reset MAXIMUM NUMBER of attempts
+  * by default,
+    * 300 (== 5 minutes)
+  * if = 0 
+    * == failure window is disabled
+  * INDEPENDENT of this value, AFTER 10 consecutive logon failures -> login attempts gets rejected
 
-* `ARGOCD_SESSION_MAX_CACHE_SIZE`: Maximum number of entries allowed in the
-cache
-* Default: 1000
+* `ARGOCD_SESSION_MAX_CACHE_SIZE`
+  * == MAXIMUM number of entries / allowed | cache
+  * by default,
+    * 1000
 
-* `ARGOCD_MAX_CONCURRENT_LOGIN_REQUESTS_COUNT`: Limits max number of concurrent login requests.
-If set to 0 then limit is disabled
-* Default: 50.
+* `ARGOCD_MAX_CONCURRENT_LOGIN_REQUESTS_COUNT`
+  * == MAXIMUM number of concurrent login requests
+  * if == 0 -> limit is disabled
+  * by default,
+    * 50
 
 ## SSO
 
-### ways to configure
+* allows
+  * manage your users, groups, memberships
+  * authenticate once and access multiple applications
 
-* OIDC providers
-  * allows
-    * manage your
-      * users
-      * groups
-      * memberships
-  * supported
-    * [Okta](okta.md)
-    * [OneLogin](onelogin.md)
-    * [Auth0](auth0.md)
-    * [Microsoft](microsoft.md)
-    * [Keycloak](keycloak.md)
-    * [Google (G Suite)](google.md)
+* supported providers + Protocols
+
+| Provider                                      | Protocol(s)  | Connection Method |
+|-----------------------------------------------|--------------|-------------------|
+| [Okta](okta.md)                               | OIDC, SAML   | Direct OR via Dex |
+| [OneLogin](onelogin.md)                       | OIDC, SAML   | Direct OR via Dex |
+| [Auth0](auth0.md)                             | OIDC         | Direct OR via Dex |
+| [Microsoft (Azure AD)](microsoft.md)          | OIDC, SAML   | Direct OR via Dex |
+| [Keycloak](keycloak.md)                       | OIDC, SAML   | Direct OR via Dex |
+| [Google (G Suite)](google.md)                 | OIDC         | Direct OR via Dex |
+| [OpenUnison](openunison.md)                   | OIDC, SAML   | Direct OR via Dex |
+| [Zitadel](zitadel.md)                         | OIDC         | Direct OR via Dex |
+| [GitHub Action](github-actions.md)            | OAuth2       | Via Dex           |
+| [GitLab CI](gitlab-ci.md)                     | OIDC         | Direct OR via Dex |
+| [AWS Identity Center](aws-identity-center.md) | OIDC, SAML   | Direct OR via Dex |
+| ANY LDAP server                               | LDAP         | Via Dex           |
+| Generic SAML                                  | SAML         | Via Dex           |
+
+### ways to configure
 
 #### Dex 
 

@@ -24,7 +24,43 @@
 ## ONLY -- through -- [JSON Web Tokens (JWTs)](https://jwt.io)
 * if you do NOT pass JWT -> it fails
   * `curl -k https://localhost:8080/api/v1/applications`
-* TODO: 
+    * 's return ""error":"no session information"
+### ❌NOT -- through username/password❌
+* `echo -n "admin:<ARGO_CD_INITIAL_ADMIN_PASSWORD>" | base64`
+  * got it in base64
+* `curl -k https://localhost:8080/api/v1/applications -H "Authorization: Basic <AUTH_PASSWORD_BASE_64>"`
+  * ❌it does NOT work❌
+    * Reason: 🧠you need to get ALWAYS the JWT🧠
+### ways to be obtained/managed
+#### local `admin` user has a username/password /
+##### gets -- , via `/api/v1/session` endpoint, -- a JWT /
+* `curl -k -H "Content-Type: application/json" https://localhost:8080/api/v1/session -d '{"username":"admin","password":"<ARGO_CD_INITIAL_ADMIN_PASSWORD>"}'`
+  * 's return: token 
+###### signed
+* | https://www.jwt.io/
+    * paste the PREVIOUS got it token > check Decoded Header's `alg`
+###### issued -- by the -- Argo CD API server
+* | https://www.jwt.io/
+  * paste the PREVIOUS got it token > check Decoded Payload's `iss`
+###### lifetime = 24hours
+* | https://www.jwt.io/
+  * paste the PREVIOUS got it token > check Decoded Payload's `exp` (== expiration time) vs `iat` (== emision time)
+##### if the admin password is updated -> ALL existing admin JWT tokens are IMMEDIATELY revoked
+* `curl -k https://localhost:8080/api/v1/applications -H "Authorization: Bearer <PREVIOUS_GOT_BEARER_TOKEN>"`
+  * it works
+* `argocd login localhost:8080 --insecure`
+  * user: admin
+  * password: <ARGO_CD_ADMIN_INITIAL_PASSWORD>
+* `argocd account get-user-info`
+  * current password: <ARGO_CD_ADMIN_INITIAL_PASSWORD>
+  * NEW password: aaaaaaaa
+* `curl -k https://localhost:8080/api/v1/applications -H "Authorization: Bearer <PREVIOUS_GOT_BEARER_TOKEN>"`
+  * ❌NOT work anymore❌
+##### password is stored -- as a -- bcrypt hash | "argocd-secret" Secret
+* `kubectl get secret argocd-secret -n argocd -o jsonpath='{.data.admin\.password}' | base64 -d`
+  * 's return SOMETHING / `$2` sounds to bcrypt hash
+##### | Single Sign-On users, the user completes | OAuth2 login flow -- to the -- configured OIDC identity provider
+TODO:
 ### TODO:
 
 # TODO:

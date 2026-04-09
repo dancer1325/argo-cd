@@ -43,8 +43,64 @@
 
 # Local users/accounts
 
-## Create new user
-* TODO: use [argocd-cm.yaml](argocd-cm.yaml)
+## use cases
+### Auth tokens -- for -- Argo CD management automation
+* `kubectl patch configmap argocd-cm -n argocd --type merge -p '             
+  data:
+    accounts.alice: "apiKey, login"
+    accounts.alice.enabled: "true"
+  '`
+  * create an user
+* `argocd account get-user-info`
+  * check it's admin
+* `argocd account update-password --account alice`
+  * current admin password: got it from kubectl
+  * new password: bbbbbbbb
+  * create a password
+* `curl -k -H "Content-Type: application/json" https://localhost:8080/api/v1/session -d '{"username":"alice","password":"bbbbbbbb"}'`
+  * 's return: token
+
+## ADDITIONAL users / small team
+* TODO:
+
+## restrictions
+### ❌NOT provide advanced features ❌
+* TODO:
+### local account's username's lenght <= 253
+* `kubectl patch configmap argocd-cm -n argocd --type merge -p '
+data:                                                                                         
+  accounts.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: "apiKey, login"                                                                                            
+' `
+  * fail
+
+## default policy
+### specified | `argocd-rbac-cm` ConfigMap's `policy.default` field
+* `kubectl get cm argocd-rbac-cm -n argocd -o jsonpath='{.policy.default}'`
+  * if NOTHING is return == NO default policy
+### if you need ADDITIONAL rules -> configure [RBAC rules](../rbac.md)
+* there
+
+## Create NEW user
+* `kubectl patch configmap argocd-cm -n argocd --type merge -p '             
+  data:
+    accounts.alice: "apiKey, login"
+    accounts.alice.enabled: "true"
+  '`
+  * add alice account
+  * `argocd account list`
+    * check the account exist
+### if you want to create it's password -> | user / has rights: `argocd account update-password --account alice --new-password <PASSWORD>`
+* `argocd account get-user-info`
+  * check it's admin
+* `argocd account update-password --account alice --new-password bbbbbbbb`
+### capabilities
+#### apiKey enable: generating authentication tokens -- for -- API access
+* `curl -k -H "Content-Type: application/json" https://localhost:8080/api/v1/session -d '{"username":"alice","password":"bbbbbbbb"}'`
+  * 's return: token
+#### login enable: login | UI
+* https://localhost:8080/
+  * user: alice
+  * password: bbbbbbbb
 
 ## Delete user
 * `kubectl patch -n argocd cm argocd-cm --type='json' -p='[{"op": "remove", "path": "/data/accounts.alice"}]'`
@@ -53,8 +109,45 @@
   * remove the corresponding `argocd-secret` Secret's password entry
 
 ## Disable admin user
-* TODO: use [argocd-cm.yaml](argocd-cm.yaml)
+* `kubectl patch configmap argocd-cm -n argocd --type merge -p '             
+  data:
+    admin.enabled: "false"
+  '`
+  * `kubectl get configmap argocd-cm -n argocd -o jsonpath='{.data.admin\.enabled}'`
+    * 's return: false
 
+## Manage users
+* trigger commented `argocd account` commands
+### `argocd account list`
+### `argocd account get --account alice`
+### `argocd login localhost:8080 --insecure`
+### `argocd account generate-token`
+* `argocd account get --account alice`
+  * check TOKENS-related
+
+## Failed logins rate limiting
+### `ARGOCD_SESSION_FAILURE_MAX_FAIL_COUNT`
+#### by default, 5
+* `kubectl get deployment argocd-server -n argocd -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="ARGOCD_SESSION_FAILURE_MAX_FAIL_COUNT")].value}'`
+  * 's return NOTHING == default value
+* [source code](/util/session/sessionmanager.go)'s `defaultMaxLoginFailures`
+### `ARGOCD_SESSION_FAILURE_WINDOW_SECONDS`
+#### by default, 5
+* `kubectl get deployment argocd-server -n argocd -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="ARGOCD_SESSION_FAILURE_WINDOW_SECONDS")].value}'`
+  * 's return NOTHING == default value
+* [source code](/util/session/sessionmanager.go)'s `defaultFailureWindow`
+### `ARGOCD_SESSION_MAX_CACHE_SIZE`
+#### by default, 1000
+* `kubectl get deployment argocd-server -n argocd -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="ARGOCD_SESSION_MAX_CACHE_SIZE")].value}'`
+  * 's return NOTHING == default value
+* [source code](/util/session/sessionmanager.go)'s `defaultMaxCacheSize`
+### `ARGOCD_MAX_CONCURRENT_LOGIN_REQUESTS_COUNT`
+#### by default, 1000
+* `kubectl get deployment argocd-server -n argocd -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="ARGOCD_MAX_CONCURRENT_LOGIN_REQUESTS_COUNT")].value}'`
+  * 's return NOTHING == default value
+* [source code](/server/server.go)'s `maxConcurrentLoginRequestsCount`
+
+* TODO:
 
 # SSO
 

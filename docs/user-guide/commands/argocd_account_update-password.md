@@ -1,5 +1,8 @@
 # `argocd account update-password` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/account.md)'s `func NewAccountUpdatePasswordCommand(`👀
+
 ## argocd account update-password
 
 Update an account's password

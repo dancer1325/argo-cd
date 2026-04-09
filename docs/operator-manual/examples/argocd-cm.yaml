@@ -23,14 +23,14 @@ data:
   # Provide custom URL to override. You must include the trailing forward slash:
   statusbadge.url: "https://cd-status.apps.argoproj.io/"
 
-  # enables anonymous user access
-  # anonymous users
+  # ANONYMOUS users
   #   get the default role permissions / specified | "argocd-rbac-cm.yaml"
   # recommendations
   #   if it's enabled -> create a NEW default role / add | `policy.default`
   #     `policy.default: role:unauthenticated`
+  #   enable them
   users.anonymous.enabled: "true"
-  # Specifies token expiration duration
+  # token expiration duration
   users.session.duration: "24h"
 
   # Specifies regex expression for password
@@ -309,13 +309,18 @@ data:
   # Optional installation id. Allows to have multiple installations of Argo CD in the same cluster.
   installationID: "my-unique-id"
 
-  # disables admin user. Admin is enabled by default
+  # disables admin user
+  #   by default, enabled
   admin.enabled: "false"
-  # add an additional local user with apiKey and login capabilities
-  #   apiKey - allows generating API keys
-  #   login - allows to login using UI
+
+  # add an ADDITIONAL LOCAL user / capabilities
+  #   apiKey
+  #     == allows generating API keys
+  #   login
+  #     == allows logging -- via -- UI
   accounts.alice: apiKey, login
-  # disables user. User is enabled by default
+  # disables user
+  #   by default, enabled
   accounts.alice.enabled: "false"
 
   # The location of optional user-defined CSS that is loaded at runtime.

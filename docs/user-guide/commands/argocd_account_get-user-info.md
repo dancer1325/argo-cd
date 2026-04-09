@@ -1,5 +1,8 @@
 # `argocd account get-user-info` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/account.md)'s `func NewAccountGetUserInfoCommand(`👀
+
 ## argocd account get-user-info
 
 Get user info
