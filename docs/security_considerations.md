@@ -1,23 +1,65 @@
 # Security Considerations
 
-> [!WARNING]
-> **Deprecation notice**
->
-> This page is now deprecated and serves as an archive only. For up-to-date
-> information, please have a look at our
-> [security policy](https://github.com/argoproj/argo-cd/security/policy) and
-> [published security advisories](https://github.com/argoproj/argo-cd/security/advisories).
+https://github.com/argoproj/argo-cd/security
 
-As a deployment tool, Argo CD needs to have production access which makes security a very important topic.
-The Argoproj team takes security very seriously and continuously working on improving it. Learn more about security
-related features in [Security](./operator-manual/security.md) section.
+* goal
+  * [security policy](https://github.com/argoproj/argo-cd/security/policy)
+  * security advisories
 
-## Overview of past and current issues
+* Argo CD
+  * require
+    * have production access
+      * -> security is very important topic
 
-The following table gives a general overview about past and present issues known
-to the Argo CD project. See in the [Known Issues](#known-issues-and-workarounds)
-section if there is a work-around available if you cannot update or if there is
-no fix yet.
+## Security policy
+### about security scanners
+
+* security scanners
+  * uses
+    * validate their container images BEFORE letting them | their clusters
+  * ⚠️cons⚠️
+    * quality & results are NOT greatly
+    * MANY produce FALSE positives
+  * recommendation
+    * ❌NOT use them -- to -- raise issues❌
+  * used
+    * INTERNALLY -- for -- ArgoCD code
+
+### Supported Versions
+
+* the last Argo CD's 3 minor versions 
+  * == apply security fixes & bug fixes | last Argo CD's 3 minor versions 
+
+* PRIOR last Argo CD's 3 minor versions
+  * MIGHT receive critical security fixes
+    * ❌ALTHOUGH it's NOT guaranteed❌
+
+* RARELY
+  * if a security fix needs COMPLEX re-design OR it's very intrusive & there's a workaround -> we should provide a forward-fix
+    * Reason:🧠be released | the next minor release
+      * != release | patch branch🧠
+
+### Dependency Upgrade Policy
+
+* binaries & libraries / Argo CD relies on
+  * _Example:_ Helm, Kustomize, and git
+  * ⚠️| SAME minor version, ONLY upgrade -- to -- NEW patch versions⚠️ 
+    * Reason:🧠it may include breaking changes OR changes behavior🧠
+    * _Example:_ if currently we use Helm 3.12.0 & have Argo CD 3.4.0 -> | Argo CD 3.4.x, ONLY upgrade to Helm 3.12.x 
+
+TODO:
+If there is a critical, exploitable vulnerability in a dependency that will not be fixed in a patch release,
+we will evaluate the impact of the vulnerability and the risk of not upgrading the dependency
+* We ask that, if you believe a version bump is justified, 
+please open an issue describing how the vulnerability is exploitable in the context of Argo CD, and 
+we will evaluate it and decide whether or not to upgrade the dependency.
+
+### how to report vulnerabilities?
+
+* [here](https://github.com/argoproj/argo-cd/security/advisories/new)
+
+## Security Advisories
+TODO: add ALSO published [here](https://github.com/argoproj/argo-cd/security/advisories)
 
 |Date|CVE|Title|Risk|Affected version(s)|Fix version|
 |----|---|-----|----|-------------------|-----------|
@@ -29,12 +71,6 @@ no fix yet.
 |2020-04-08|[CVE-2020-8827](https://nvd.nist.gov/vuln/detail/CVE-2020-8827)|Insufficient anti-automation/anti-brute force|High|all <= 1.5.3|v1.5.3|
 |2020-04-08|[CVE-2020-8828](https://nvd.nist.gov/vuln/detail/CVE-2020-8828)|Insecure default administrative password|High|all <= 1.8.0|1.8.0|
 |2020-04-08|[CVE-2018-21034](https://nvd.nist.gov/vuln/detail/CVE-2018-21034)|Sensitive Information Disclosure|Medium|all <= v1.5.0|v1.5.0|
-
-## Known Issues And Workarounds
-
-A recent security audit (thanks a lot to [Matt Hamilton](https://github.com/Eriner) of Soluble AI (acquired by https://www.fortinet.com) )
-has revealed several limitations in Argo CD which could compromise security.
-Most of the issues are related to the built-in user management implementation.
 
 ### CVE-2020-1747, CVE-2020-14343 - PyYAML library susceptible to arbitrary code execution
 
@@ -178,8 +214,3 @@ In Argo versions prior to v1.5.0-rc1, it was possible for authenticated Argo use
 
 Upgrade to ArgoCD v1.5.0 or higher. No workaround available
 
-## Reporting Vulnerabilities
-
-Please have a look at our
-[security policy](https://github.com/argoproj/argo-cd/security/policy)
-for more details on how to report security vulnerabilities for Argo CD.

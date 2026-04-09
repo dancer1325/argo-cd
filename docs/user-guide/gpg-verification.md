@@ -2,27 +2,30 @@
 
 ## Overview
 
-As of v1.7 it is possible to configure ArgoCD to only sync against commits
-that are signed in Git using GnuPG. Signature verification is configured on
-project level.
+* requirements
+  * ArgoCD v1.7
 
-If a project is configured to enforce signature verification, all applications
-associated with this project must have the commits in the source repositories
-signed with a GnuPG public key known to ArgoCD. ArgoCD will refuse to sync to
-any revision that does not have a valid signature made by one of the configured
-keys. The controller will emit a `ResourceComparison` error if it tries to sync
-to a revision that is either not signed, or is signed by an unknown or not
-allowed public key.
+* goal
+  * ⭐️configure ArgoCD / ONLY sync commits / are signed -- through -- GnuPG | Git using⭐️
 
-By default, signature verification is enabled but not enforced. If you wish to
-completely disable the GnuPG functionality in ArgoCD, you have to set the
-environment variable `ARGOCD_GPG_ENABLED` to `"false"` in the pod templates of
-the `argocd-server`, `argocd-repo-server`, `argocd-application-controller` and 
-`argocd-applicationset-controller` deployment manifests.
+* GnuPG Signature verification
+  * 👀configured | Project level👀
+    * -> ⚠️affect ALL Applications / belong -- to -- that Project⚠️
+    * by default,
+      * enabled
+        * if you want to disable FULLY -> set the environment variable `ARGOCD_GPG_ENABLED: false` |
+          * `argocd-server` deployment's pod template
+          * `argocd-repo-server` deployment's pod template
+          * `argocd-application-controller` deployment's pod template
+          * `argocd-applicationset-controller` deployment's pod template
+      * NOT enforced
+  * if Argo CD tries to sync to a revision / either NOR signed OR signed by an unknown OR NOT ALLOWED -> controller emits a `ResourceComparison` error
+  * ALLOWED | Git repositories
+  * ❌NOT ALLOWED | 
+    * Helm repositories
+    * Git generator❌
 
-Verification of GnuPG signatures is only supported with Git repositories. It is
-not possible using Helm repositories.
-
+TODO: 
 > [!NOTE]
 > **A few words about trust**
 >
@@ -30,11 +33,6 @@ not possible using Helm repositories.
 > is imported, ArgoCD will trust it. ArgoCD does not support more complex
 > trust models, and it is not necessary (nor possible) to sign the public keys
 > you are going to import into ArgoCD.
-
-
-> [!NOTE]
-> Signature verification is not supported for the templated `project` field when 
-> using the Git generator.
 
 ## Signature verification targets
 

@@ -1,31 +1,41 @@
 # Security
 
-Argo CD has undergone rigorous internal security reviews and penetration testing to satisfy [PCI
-compliance](https://www.pcisecuritystandards.org) requirements. The following are some security
-topics and implementation details of Argo CD.
+* goal
+  * Argo CD
+    * security topics
+    * implementation details
 
-## Authentication
+* Argo CD
+  * satisfy [PCI compliance](https://www.pcisecuritystandards.org) requirements
+    * -- thanks to -- 
+      * rigorous internal security testing
+      * penetration testing
 
-Authentication to Argo CD API server is performed exclusively using [JSON Web Tokens](https://jwt.io)
-(JWTs). Username/password bearer tokens are not used for authentication. The JWT is obtained/managed
-in one of the following ways:
+## Authentication | Argo CD API server
 
-1. For the local `admin` user, a username/password is exchanged for a JWT using the `/api/v1/session`
-   endpoint. This token is signed & issued by the Argo CD API server itself and it expires after 24 hours 
-   (this token used not to expire, see [CVE-2021-26921](https://github.com/argoproj/argo-cd/security/advisories/GHSA-9h6w-j7w4-jr52)).
-   When the admin password is updated, all existing admin JWT tokens are immediately revoked.
-   The password is stored as a bcrypt hash in the [`argocd-secret`](https://github.com/argoproj/argo-cd/blob/master/manifests/base/config/argocd-secret.yaml) Secret.
-
-2. For Single Sign-On users, the user completes an OAuth2 login flow to the configured OIDC identity
-   provider (either delegated through the bundled Dex provider, or directly to a self-managed OIDC
-   provider). This JWT is signed & issued by the IDP, and expiration and revocation is handled by
-   the provider. Dex tokens expire after 24 hours.
-
-3. Automation tokens are generated for a project using the `/api/v1/projects/{project}/roles/{role}/token`
-   endpoint, and are signed & issued by Argo CD. These tokens are limited in scope and privilege,
-   and can only be used to manage application resources in the project which it belongs to. Project
-   JWTs have a configurable expiration and can be immediately revoked by deleting the JWT reference
-   ID from the project role.
+* 💡ONLY -- through -- [JSON Web Tokens (JWTs)](https://jwt.io)💡  
+  * ❌NOT -- through username/password bearer tokens❌
+  * ways to be obtained/managed
+    1. local `admin` user has a username/password /  
+       * gets -- , via `/api/v1/session` endpoint, -- a JWT /
+         * signed
+         * issued -- by the -- Argo CD API server
+         * lifetime = 24hours
+           * [CVE-2021-26921](https://github.com/argoproj/argo-cd/security/advisories/GHSA-9h6w-j7w4-jr52)
+       * if the admin password is updated -> ALL existing admin JWT tokens are IMMEDIATELY revoked
+          The password is stored as a bcrypt hash in the [`argocd-secret`](https://github.com/argoproj/argo-cd/blob/master/manifests/base/config/argocd-secret.yaml) Secret.
+    2. For Single Sign-On users, the user completes an OAuth2 login flow to the configured OIDC identity
+       provider (either delegated through the bundled Dex provider, or directly to a self-managed OIDC
+       provider)
+       * This JWT is signed & issued by the IDP, and expiration and revocation is handled by
+          the provider. Dex tokens expire after 24 hours.
+    3. Automation tokens are generated for a project using the `/api/v1/projects/{project}/roles/{role}/token`
+       endpoint, and are signed & issued by Argo CD
+       * These tokens are limited in scope and privilege,
+          and can only be used to manage application resources in the project which it belongs to
+       * Project
+          JWTs have a configurable expiration and can be immediately revoked by deleting the JWT reference
+          ID from the project role.
 
 ## Authorization
 
