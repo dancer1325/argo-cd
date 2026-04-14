@@ -154,72 +154,49 @@ data:
 * _Example:_ configure Argo CD SSO -- via -- GitHub (OAuth2)
 
 ## Dex
+### == Identity provider / ALTHOUGH
+#### embedded & bundled | ArgoCd
+* `kubectl get all -n argocd | grep "dex"`
+  * check they are deployed
+* check in the [manifests](/manifests) / they are found
+#### by default, ❌NOT configured❌
+* `kubectl logs -n argocd -l app.kubernetes.io/name=argocd-dex-server`
+  * check the message "dex is not configured"
+### <DEX_ISSUER_URL>.well-known/openid-configuration
+#### == information -- about -- what the provider supports
+* requirements
+  * [follow how to configure](#how-to-configure)
+* https://localhost:8080/api/dex/.well-known/openid-configuration
+
+### how to configure
+#### _Example:_ using Github connector
 
 * steps
-  * | Github, 
+  * | Github,
     * register a NEW application
+      * == Settings > Developer Settings > OAuth Apps > New OAuth App
 
-      ![Register OAuth App](/docs/assets/register-app.png "Register OAuth App")
-      * authorization callback URL: https://argocd.example.com/api/dex/callback
-      * you receive OAuth2 client ID & OAuth2 client secret
+        ![Register OAuth App](/docs/assets/register-app.png "Register OAuth App")
+        * authorization callback URL: https://localhost:8080/api/dex/callback
+        * you receive OAuth2 client ID & OAuth2 client secret
 
-        ![OAuth2 Client Config](/docs/assets/oauth2-config.png "OAuth2 Client Config")
+          ![OAuth2 Client Config](/docs/assets/oauth2-config.png "OAuth2 Client Config")
+  * `kubectl port-forward svc/argocd-server -n argocd 8080:443`
+    * Reason: check you can login -- via -- Dex + Github connector
+  * `kubectl patch secret argocd-secret -n argocd --type merge -p "{\"data\":{\"dex.github.clientSecret\":\"$(echo -n '<GITHUB_CLIENT_SECRET>' | base64)\"}}"`
+  * `kubectl patch configmap argocd-cm -n argocd --type merge --patch-file patchDexGithubConnectorArgoCDCM.yaml`
+  * `kubectl rollout restart deployment argocd-dex-server -n argocd`
+  * https://localhost:8080/
+    * click: Log in via Github
+      * get access to ArgoCD UI
 
-### steps to configure
+### how `to request ADDITIONAL ID token claims?
 
-* `kubectl edit configmap argocd-cm -n argocd`
+TODO: set OIDC connector locally
 
-    ```yaml
-    data:
-      # url: ArgoCD base URL
-      url: https://argocd.example.com
-    
-      # OPTIONAL
-      additionalUrls:
-        ArgoCDBaseURL1
-        ArgoCDBaseURL2
-        ...
-    
-      # see https://github.com/dexidp/website/blob/main/content/docs/connectors/github.md
-      dex.config: |
-        connectors:
-          # GitHub example
-          # 1. public Github
-          - type: github
-            id: github
-            name: GitHub
-            config:
-              # MANDATORY / got -- from -- PREVIOUS step
-              clientID: aabbccddeeff00112233
-              
-              # MANDATORY / got -- from -- PREVIOUS step
-              # $<some_K8S_secret>:dex.github.clientSecret
-              #   <some_K8S_secret>
-              #     by default, | "argocd-secret"
-              #     requirements for the "<some_K8S_secret>" secret
-              #       label `app.kubernetes.io/part-of: argocd`
-              clientSecret: $dex.github.clientSecret  
-              
-              # recommended / restrict Github Organizations -> ANY Github Organization's member can perform management tasks
-              orgs:
-              - name: your-github-org
-        
-              # OPTIONAL  
-              #   Reason: AUTOMATICALLY use the correct one 
-              #       / any OAuth2 connectors
-              #       -- to -- match the correct external callback
-              redirectURI: 
-    
-          # 2. GitHub enterprise
-          - type: github
-            id: acme-github
-            name: Acme GitHub
-            config:
-              hostName: github.acme.example.com
-              clientID: abcdefghijklmnopqrst
-              clientSecret: $dex.acme.clientSecret  # Alternatively $<some_K8S_secret>:dex.acme.clientSecret
-              orgs:
-              - name: your-github-org
-    ```
-  
+### how to retrieve claims / are NOT specified | ID token?
 
+TODO: set OIDC connector locally
+
+## OIDC Provider DIRECTLY
+### TODO: 

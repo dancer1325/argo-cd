@@ -20,3 +20,63 @@ data:
 
   # 2. disable admin user
   admin.enabled: "false"
+
+  # 3. SSO
+  # 3,1 Dex-related
+  # url: ArgoCD base URL
+  url: https://argocd.example.com
+
+  # OPTIONAL
+#  additionalUrls:
+#    - ArgoCDBaseURL1
+#    - ArgoCDBaseURL2
+
+  # see https://github.com/dexidp/website/blob/main/content/docs/connectors/github.md
+  dex.config: |
+    connectors:
+      # GitHub example
+      # 1. public Github
+      - type: github
+        id: github
+        name: GitHub
+        config:
+          # MANDATORY / got -- from -- PREVIOUS step
+          clientID: aabbccddeeff00112233
+
+          # MANDATORY / got -- from -- PREVIOUS step
+          # $<some_K8S_secret>:dex.github.clientSecret
+          #   <some_K8S_secret>
+          #     by default, | "argocd-secret"
+          #     requirements for the "<some_K8S_secret>" secret
+          #       label `app.kubernetes.io/part-of: argocd`
+          clientSecret: $dex.github.clientSecret  
+
+          # recommended / restrict Github Organizations -> ANY Github Organization's member can perform management tasks
+          orgs:
+          - name: your-github-org
+
+          # OPTIONAL  
+          #   Reason: AUTOMATICALLY use the correct one 
+          #       / any OAuth2 connectors
+          #       -- to -- match the correct external callback
+          redirectURI: 
+
+      # 2. GitHub enterprise
+      - type: github
+        id: acme-github
+        name: Acme GitHub
+        config:
+          hostName: github.acme.example.com
+          clientID: abcdefghijklmnopqrst
+          clientSecret: $dex.acme.clientSecret  # Alternatively $<some_K8S_secret>:dex.acme.clientSecret
+          orgs:
+          - name: your-github-org
+
+      # 3. OIDC
+      - type: oidc
+        id: oidc
+        name: OIDC
+        config:
+          issuer: https://example-OIDC-provider.example.com
+          clientID: aaaabbbbccccddddeee
+          clientSecret: $dex.oidc.clientSecret

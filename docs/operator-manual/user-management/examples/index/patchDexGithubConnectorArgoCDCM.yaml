@@ -1,0 +1,10 @@
+data:
+  url: "https://localhost:8080"
+  dex.config: |
+    connectors:
+    - type: github
+      id: github
+      name: GitHub
+      config:
+        clientID: <GITHUB_CLIENT_ID>
+        clientSecret: $dex.github.clientSecret

@@ -1,0 +1,18 @@
+data:
+  url: "https://argocd.example.com"
+  dex.config: |
+    connectors:
+      # OIDC
+      - type: oidc
+        id: oidc
+        name: OIDC
+        config:
+          issuer: https://example-OIDC-provider.example.com
+          clientID: aaaabbbbccccddddeee
+          clientSecret: $dex.oidc.clientSecret
+          insecureEnableGroups: true
+          scopes:
+          - profile
+          - email
+          - groups
+          getUserInfo: true
