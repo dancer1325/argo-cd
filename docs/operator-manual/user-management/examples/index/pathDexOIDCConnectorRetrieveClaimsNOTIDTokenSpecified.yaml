@@ -1,18 +1,30 @@
 data:
-  url: "https://argocd.example.com"
+  url: "https://localhost:8080"
   dex.config: |
     connectors:
       # OIDC
       - type: oidc
-        id: oidc
-        name: OIDC
+        id: google
+        name: Google
         config:
-          issuer: https://example-OIDC-provider.example.com
-          clientID: aaaabbbbccccddddeee
-          clientSecret: $dex.oidc.clientSecret
-          insecureEnableGroups: true
+          issuer: https://accounts.google.com
+
+          # issuerAlias: https://accounts.google.com
+
+          # $<ENVIRONMENT_VARIABLE>
+          # clientID: $GOOGLE_CLIENT_ID
+          # TODO: remove it
+          clientID: 597760435579-dri7foqmaapmh4h1tqvn8bkdaptenhdr.apps.googleusercontent.com
+          clientSecret: $dex.google.clientSecret
+
+          # Dex's issuer URL + "/callback"
+          redirectURI: https://localhost:8080/api/dex/callback
+
           scopes:
-          - profile
-          - email
-          - groups
+            - profile
+            - email
+            - groups
+
+          insecureEnableGroups: true
+
           getUserInfo: true

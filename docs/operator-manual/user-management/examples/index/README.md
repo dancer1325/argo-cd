@@ -191,12 +191,58 @@ data:
       * get access to ArgoCD UI
 
 ### how `to request ADDITIONAL ID token claims?
+#### _Example:_ OIDC connector -- as -- Google account
+* requirements
+  * [| your google-cloud, create your Google Client Id & Google CLient Secret](https://developers.google.com/identity/protocols/oauth2?hl=es-419) 
 
-TODO: set OIDC connector locally
+* steps
+  * `kubectl port-forward svc/argocd-server -n argocd 8080:443`
+    * Reason: check you can login -- via -- Dex + Google connector
+  * `kubectl patch secret argocd-secret -n argocd --type merge -p "{\"data\":{\"dex.google.clientSecret\":\"$(echo -n '<GOOGLE_CLIENT_SECRET>' | base64)\"}}"`
+  * `kubectl patch configmap argocd-cm -n argocd --type merge --patch-file pathDexOIDCConnectorAdditionalIDTokens.yaml`
+  * `kubectl rollout restart deployment argocd-dex-server -n argocd`
+  * https://localhost:8080/
+    * click: Log in via Google
+      * Problems:
+        * Problem1: "failed to query provider "": Get "/.well-known/openid-configuration": unsupported protocol scheme """
+          * Reason: issuer MUST be reachable -- from -- browser + inside pod 
+          * Pending attempt: kind / `extraPortMappings`
+          * Solution: ⚠️TODO:⚠️
 
 ### how to retrieve claims / are NOT specified | ID token?
+#### _Example:_ OIDC connector -- as -- Google account
+* requirements
+  * [| your google-cloud, create your Google Client Id & Google CLient Secret](https://developers.google.com/identity/protocols/oauth2?hl=es-419)
 
-TODO: set OIDC connector locally
+* steps
+  * `kubectl port-forward svc/argocd-server -n argocd 8080:443`
+    * Reason: check you can login -- via -- Dex + Google connector
+  * `kubectl patch secret argocd-secret -n argocd --type merge -p "{\"data\":{\"dex.google.clientSecret\":\"$(echo -n '<GOOGLE_CLIENT_SECRET>' | base64)\"}}"`
+  * `kubectl patch configmap argocd-cm -n argocd --type merge --patch-file pathDexOIDCConnectorAdditionalIDTokens.yaml`
+  * `kubectl rollout restart deployment argocd-dex-server -n argocd`
+  * https://localhost:8080/
+    * click: Log in via Google
+      * Problems:
+        * Problem1: "failed to query provider "": Get "/.well-known/openid-configuration": unsupported protocol scheme """
+          * Reason: issuer MUST be reachable -- from -- browser + inside pod
+          * Pending attempt: kind / `extraPortMappings`
+          * Solution: TODO:
 
 ## OIDC Provider DIRECTLY
+### how to configure
+#### _Example:_ using Google
+* requirements
+  * [| your google-cloud, create your Google Client Id & Google CLient Secret](https://developers.google.com/identity/protocols/oauth2?hl=es-419)
+
+* steps
+  * `kubectl port-forward svc/argocd-server -n argocd 8080:443`
+  * `kubectl patch secret argocd-secret -n argocd --type merge -p "{\"data\":{\"oidc.google.clientSecret\":\"$(echo -n '<GITHUB_CLIENT_SECRET>' | base64)\"}}"`
+  * `kubectl patch configmap argocd-cm -n argocd --type merge --patch-file patchOIDC.yaml`
+  * `kubectl rollout restart deployment argocd-server -n argocd`
+    * `kubectl rollout status deployment argocd-server -n argocd`
+      * ⚠️check the rollout status⚠️
+  * https://localhost:8080/
+    * click: Log in via Google
+      * get access to ArgoCD UI
+
 ### TODO: 

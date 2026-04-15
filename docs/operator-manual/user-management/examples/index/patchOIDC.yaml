@@ -1,0 +1,19 @@
+data:
+  url: https://localhost:8080
+
+  oidc.config: |
+    name: Oidc
+    issuer: https://accounts.google.com
+    # issuerAlias: https://accounts.google.com
+
+    # $<ENVIRONMENT_VARIABLE>
+    # clientID: $GOOGLE_CLIENT_ID
+    clientID: 597760435579-dri7foqmaapmh4h1tqvn8bkdaptenhdr.apps.googleusercontent.com
+    # TODO: remove it
+    clientSecret: $oidc.google.clientSecret
+    
+    # OTHERWISE, it uses groups
+    requestedScopes:                                                                            
+      - openid                                                                                  
+      - profile                                                                                 
+      - email

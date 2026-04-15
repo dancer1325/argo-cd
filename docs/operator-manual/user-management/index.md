@@ -230,66 +230,24 @@
 
 #### OIDC Provider DIRECTLY
 
+##### how to configure?
+* steps
+  * | identity provider,
+    * register the application
+      * callback address endpoint: "/auth/callback"
+      * you receive:
+        * OAuth2 client ID
+        * OAuth2 client secret
+  * | Argo CD "argocd-secret" Configmap,
+    * add `oidc.google.clientSecret: <base64-encoded-secret>`
+      * _Example:_ if you use OIDC connector -> set `oidc.google.clientSecret: <base64-encoded-secret>`
+  * | "argocd-cm" ConfigMap,
+    * add `data.oidc.config`
+      * [ALLOWED connectors](https://dexidp.io/docs/connectors/)
+
+##### how to request ADDITIONAL ID token claims?
+
 TODO: 
-To configure Argo CD to delegate authentication to your existing OIDC provider, add the OAuth2
-configuration to the `argocd-cm` ConfigMap under the `oidc.config` key:
-
-```yaml
-data:
-  url: https://argocd.example.com
-
-  oidc.config: |
-    name: Okta
-    issuer: https://dev-123456.oktapreview.com
-    clientID: aaaabbbbccccddddeee
-    clientSecret: $oidc.okta.clientSecret
-    
-    # Optional list of allowed aud claims
-* If omitted or empty, defaults to the clientID value above (and the 
-    # cliClientID, if that is also specified)
-* If you specify a list and want the clientID to be allowed, you must 
-    # explicitly include it in the list.
-    # Token verification will pass if any of the token's audiences matches any of the audiences in this list.
-    allowedAudiences:
-    - aaaabbbbccccddddeee
-    - qqqqwwwweeeerrrrttt
-
-    # Optional
-* If false, tokens without an audience will always fail validation
-* If true, tokens without an audience 
-    # will always pass validation.
-    # Defaults to true for Argo CD < 2.6.0
-* Defaults to false for Argo CD >= 2.6.0.
-    skipAudienceCheckWhenTokenHasNoAudience: true
-
-    # Optional set of OIDC scopes to request
-* If omitted, defaults to: ["openid", "profile", "email", "groups"]
-    requestedScopes: ["openid", "profile", "email", "groups"]
-
-    # Optional set of OIDC claims to request on the ID token.
-    requestedIDTokenClaims: {"groups": {"essential": true}}
-
-    # Some OIDC providers require a separate clientID for different callback URLs.
-    # For example, if configuring Argo CD with self-hosted Dex, you will need a separate client ID
-    # for the 'localhost' (CLI) client to Dex
-* This field is optional
-* If omitted, the CLI will
-    # use the same clientID as the Argo CD server
-    cliClientID: vvvvwwwwxxxxyyyyzzzz
-
-    # PKCE is an OIDC extension to prevent authorization code interception attacks.
-    # Make sure the identity provider supports it and that it is activated for Argo CD OIDC client.
-    # Default is false.
-    enablePKCEAuthentication: true
-```
-
-> [!NOTE]
-> The callback address should be the /auth/callback endpoint of your Argo CD URL
-> (e.g
-* https://argocd.example.com/auth/callback).
-
-##### Requesting additional ID token claims
-
 Not all OIDC providers support a special `groups` scope
 * E.g
 * Okta, OneLogin and Microsoft do support a special
@@ -392,51 +350,7 @@ Add a `rootCA` to your `oidc.config` which contains the PEM encoded root certifi
 - If value has the form: `$<secret>:a.key.in.k8s.secret`, look for a k8s secret with the name `<secret>` (minus the `$`), and read its value
 * 
 - Otherwise, look for a key in the k8s secret named `argocd-secret`
-* 
-
-##### Example
-
-SSO `clientSecret` can thus be stored as a Kubernetes secret with the following manifests
-
-`argocd-secret`:
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: argocd-secret
-  namespace: argocd
-  labels:
-    app.kubernetes.io/name: argocd-secret
-    app.kubernetes.io/part-of: argocd
-type: Opaque
-data:
-  ...
-  # The secret value must be base64 encoded **once** 
-  # this value corresponds to: `printf "hello-world" | base64`
-  oidc.auth0.clientSecret: "aGVsbG8td29ybGQ="
-  ...
-```
-
-`argocd-cm`:
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: argocd-cm
-  namespace: argocd
-  labels:
-    app.kubernetes.io/name: argocd-cm
-    app.kubernetes.io/part-of: argocd
-data:
-  ...
-  oidc.config: |
-    name: Auth0
-    clientID: aabbccddeeff00112233
-
-    # Reference key in argocd-secret
-    clientSecret: $oidc.auth0.clientSecret
-  ...
-```
+*
 
 ##### Alternative
 
