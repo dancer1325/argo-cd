@@ -17,60 +17,51 @@
 
 ### create a NEW client | Keycloak
 
-TODO: Start by logging into your keycloak server, select the realm you want to use (`master` by default)
-and then go to __Clients__ and click the __Create client__ button at the top.
+* steps
+  * | browser's Keycloack URL
+    * choose your realm
+    * Clients 
+      * \> Create client
 
-![Keycloak add client](../../assets/keycloak-add-client.png "Keycloak add client")
+        ![Keycloak add client](../../assets/keycloak-add-client.png "Keycloak add client")
+        * \> Next > Client authentication: on
 
-Enable the __Client authentication__.
+          ![Keycloak add client Step 2](../../assets/keycloak-add-client_2.png "Keycloak add client Step 2")
+        * \> Next > 
+          * __Root URL__
+            * == https://localhost:8080
+          * __Web origins__
+            * == +
+          * __Admin URL__
+            * TODO: ?
+          * __Home URL__
+            * == /applications 
+          * __Valid Post logout redirect URIs__ 
+            * == https://localhost:8080/applications
+          * __Valid Redirect URIs__
+            * == ALLOWED values
+              * https://localhost:8080/auth/callback
+              * https://localhost:8080/*
+                * use cases
+                  * testing/development purposes
+                * ❌NOT use cases❌
+                  * production
+      
+          ![Keycloak configure client](../../assets/keycloak-configure-client.png "Keycloak configure client")
 
-![Keycloak add client Step 2](../../assets/keycloak-add-client_2.png "Keycloak add client Step 2")
+      * \> Choose RECENTLY created client > Credentials > copy the Client Secret
 
-Configure the client by setting the __Root URL__, __Web origins__, __Admin URL__ to the hostname (https://{hostname}).
+        ![Keycloak client secret](../../assets/keycloak-client-secret.png "Keycloak client secret")
 
-Also you can set __Home URL__ to _/applications_ path and __Valid Post logout redirect URIs__ to "https://{hostname}/applications".
+### how to configure ArgoCD OIDC?
 
-The Valid Redirect URIs should be set to https://{hostname}/auth/callback (you can also set the less secure https://{hostname}/* for testing/development purposes,
-but it's not recommended in production).
+* steps
+  * `kubectl -n argocd patch secret argocd-secret --patch='{"stringData": { "oidc.keycloak.clientSecret": "<REPLACE_WITH_CLIENT_SECRET>" }}'`
+  * `kubectl patch configmap argocd-cm -n argocd --type merge --patch-file patchForClientAuthentication.yaml`
+ 
+* TODO:
 
-![Keycloak configure client](../../assets/keycloak-configure-client.png "Keycloak configure client")
-
-Make sure to click __Save__.
-
-There should be a tab called __Credentials__. You can copy the Client Secret that we'll use in our ArgoCD configuration.
-
-![Keycloak client secret](../../assets/keycloak-client-secret.png "Keycloak client secret")
-
-### Configuring ArgoCD OIDC
-
-Let's start by storing the client secret you generated earlier in the argocd secret _argocd-secret_.
-
-You can patch it with value copied previously:
-```bash
-kubectl -n argo-cd patch secret argocd-secret --patch='{"stringData": { "oidc.keycloak.clientSecret": "<REPLACE_WITH_CLIENT_SECRET>" }}'
-```
-
-Now we can configure the config map and add the oidc configuration to enable our keycloak authentication.
-You can use `$ kubectl edit configmap argocd-cm`.
-
-Your ConfigMap should look like this:
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: argocd-cm
-data:
-  url: https://argocd.example.com
-  oidc.config: |
-    name: Keycloak
-    issuer: https://keycloak.example.com/realms/master
-    clientID: argocd
-    clientSecret: $oidc.keycloak.clientSecret
-    refreshTokenThreshold: 2m
-    requestedScopes: ["openid", "profile", "email", "groups"]
-```
-
+TODO: 
 Make sure that:
 
 - __issuer__ ends with the correct realm (in this example _master_)
@@ -82,14 +73,13 @@ Make sure that:
 
 ## -- via -- PKCE
 
-These instructions will take you through the entire process of getting your ArgoCD application authenticating with Keycloak.
+* goal
+  * create a client | Keycloak
+  * configure ArgoCD / authenticate -- through -- Keycloak
+    * using groups / set | Keycloak
+  * authenticate -- via -- `argocd` CL
 
-You will create a client within Keycloak and configure ArgoCD to use Keycloak for authentication, using groups set in Keycloak
-to determine privileges in Argo.
-
-You will also be able to authenticate using argo-cd command line.
-
-### Creating a new client in Keycloak
+### Create a NEW client | Keycloak
 
 First we need to setup a new client.
 
@@ -123,23 +113,6 @@ Make sure to click __Save__.
 Now we can configure the config map and add the oidc configuration to enable our keycloak authentication.
 You can use `$ kubectl edit configmap argocd-cm`.
 
-Your ConfigMap should look like this:
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: argocd-cm
-data:
-  url: https://argocd.example.com
-  oidc.config: |
-    name: Keycloak
-    issuer: https://keycloak.example.com/realms/master
-    clientID: argocd
-    enablePKCEAuthentication: true
-    refreshTokenThreshold: 2m
-    requestedScopes: ["openid", "profile", "email", "groups"]
-```
 
 Make sure that:
 
@@ -150,7 +123,7 @@ Make sure that:
 - __requestedScopes__ contains the _groups_ claim if you didn't add it to the Default scopes
 - __refreshTokenThreshold__ is less than the client token lifetime.  If this setting is not less than the token lifetime, a new token will be obtained for every request.  Keycloak sets the client token lifetime to 5 minutes by default.
 
-## Configuring the groups claim
+## how to configure the `groups` claim?
 
 In order for ArgoCD to provide the groups the user is in we need to configure a groups claim that can be included in the authentication token.
 
@@ -185,7 +158,7 @@ Create a group called _ArgoCDAdmins_ and have your current user join the group.
 
 ![Keycloak user group](../../assets/keycloak-user-group.png "Keycloak user group")
 
-## Configuring ArgoCD Policy
+## how to configure the ArgoCD Policy?
 
 Now that we have an authentication that provides groups we want to apply a policy to these groups.
 We can modify the _argocd-rbac-cm_ ConfigMap using `$ kubectl edit configmap argocd-rbac-cm`.

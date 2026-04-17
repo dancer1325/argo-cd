@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak-internal
+  namespace: default
+spec:
+  selector:
+    app: keycloak
+  ports:
+    # # modify port -- based on -- keycloack exposed port
+    - port: 32772
+      targetPort: 8080

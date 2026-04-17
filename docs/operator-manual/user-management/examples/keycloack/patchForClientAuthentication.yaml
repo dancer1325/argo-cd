@@ -1,0 +1,11 @@
+data:
+  url: "https://localhost:8080"
+  oidc.config: |
+    name: Keycloak
+    # modify port -- based on -- keycloack exposed port
+    issuer: http://keycloak.localhost:32772/realms/master                                   
+    issuerAlias: https://keycloak.localhost/realms/master
+    clientID: argoCD
+    clientSecret: $oidc.keycloak.clientSecret
+    refreshTokenThreshold: 2m
+    requestedScopes: ["openid", "profile", "email"]
