@@ -38,53 +38,12 @@
 }
 * ALLOWED RBAC resources
 
-// List of allowed RBAC actions
-var defaultCRUDActions = actionTraitMap{
-	rbac.ActionCreate: rbacTrait{},
-	rbac.ActionGet:    rbacTrait{},
-	rbac.ActionUpdate: rbacTrait{},
-	rbac.ActionDelete: rbacTrait{},
-}
-
-var defaultCRDActions = actionTraitMap{
-	rbac.ActionCreate: rbacTrait{},
-	rbac.ActionGet:    rbacTrait{},
-	rbac.ActionDelete: rbacTrait{},
-}
-
-var applicationsActions = actionTraitMap{
-	rbac.ActionCreate:   rbacTrait{},
-	rbac.ActionGet:      rbacTrait{},
-	rbac.ActionUpdate:   rbacTrait{allowPath: true},
-	rbac.ActionDelete:   rbacTrait{allowPath: true},
-	rbac.ActionAction:   rbacTrait{allowPath: true},
-	rbac.ActionOverride: rbacTrait{},
-	rbac.ActionSync:     rbacTrait{},
-}
-
-var accountsActions = actionTraitMap{
-	rbac.ActionCreate: rbacTrait{},
-	rbac.ActionUpdate: rbacTrait{},
-}
-
-var execActions = actionTraitMap{
-	rbac.ActionCreate: rbacTrait{},
-}
-
-var logsActions = actionTraitMap{
-	rbac.ActionGet: rbacTrait{},
-}
-
-var extensionActions = actionTraitMap{
-	rbac.ActionInvoke: rbacTrait{},
-}
-
 # `func NewRBACCommand() *cobra.Command {`
 * `argocd admin settings rbac COMMAND`
   * validate & test RBAC configuration
   * ALLOWED `COMMAND`
-    * NewRBACCanCommand()
-    * NewRBACValidateCommand()
+    * [`NewRBACCanCommand()`](#func-newrbaccancommand-cobracommand-)
+    * [`NewRBACValidateCommand()`](#func-newrbacvalidatecommand-cobracommand-)
 
 ## `func NewRBACCanCommand() *cobra.Command {`
 * `argocd admin settings rbac can ROLE/SUBJECT ACTION RESOURCE [SUB-RESOURCE] [FLAGS]`

@@ -1,0 +1,30 @@
+kind: AppProject
+apiVersion: argoproj.io/v1alpha1
+metadata:
+  name: some-project
+  namespace: argocd
+spec:
+  # set ANOTHER namespace
+  sourceNamespaces:
+    - some-namespace
+
+---
+kind: AppProject
+apiVersion: argoproj.io/v1alpha1
+metadata:
+  name: project-one
+  namespace: argocd
+spec:
+  sourceNamespaces:
+    - namespace-one
+  # ...
+
+---
+kind: AppProject
+apiVersion: argoproj.io/v1alpha1
+metadata:
+  name: project-two
+  namespace: argocd
+spec:
+  sourceNamespaces:
+    - namespace-two

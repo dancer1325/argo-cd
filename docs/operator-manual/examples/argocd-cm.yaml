@@ -383,7 +383,11 @@ data:
   # This is to prevent the UI from becoming unresponsive when rendering a large number of logs. Default is 10.
   server.maxPodLogsToRender: "10"
 
-  # exec.enabled indicates whether the UI exec feature is enabled. It is disabled by default.
+  # exec.enabled
+  #   by default,
+  #     disabled
+  #   allows,
+  #     | UI, enable the exec feature
   exec.enabled: "false"
 
   # exec.shells restricts which shells are allowed for `exec`, and in which order they are attempted

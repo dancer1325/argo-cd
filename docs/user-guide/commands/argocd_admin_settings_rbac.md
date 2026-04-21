@@ -1,5 +1,8 @@
 # `argocd admin settings rbac` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/admin/settings_rbac.md)'s `func NewRBACCanCommand(`👀
+
 ## argocd admin settings rbac
 
 Validate and test RBAC configuration

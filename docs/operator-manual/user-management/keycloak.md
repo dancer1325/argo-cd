@@ -57,19 +57,23 @@
 
 * steps
   * `kubectl -n argocd patch secret argocd-secret --patch='{"stringData": { "oidc.keycloak.clientSecret": "<REPLACE_WITH_CLIENT_SECRET>" }}'`
-  * `kubectl patch configmap argocd-cm -n argocd --type merge --patch-file patchForClientAuthentication.yaml`
- 
-* TODO:
-
-TODO: 
-Make sure that:
-
-- __issuer__ ends with the correct realm (in this example _master_)
-- __issuer__ on Keycloak releases older than version 17 the URL must include /auth (in this example /auth/realms/master)
-- __clientID__ is set to the Client ID you configured in Keycloak
-- __clientSecret__ points to the right key you created in the _argocd-secret_ Secret
-- __requestedScopes__ contains the _groups_ claim if you didn't add it to the Default scopes
-- __refreshTokenThreshold__ is less than the client token lifetime.  If this setting is not less than the token lifetime, a new token will be obtained for every request.  Keycloak sets the client token lifetime to 5 minutes by default.
+  * `kubectl patch configmap argocd-cm -n argocd --type merge --patch-file patchForClientAuthentication.yaml` /
+    * __issuer__ 
+      * ends -- with the -- realm / contains the clientId
+      * | Keycloak v17-,
+        * MUST include /auth
+          * _Example:_ /auth/realms/master
+    * __clientID__
+      * == Client ID / you configured | Keycloak
+    * __clientSecret__ 
+      * points -- to the -- right key / you created | "argocd-secret" Secret
+    * __requestedScopes__
+      * if you did NOT add it | default scopes -> contain _groups_ claim 
+    * __refreshTokenThreshold__ 
+      * \< client token lifetime
+        * OTHERWISE, a NEW token will be obtained / EACH request
+      * by default,
+        * 5'
 
 ## -- via -- PKCE
 
@@ -123,40 +127,33 @@ Make sure that:
 - __requestedScopes__ contains the _groups_ claim if you didn't add it to the Default scopes
 - __refreshTokenThreshold__ is less than the client token lifetime.  If this setting is not less than the token lifetime, a new token will be obtained for every request.  Keycloak sets the client token lifetime to 5 minutes by default.
 
-## how to configure the `groups` claim?
+## how to configure the `groups` claim | authentication token?
 
-In order for ArgoCD to provide the groups the user is in we need to configure a groups claim that can be included in the authentication token.
+* steps
+  * | __Client Scope__ 
 
-To do this we'll start by creating a new __Client Scope__ called _groups_.
+    ![Keycloak add scope](../../assets/keycloak-add-scope.png "Keycloak add scope")
+    * \> add a Token Mapper / 
+      * if the client requests the groups scope -> add the groups claim | token 
+      * set
+        * "Mapper type" == __Group Membership__
+        * __Name__ == __Token Claim Name__
+        * "Full group path": off
 
-![Keycloak add scope](../../assets/keycloak-add-scope.png "Keycloak add scope")
+      ![Keycloak groups mapper](../../assets/keycloak-groups-mapper.png "Keycloak groups mapper")
+  * | Client,
+    * choose the RECENTLY created client > "Client Scopes" > "Add client scope"
+      * choose the _groups_ scope 
+        * add it | __Default__ Client Scope OR __Optional__ Client Scope
+          * if you set __Optional__ -> make sure / ArgoCD requests the scope | its OIDC configuration
+          * recommendation
+            * use __Default__ Client Scope
 
-Once you've created the client scope you can now add a Token Mapper which will add the groups claim to the token when the client requests
-the groups scope.
+    ![Keycloak client scope](../../assets/keycloak-client-scope.png "Keycloak client scope")
+  * | group,
+    * join the user | _ArgoCDAdmins_ group
 
-In the Tab "Mappers", click on "Configure a new mapper" and choose __Group Membership__.
-
-Make sure to set the __Name__ as well as the __Token Claim Name__ to _groups_
-Also disable the "Full group path".
-
-![Keycloak groups mapper](../../assets/keycloak-groups-mapper.png "Keycloak groups mapper")
-
-We can now configure the client to provide the _groups_ scope.
-
-Go back to the client we've created earlier and go to the Tab "Client Scopes".
-
-Click on "Add client scope", choose the _groups_ scope and add it either to the __Default__ or to the __Optional__ Client Scope.
-
-If you put it in the Optional
-category you will need to make sure that ArgoCD requests the scope in its OIDC configuration.
-Since we will always want group information, I recommend
-using the Default category.
-
-![Keycloak client scope](../../assets/keycloak-client-scope.png "Keycloak client scope")
-
-Create a group called _ArgoCDAdmins_ and have your current user join the group.
-
-![Keycloak user group](../../assets/keycloak-user-group.png "Keycloak user group")
+    ![Keycloak user group](../../assets/keycloak-user-group.png "Keycloak user group")
 
 ## how to configure the ArgoCD Policy?
 
@@ -193,11 +190,11 @@ Once done, you should see
 ![Authentication successful!](../../assets/keycloak-authentication-successful.png "Authentication successful!")
 
 ## Troubleshoot
-If ArgoCD auth returns 401 or when the login attempt leads to the loop, then restart the argocd-server pod.
-```
-kubectl rollout restart deployment argocd-server -n argocd
-```
 
-If you migrate from Client authentication to PKCE, you can have the following error `invalid_request: Missing parameter: code_challenge_method`.
-
-It could be a redirect issue, try in private browsing or clean browser cookies.
+* restart the "argocd-server" pod
+  * `kubectl rollout restart deployment argocd-server -n argocd`
+* | migrate FROM Client authentication -- to -- PKCE,
+  * Problem: "invalid_request: Missing parameter: code_challenge_method"
+    * Solution: 
+      * try | private browsing
+      * clean browser cookies

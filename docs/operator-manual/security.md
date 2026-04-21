@@ -16,7 +16,7 @@
 * 💡ONLY -- through -- [JSON Web Tokens (JWTs)](https://jwt.io)💡  
   * ❌NOT -- through username/password❌
   * ways to be obtained/managed
-    1. local `admin` user has a username/password /  
+    1. local users / contain username/password /  
        * gets -- , via `/api/v1/session` endpoint, -- a JWT /
          * signed
          * issued -- by the -- Argo CD API server
@@ -43,17 +43,19 @@
 ## Authorization
 
 * how does it work?
-  * Authorization is performed by iterating the list of group membership in a user's JWT groups claims,
-  and comparing each group against the roles/rules in the [RBAC](./rbac.md) policy
-  Any matched rule
-  permits access to the API request.
+  * iterate | user's JWT groups claims' list of group membership
+  * compare EACH group vs [RBAC](./rbac.md) policy's roles/rules
+    * if a rule matches -> permits access -- to the -- API request
 
 ## TLS
 
+TODO: 
 All network communication is performed over TLS including service-to-service communication between
-the three components (argocd-server, argocd-repo-server, argocd-application-controller). The Argo CD
-API server can enforce the use of TLS 1.2 using the flag: `--tlsminversion 1.2`.
-Communication with Redis is performed over plain HTTP by default. TLS can be setup with command line arguments.
+the three components (argocd-server, argocd-repo-server, argocd-application-controller)
+The Argo CD
+API server can enforce the use of TLS 1.2 using the flag: `--tlsminversion 1.2`
+Communication with Redis is performed over plain HTTP by default
+TLS can be setup with command line arguments.
 
 ## Git & Helm Repositories
 

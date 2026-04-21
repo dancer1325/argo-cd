@@ -1,0 +1,16 @@
+data:
+  # 1. OPTIONAL - if it's omitted OR empty -> users
+  #       remove      p, role:readonlyapplications, applications, get, */*, allow
+  # 2. can NOT be blocked -- by a -- `deny` rule
+  #       remove      p, user-without-role, applications, get, */*, deny
+  # 3. `g, <user>, <role>`
+  policy.csv: |
+    p, example-user, applications, get, default/example.guestbook, allow
+    p, example-user, logs, get, example.guestbook, allow
+    p, role:readonlyapplications, applications, get, */*, allow
+    p, user-without-role, applications, get, */*, deny
+    
+    g, reader-user, role:readonlyapplications
+
+  policy.default: role:readonlyapplications
+

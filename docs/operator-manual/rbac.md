@@ -1,56 +1,62 @@
 # RBAC Configuration
 
-* RBAC feature 
+* RBAC  
   * enables
     * restrictions of access -- to -- Argo CD resources
   * requirements
     * [SSO configuration](user-management/index.md), OR 
     * [>=1 local users setup](user-management/index.md)
-  * 👀main components | define RBAC configuration👀
-    - ["argocd-rbac-cm" configMap](examples/argocd-rbac-cm.yaml)
-      - == global RBAC configMap
-    - [AppProject's roles](../user-guide/projects.md#project-roles)
+  * 👀| configure RBAC, main components 👀
+    * ["argocd-rbac-cm" configMap](examples/argocd-rbac-cm.yaml)
+      * == global RBAC configMap
+      * apply | specified policy rule's resource
+    * [AppProject's roles](../user-guide/projects.md#project-roles)
+      - apply | SPECIFIC project
   * steps
-    * define RBAC roles
+    * define & apply RBAC roles
     * map SSO groups OR local users -- to -- roles
 
-* Argo CD
-  * ❌does NOT have its own user management system❌
-  * `admin`
-    * ONLY 1 built-in user
-    * unrestricted access -- to the -- system
+## RBAC Model
 
-## Built-in RBAC Roles
-
-- `role:readonly`
-  - read-only access -- to -- ALL resources
-- `role:admin`
-  - unrestricted access -- to -- ALL resources
-
-* [here](/assets/builtin-policy.csv)
-
-## Authenticated Users' default policy
-
-* ["argocd-rbac-cm" ConfigMap's `data.policy.default`](examples/argocd-rbac-cm.yaml)
-
-## Anonymous Access
-
-* steps
-  * | ["argocd-cm" ConfigMap](examples/argocd-cm.yaml),
-    * `data.users.anonymous.enabled: "true"`
-      * == enable anonymous access
-
-* allows
-  * anonymous users can access -- to the -- Argo CD instance /
-    * assume the default role permissions: `policy.default`
-
-## RBAC Model Structure
+* [here](/assets/model.conf)
 
 * model syntax
   * is -- based on -- [Casbin](https://casbin.org/docs/overview)
   * types of syntax
-    * syntax -- for -- assigning policies
-    * syntax -- for -- assigning users -- to -- internal roles
+    * [Policy -- `p` --](https://casbin.apache.org/docs/how-it-works#policy)
+      * syntax -- for -- assigning policies
+    * [group -- role definition --](https://casbin.apache.org/docs/rbac#role-definition)
+      * syntax -- for -- assigning users -- to -- internal roles
+
+* **Policy**
+  * allows
+    * assign permissions -- to an -- entity
+  * `p, <role/user/group>, <resource>, <action>, <object>, <effect>`
+    * == syntax
+    - `<role/user/group>`
+      - == entity | policy will be assigned
+      - if you want to distinguish user vs role -> user [`role::` prefix](https://casbin.apache.org/docs/rbac#distinguishing-users-from-roles)
+      - group comes -- from -- [SSO provider](user-management/index.md)
+    - `<resource>`
+      - == type of resource | action is performed
+        - [accounts](user-management/index.md)
+          - == local users
+        - [certificates](tls.md)
+        - [gpgkeys](../user-guide/gpg-verification.md)
+        - [exec](web_based_terminal.md)
+        - [extensions](../developer-guide/extensions/proxy-extensions.md)
+    - `<action>`
+      - == operation / performed | resource
+      - below table
+    - `<object>`
+      - == object identifier /
+        - represent the resource | perform the action
+        - 's format -- , depend on the -- resource
+    - `<effect>`
+      - Whether this policy should grant or restrict the operation | target object
+      - ALLOWED values
+        - `allow`
+        - `deny`
 
 * **Group**
   * allows
@@ -67,29 +73,8 @@
     - `<role>`
       - == internal role | entity will be assigned
 
-* **Policy**
-  * allows
-    * assign permissions -- to an -- entity
-  * `p, <role/user/group>, <resource>, <action>, <object>, <effect>`
-    * == syntax
-    - `<role/user/group>`
-      - == entity | policy will be assigned
-    - `<resource>`
-      - == type of resource | action is performed
-    - `<action>`
-      - == operation / performed | resource
-    - `<object>`
-      - == object identifier /
-        - represent the resource | perform the action
-        - 's format -- , depend on the resource, -- vary
-    - `<effect>`
-      - Whether this policy should grant or restrict the operation on the target object
-      - ALLOWED values
-        - `allow`
-        - `deny`
-
 * actions / EACH [resource](/util/rbac/rbac.go)
-  
+
   | Resource\Action     | get | create | update | delete | sync | action | override | invoke |
   | :------------------ | :-: | :----: | :----: | :----: | :--: | :----: | :------: | :----: |
   | **applications**    | ✅  |   ✅   |   ✅   |   ✅   |  ✅  |   ✅   |    ✅    |   ❌   |
@@ -104,7 +89,8 @@
   | **exec**            | ❌  |   ✅   |   ❌   |   ❌   |  ❌  |   ❌   |    ❌    |   ❌   |
   | **extensions**      | ❌  |   ❌   |   ❌   |   ❌   |  ❌  |   ❌   |    ❌    |   ✅   |
 
-### Application-Specific Policy
+
+#### application-specific policy -- `<object>` == `<app-project>/<app-name>` --
 
 * uses
   * | ALLOWED resources
@@ -113,26 +99,12 @@
     - `logs`
     - `exec`
 
-* ways to configure
-  * | ["argocd-rbac-cm" ConfigMap](examples/argocd-rbac-cm.yaml)
-    * == global configuration
-  * | [AppProject's roles](../user-guide/projects.md#project-roles)
+##### | ANY Namespaces -- `<object>` == `<app-project>/<app-ns>/<app-name>` --
 
-* `<object>`
-  * == `<app-project>/<app-name>`
+* requirements
+  * enable [application | ANY namespace](app-any-namespace.md)
 
-#### | ANY Namespaces
-
-* | enable [application | ANY namespace](app-any-namespace.md),
-  * `<object>`
-    * == `<app-project>/<app-ns>/<app-name>`
-
-### `applications` resource
-
-TODO:
-The `applications` resource is an [Application-Specific Policy](#application-specific-policy).
-
-#### Fine-grained Permissions for `update`/`delete` action
+##### Fine-grained Permissions for `update`/`delete` action
 
 The `update` and `delete` actions, when granted on an application, will allow the user to perform the operation on the application itself,
 but not on its resources.
@@ -196,7 +168,7 @@ p, example-user, applications, update/*, default/prod-app, deny
 > p, example-user, applications, delete/*/Pod/*, default/prod-app, deny
 > ```
 
-#### The `action` action
+##### The `action` action
 
 The `action` action corresponds to either built-in resource customizations defined
 [in the Argo CD repository](https://github.com/argoproj/argo-cd/tree/master/resource_customizations),
@@ -223,7 +195,7 @@ To allow the user to perform any actions:
 p, example-user, applications, action/*, default/*, allow
 ```
 
-#### The `override` action
+##### The `override` action
 
 The `override` action privilege can be used to allow passing arbitrary manifests or different revisions when syncing an `Application`. This can e.g. be used for development or testing purposes.
 
@@ -240,7 +212,7 @@ passing a revision when syncing an `Application` is also considered as an `overr
 The default setting of this flag is 'false', to prevent breaking changes in existing installations. It is recommended to set this setting to 'true' and only grant the `override` privilege per AppProject to the users that actually need this behavior.
 
 
-### `applicationsets` resource
+#### `applicationsets` resource
 
 * == [Application-Specific policy](#application-specific-policy)
 
@@ -263,23 +235,28 @@ outside the `dev-project` project.
 p, dev-group, applicationsets, *, dev-project/*, allow
 ```
 
-### `logs` resource
+#### `logs` resource
 
-* == [Application-Specific Policy](#application-specific-policy)
+* allows
+  * seeing pod's logs
 
-When granted with the `get` action, this policy allows a user to see Pod's logs of an application via
-the Argo CD UI. The functionality is similar to `kubectl logs`.
+* == `kubectl logs`
 
-### `exec` resource
+#### `exec` resource
 
-* == [Application-Specific Policy](#application-specific-policy)
+* requirements
+  * | argocd-cm.yaml,
+    * `data.exec.enabled: "true"`
 
-When granted with the `create` action, this policy allows a user to `exec` into Pods of an application via
-the Argo CD UI. The functionality is similar to `kubectl exec`.
+* allows
+  * | ArgoCD UI, 
+    * user can `exec` | Pods
 
-See [Web-based Terminal](web_based_terminal.md) for more info.
+* == `kubectl exec`
 
-### `extensions` resource
+* [MORE](web_based_terminal.md)
+
+#### `extensions` resource
 
 With the `extensions` resource, it is possible to configure permissions to invoke [proxy extensions](../developer-guide/extensions/proxy-extensions.md).
 The `extensions` RBAC validation works in conjunction with the `applications` resource.
@@ -299,6 +276,31 @@ When `deny` is used as an effect in a policy, it will be effective if the policy
 Even if more specific policies with the `allow` effect match as well, the `deny` will have priority.
 
 The order in which the policies appears in the policy file configuration has no impact, and the result is deterministic.
+
+## Built-in 
+
+* [policy](/assets/builtin-policy.csv)
+* RBAC Roles
+  * `role:readonly`
+    * read-only access -- to -- ALL resources
+  * `role:admin`
+    * unrestricted access -- to -- ALL resources
+
+## default policy
+
+* | "argocd-rbac-cm" ConfigMap,
+  * [`data.policy.default`](examples/argocd-rbac-cm.yaml)
+
+## Anonymous Access
+
+* steps
+  * | ["argocd-cm" ConfigMap](examples/argocd-cm.yaml),
+    * `data.users.anonymous.enabled: "true"`
+      * == enable anonymous access
+
+* allows
+  * anonymous users can access -- to the -- Argo CD instance /
+    * assume the [default role permissions](#default-policy)
 
 ## Policies Evaluation and Matching
 
@@ -334,7 +336,39 @@ When the `example-user` executes the `extensions/DaemonSet/test` action, the fol
 3. The value `action/extensions/DaemonSet/test` matches `action/extensions/*`. Note that `/` is not treated as a separator and the use of `**` is not necessary.
 4. The value `default/my-app` matches `default/*`.
 
-## Using SSO Users/Groups
+## -- via -- 
+
+### Local Users/Accounts
+
+* [Local users](user-management/index.md#local-usersaccounts)
+  * ways to assign access
+    * group them -- with a -- role
+    * assign policies DIRECTLY -- to -- them
+
+TODO: 
+> [!WARNING]
+> **Ambiguous Group Assignments**
+>
+> If you have [enabled SSO](user-management/index.md#sso), any SSO user with a scope that matches a local user will be
+> added to the same roles as the local user
+> For example, if local user `sally` is assigned to `role:admin`, and if an
+> SSO user has a scope which happens to be named `sally`, that SSO user will also be assigned to `role:admin`.
+>
+> An example of where this may be a problem is if your SSO provider is an SCM, and org members are automatically
+> granted scopes named after the orgs
+> If a user can create or add themselves to an org in the SCM, they can gain the
+> permissions of the local user with the same name.
+>
+> To avoid ambiguity, if you are using local users and SSO, it is recommended to assign policies directly to local
+> users, and not to assign roles to local users
+> In other words, instead of using `g, my-local-user, role:admin`, you
+> should explicitly assign policies to `my-local-user`:
+>
+> ```yaml
+> p, my-local-user, *, *, *, allow
+> ```
+
+### SSO Users/Groups
 
 The `scopes` field controls which OIDC scopes to examine during RBAC enforcement (in addition to `sub` scope).
 If omitted, it defaults to `'[groups]'`. The scope value can be a string, or a list of strings.
@@ -385,43 +419,6 @@ spec:
         - user@example.org # Value from the email scope
         - my-org:team-beta # Value from the groups scope
 ```
-
-## Local Users/Accounts
-
-* [Local users](user-management/index.md#local-usersaccounts) 
-  * assigned access by either grouping them with a role or by assigning policies directly
-  to them.
-
-The example below shows how to assign a policy directly to a local user.
-
-```yaml
-p, my-local-user, applications, sync, my-project/*, allow
-```
-
-This example shows how to assign a role to a local user.
-
-```yaml
-g, my-local-user, role:admin
-```
-
-> [!WARNING]
-> **Ambiguous Group Assignments**
->
-> If you have [enabled SSO](user-management/index.md#sso), any SSO user with a scope that matches a local user will be
-> added to the same roles as the local user. For example, if local user `sally` is assigned to `role:admin`, and if an
-> SSO user has a scope which happens to be named `sally`, that SSO user will also be assigned to `role:admin`.
->
-> An example of where this may be a problem is if your SSO provider is an SCM, and org members are automatically
-> granted scopes named after the orgs. If a user can create or add themselves to an org in the SCM, they can gain the
-> permissions of the local user with the same name.
->
-> To avoid ambiguity, if you are using local users and SSO, it is recommended to assign policies directly to local
-> users, and not to assign roles to local users. In other words, instead of using `g, my-local-user, role:admin`, you
-> should explicitly assign policies to `my-local-user`:
->
-> ```yaml
-> p, my-local-user, *, *, *, allow
-> ```
 
 ## Policy CSV Composition
 

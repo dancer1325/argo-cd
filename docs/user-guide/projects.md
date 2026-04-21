@@ -216,9 +216,9 @@ argocd app set APPLICATION_NAME --project PROJECT_NAME
     * allows
       * determining
         * WHO
-        * WHAT TODO:can be done to the applications associated with the project
+        * WHAT can be done | applications / associated -- with the -- project
   * uses
-    * give a CI pipeline: a RESTRICTED set of permissions / enable sync operations | 1! app
+    * | CI pipeline, set RESTRICTED set of permissions / enable sync operations | 1! app
       * NOT change its source OR destination
   * exist MULTIPLE projects roles / projects
   * can have DIFFERENT policies

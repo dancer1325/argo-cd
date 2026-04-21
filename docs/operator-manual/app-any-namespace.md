@@ -1,57 +1,45 @@
-# Applications in any namespace
+# Applications | ANY namespace
 
-* ⚠️take care enabling it⚠️
-  * Reason:🧠Misconfiguration -> could lead -- to -- potential security issues🧠
+* goal
+  * manage `Application` resources | namespaces / != control plane's namespace
+    * Reason:🧠by default, ONLY ALLOWED | Argo CD's control plane namespace🧠
 
 ## Introduction
 
 * requirements
   * Argo CD v2.5+
-  * enable & configure -- by the -- Argo CD administrator
-
-* goal
-  * manage `Application` resources | namespaces / != control plane's namespace
+  * Cluster-scoped Argo CD installation
+    * [here](/manifests/README.md)
+      * Reason:🧠has permissions -- to -- list & manipulate resources | cluster scope🧠
+    * ❌!= Argo CD namespace-scoped installation❌
+  * switch the application tracking method -- to -- `annotation` OR `annotation+label`
+    * Reason: 🧠application names == namespace's name + `Application`'s name
+      * -> 's length can be > 63 characters (==labelS' limit length)
+    * ❌NOT technically required❌
+      * BUT strongly recommended
+    * [how to enable](../user-guide/resource_tracking.md)
+  * | `argocd-application-controller` & `argocd-server` workloads,
+    * set `--application-namespaces = <NAMESPACE_FIRST>, <NAMESPACE_SECOND>, ...`
+    * == globally
+  * | `AppProject`,
+    * set `.spec.sourceNamespaces= <NAMESPACE_FIRST>, <NAMESPACE_SECOND>, ...`
 
 * control plane's namespace
-  * "argocd": default name 
+  * by default,
+    * "argocd" 
 
-* define applications | ADDITIONAL namespaces
-  * restrictions
-    * ⚠️ONLY can use certain `AppProjects` / configured -- by the -- Argo CD administrators⚠️
-  * 👀enable👀
-    * ordinary Argo CD users
-      * can use patterns
-        * _Example:_ [declarative](declarative-setup.md) management of `Application` resources / 
-          * NO risk of privilege escalation
-      * TODO: can configure notifications 
-for their Argo CD application in the namespace where Argo CD application is running in
-* See notifications [namespace based configuration](notifications/index.md#namespace-based-configuration)
+* 👀enable👀
+  * ordinary Argo CD users
+    * can manage ArgoCD Applications
+      * _Example:_ [declaratively](declarative-setup.md) 
+      * 💡WITHOUT risk of privilege escalation💡
+        * Reason:🧠restricted to the namespace🧠
+    * can configure [notifications / Argo CD application | specific namespace](notifications/index.md#namespace-based-configuration)
 
-## Prerequisites
-
-### Cluster-scoped Argo CD installation
-
-This feature can only be enabled and used when your Argo CD is installed as a cluster-wide instance, so it has permissions to list and manipulate resources on a cluster scope
-* It will not work with an Argo CD installed in namespace-scoped mode.
-
-### Switch resource tracking method
-
-Also, while technically not necessary, it is strongly suggested that you switch the application tracking method from the default `label` setting to either `annotation` or `annotation+label`
-* The reasoning for this is, that application names will be a composite of the namespace's name and the name of the `Application`, and this can easily exceed the 63 characters length limit imposed on label values
-* Annotations have a notably greater length limit.
-
-To enable annotation based resource tracking, refer to the documentation about [resource tracking methods](../user-guide/resource_tracking.md)
+* ⚠️take care enabling it⚠️
+  * Reason:🧠Misconfiguration -> could lead -- to -- potential security issues🧠
 
 ## Implementation details
-
-### Overview
-
-In order for an application to be managed and reconciled outside the Argo CD's control plane namespace, two prerequisites must match:
-
-1. The `Application`'s namespace must be explicitly enabled using the `--application-namespaces` parameter for the `argocd-application-controller` and `argocd-server` workloads. This parameter controls the list of namespaces that Argo CD will be allowed to source `Application` resources from globally. Any namespace not configured here cannot be used from any `AppProject`.
-1. The `AppProject` referenced by the `.spec.project` field of the `Application` must have the namespace listed in its `.spec.sourceNamespaces` field. This setting will determine whether an `Application` may use a certain `AppProject`. If an `Application` specifies an `AppProject` that is not allowed, Argo CD refuses to process this `Application`. As stated above, any namespace configured in the `.spec.sourceNamespaces` field must also be enabled globally.
-
-`Applications` in different namespaces can be created and managed just like any other `Application` in the `argocd` namespace previously, either declaratively or through the Argo CD API (e.g. using the CLI, the web UI, the REST API, etc).
 
 ### Reconfigure Argo CD to allow certain namespaces
 
@@ -108,33 +96,6 @@ kubectl apply -k examples/k8s-rbac/argocd-server-applications/
         * -> ONLY can create `Applications` | ALLOWED `AppProjects`
 
 * TODO:
-For an `Application` to be created outside the `argocd` namespace, the `AppProject` referred to in the `Application`'s `.spec.project` field must include the `Application`'s namespace in its `.spec.sourceNamespaces` field.
-
-For example, consider the two following (incomplete) `AppProject` specs:
-
-```yaml
-kind: AppProject
-apiVersion: argoproj.io/v1alpha1
-metadata:
-  name: project-one
-  namespace: argocd
-spec:
-  sourceNamespaces:
-  - namespace-one
-```
-
-and
-
-```yaml
-kind: AppProject
-apiVersion: argoproj.io/v1alpha1
-metadata:
-  name: project-two
-  namespace: argocd
-spec:
-  sourceNamespaces:
-  - namespace-two
-```
 
 In order for an Application to set `.spec.project` to `project-one`, it would have to be created in either namespace `namespace-one` or `argocd`. 
 Likewise, in order for an Application to set `.spec.project` to `project-two`, it would have to be created in either namespace `namespace-two` or `argocd`.
@@ -179,70 +140,32 @@ If you want to restrict access to be granted only to `Applications` in project `
 p, somerole, applications, get, foo/bar/*, allow
 ```
   
-## Managing applications in other namespaces
+## how to manage applications | OTHER namespaces?
 
 ### Declaratively
 
-For declarative management of Applications, just create the Application from a YAML or JSON manifest in the desired namespace. Make sure that the `.spec.project` field refers to an AppProject that allows this namespace. For example, the following (incomplete) Application manifest creates an Application in the namespace `some-namespace`:
+* define the Application -- through -- AppProject / 
+  * AppProject specifies the `spec.sourceNamespaces`
 
-```yaml
-kind: Application
-apiVersion: argoproj.io/v1alpha1
-metadata:
-  name: some-app
-  namespace: some-namespace
-spec:
-  project: some-project
-  # ...
-```
+### -- via -- `argocd` CL
 
-The project `some-project` will then need to specify `some-namespace` in the list of allowed source namespaces, e.g.
+* `argocd [COMMAND] <APPLICATION_NAME>/<NAMESPACE_NAME>`
+  * if application live | Argo CD's control plane namespace -> you can omit the `<NAMESPACE_NAME>` 
 
-```yaml
-kind: AppProject
-apiVersion: argoproj.io/v1alpha1
-metadata:
-    name: some-project
-    namespace: argocd
-spec:
-    sourceNamespaces:
-    - some-namespace
-```
+### -- via -- ArgoCD UI
 
-### Using the CLI
+* | create an application,
+  * General
+    * name == `<APPLICATION_NAME>`
+  * Destination
+    * namespace == `<NAMESPACE_NAME>`
 
-You can use all existing Argo CD CLI commands for managing applications in other namespaces, exactly as you would use the CLI to manage applications in the control plane's namespace.
+### -- via -- ArgoCD  REST API
 
-For example, to retrieve the `Application` named `foo` in the namespace `bar`, you can use the following CLI command:
-
-```shell
-argocd app get foo/bar
-```
-
-Likewise, to manage this application, keep referring to it as `foo/bar`:
-
-```bash
-# Create an application
-argocd app create foo/bar ...
-# Sync the application
-argocd app sync foo/bar
-# Delete the application
-argocd app delete foo/bar
-# Retrieve application's manifest
-argocd app manifests foo/bar
-```
-
-As stated previously, for applications in the Argo CD's control plane namespace, you can omit the namespace from the application name.
-
-### Using the UI
-
-Similar to the CLI, you can refer to the application in the UI as `foo/bar`.
-
-For example, to create an application named `bar` in the namespace `foo` in the web UI, set the application name in the creation dialogue's _Application Name_ field to `foo/bar`. If the namespace is omitted, the control plane's namespace will be used.
-
-### Using the REST API
-
-If you are using the REST API, the namespace for `Application` cannot be specified as the application name, and resources need to be specified using the optional `appNamespace` query parameter. For example, to work with the `Application` resource named `foo` in the namespace `bar`, the request would look like follows:
+If you are using the REST API, the namespace for `Application` cannot be specified as the application name, 
+and resources need to be specified using the optional `appNamespace` query parameter
+* For example, to work with the `Application` resource named `foo` in the namespace `bar`, 
+* the request would look like follows:
 
 ```bash
 GET /api/v1/applications/foo?appNamespace=bar

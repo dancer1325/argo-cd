@@ -1,0 +1,9 @@
+kind: Application
+apiVersion: argoproj.io/v1alpha1
+metadata:
+  name: some-app
+  namespace: some-namespace
+spec:
+  # refer -- to -- AppProject
+  project: some-project
+  # ...

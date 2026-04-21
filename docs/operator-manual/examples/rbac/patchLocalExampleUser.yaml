@@ -1,0 +1,7 @@
+data:
+  accounts.example-user: apiKey, login
+  accounts.example-user.enabled: "true"
+  accounts.user-without-role: apiKey, login
+  accounts.user-without-role.enabled: "true"
+  accounts.reader-user: apiKey, login
+  accounts.reader-user.enabled: "true"
