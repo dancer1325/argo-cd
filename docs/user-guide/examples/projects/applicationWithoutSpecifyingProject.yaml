@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-without-specifying-project
+  namespace: argocd
+spec:
+  # project:    NOT specified
+  #   get an error, because it's MANDATORY
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps.git
+    targetRevision: HEAD
+    path: guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default

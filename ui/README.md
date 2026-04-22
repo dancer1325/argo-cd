@@ -1,22 +1,29 @@
-# Argo CD UI
+# Argo CD Web UI
 
 <img src="https://github.com/argoproj/argo-cd/blob/master/ui/src/assets/images/argo.png?raw=true" alt="Argo Image" width="600" />
 
-Web UI for [Argo CD](https://github.com/argoproj/argo-cd).
-
 ## Getting started
+### requirements
+* install [NodeJS](https://nodejs.org/en/download/) and [Yarn](https://yarnpkg.com)
+  * | macOS, run SIMPLY `brew install node yarn`
 
-  1. Install [NodeJS](https://nodejs.org/en/download/) and [Yarn](https://yarnpkg.com).  On macOS with [Homebrew](https://brew.sh/), running `brew install node yarn` will accomplish this.
-  2. Run `yarn install` to install local prerequisites.
-  3. Run `yarn start` to launch the webpack dev UI server.
-  4. Run `yarn build` to bundle static resources into the `./dist` directory.
+### how to install?
+* `yarn install` 
 
-To build a Docker image, run `IMAGE_NAMESPACE=yourimagerepo IMAGE_TAG=latest yarn docker`.
+### how to start webpack dev UI server?
+* `yarn start`
 
-To do the same and push to a Docker registry, run `IMAGE_NAMESPACE=yourimagerepo IMAGE_TAG=latest DOCKER_PUSH=true yarn docker`.
+### how to build? 
+* `yarn build`
+  * create static resources | "./dist"
+
+### how to build a Docker image?
+* `IMAGE_NAMESPACE=yourimagerepo IMAGE_TAG=latest yarn docker`
+  * if you want to push | Docker registry -> run `IMAGE_NAMESPACE=yourimagerepo IMAGE_TAG=latest DOCKER_PUSH=true yarn docker`
 
 ## Pre-commit Checks
 
+TODO: 
 Make sure your code passes the lint checks:
 
 ```bash

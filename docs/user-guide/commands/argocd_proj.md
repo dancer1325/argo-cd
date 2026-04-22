@@ -1,5 +1,8 @@
 # `argocd proj` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/project.md)'s `func NewProjectCommand(`👀
+
 ## argocd proj
 
 Manage projects

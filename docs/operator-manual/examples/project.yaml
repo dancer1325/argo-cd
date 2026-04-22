@@ -3,19 +3,25 @@ kind: AppProject
 metadata:
   name: my-project
   namespace: argocd
-  # Finalizer that ensures that project is not deleted until it is not referenced by any application
+  # Finalizer
+  #   allow
+  #     TILL project is NOT reference by any application, project is NOT deleted
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   # Project description
   description: Example Project
 
-  # Allow manifests to deploy from any Git repos
+  # ALLOWED source repos / AppProject's ArgoCD Applications source of truth could come from
   sourceRepos:
+  # ALL are ALLOWED
   - '*'
 
-  # Only permit applications to deploy to the 'guestbook' namespace or any namespace starting with 'guestbook-' in the same cluster
-  # Destination clusters can be identified by 'server', 'name', or both.
+  # Kubernetes cluster & namespace | Applications can be deployed
+  # ways to identify the destination clusters
+  #   1. -- by -- 'server'
+  #   2. -- by -- 'name'
+  #   3. -- by -- 'name' + 'server'
   destinations:
   - namespace: guestbook
     server: https://kubernetes.default.svc
@@ -25,22 +31,27 @@ spec:
     server: https://kubernetes.default.svc
     name: in-cluster
 
-  # Deny all cluster-scoped resources from being created, except for Namespace
+  # cluster-scoped resources / ALLOWED from being created
   clusterResourceWhitelist:
   - group: ''
     kind: Namespace
-    # Name is optional. If specified, only resources with a matching name will be allowed.
+    # Name
+    #   OPTIONAL
+    #     if it's specified -> ONLY resources / matching name are ALLOWED
     # Globs in Go's filepath.Match syntax are supported. Example: "team1-*".
     name: ''
 
-  # Deny all Namespace resources from being created if their name starts with 'kube-'
+  # cluster-scoped resources / DENIED from being created
   clusterResourceBlacklist:
     - group: ''
       kind: Namespace
-      # Name is optional. If specified, only resources with a matching name will be denied.
+      # Name
+      #   OPTIONAL
+      #     if it's specified -> ONLY resources / matching name are DENIED
       name: 'kube-*'
 
-  # Allow all namespaced-scoped resources to be created, except for ResourceQuota, LimitRange, NetworkPolicy
+  # cluster-scoped resources / DENIED from being created
+  #   == REST can be created
   namespaceResourceBlacklist:
   - group: ''
     kind: ResourceQuota
@@ -49,7 +60,8 @@ spec:
   - group: ''
     kind: NetworkPolicy
 
-  # Deny all namespaced-scoped resources from being created, except for Deployment and StatefulSet
+  # cluster-scoped resources / ALLOWED from being created
+  #   == REST can NOT be created
   namespaceResourceWhitelist:
   - group: 'apps'
     kind: Deployment
@@ -60,6 +72,7 @@ spec:
   orphanedResources:
     warn: false
 
+  #
   roles:
   # A role which provides read-only access to all applications in the project
   - name: read-only

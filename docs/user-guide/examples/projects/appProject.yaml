@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: example-project
+  namespace: argocd
+spec:
+  description: Example project for grouping applications
+  sourceRepos:
+  - 'https://github.com/dancer1325/argocd-example-apps.git'
+  destinations:
+  - server: https://kubernetes.default.svc
+    namespace: default
+---
+# TODO: add clusterResourceWhitelist & clusterResourceBlacklist, but it need create more cluster beforehand
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: example-namespaceresourcewhiteandblacklist-project
+  namespace: argocd
+spec:
+  description: Example project for grouping applications
+  sourceRepos:
+    - 'https://github.com/dancer1325/argocd-example-apps.git'
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: default
+  namespaceResourceBlacklist:
+    - group: ''
+      kind: Service
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: Deployment
+    - group: '*'
+      kind: Pod
+

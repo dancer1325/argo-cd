@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: team-frontend
+  namespace: argocd
+spec:
+  description: Frontend team project
+  sourceRepos:
+  - 'https://github.com/dancer1325/argocd-example-apps.git'
+  destinations:
+  - server: https://kubernetes.default.svc
+    namespace: frontend
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: team-backend
+  namespace: argocd
+spec:
+  description: Backend team project
+  sourceRepos:
+  - 'https://github.com/dancer1325/argocd-example-apps.git'
+  destinations:
+  - server: https://kubernetes.default.svc
+    namespace: backend

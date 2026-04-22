@@ -1,0 +1,13 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: default
+spec:
+  sourceRepos:
+    - '!https://github.com/argocd/argocd-example-apps.git'
+    - '*'
+  sourceNamespaces: []
+  destinations: []
+  namespaceResourceBlacklist:
+    - group: '*'
+      kind: '*'

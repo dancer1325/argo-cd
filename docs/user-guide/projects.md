@@ -3,117 +3,76 @@
 * Projects
   * allows
     * grouping logically applications
+      * ⚠️ALL application -- belongs to -- 1! project ⚠️
   * use cases
     * Argo CD -- is used by -- MULTIPLE teams
       * _Example:_ DIFFERENT access level | namespaces / teams
   * features
-    * restrict what may be deployed
-      * Reason: 🧠 Git source repositories🧠
-    * restrict | apps -- may be -- deployed
-      * destination clusters & namespaces
-    * restrict what kinds of objects may be deployed
+    * restrict what may be deployed 
+      * -- via -- `spec.sourceRepos`
+    * restrict destination clusters & namespaces | apps -- may be -- deployed
+      * -- via -- `spec.destinations`
+    * restrict the kinds of objects may be deployed
       * _Example:_ RBAC, CRDs, DaemonSets, NetworkPolicy, ...
-    * defining project roles -- to provide -- application RBAC
-      * -- bound to -- OIDC groups &/OR JWT tokens
+      * -- via -- `*ResourceWhitelist/Blacklist`
+        * 👀if you want to check if a resource is cluster-scoped OR namespace-scoped -> `kubectl api-resources` & check column: "namespace"👀
+    * define project roles -- to provide -- [application RBAC](../operator-manual/rbac.md)
 
 ### Default Project
 
-* ⚠️ALL application -- belongs to -- 1! project ⚠️
 * `default` project
-  * use cases
-    * if unspecified -> an application -- belongs to the -- default project
-  * created AUTOMATICALLY / 
-    * ORIGINALLY, MOST permissive
-        ```yaml
-        spec:
-        sourceRepos:
-        - '*'
-        destinations:
-        - namespace: '*'
-            server: '*'
-        clusterResourceWhitelist:
-        - group: '*'
-            kind: '*'
-        ```
-  * allows
-    * from ANY source repo -- deployments to -- ANY cluster
-    * ALL resource Kinds 
-    * being modified
-      * ❌NOT deleted ❌
-    * TODO: When initially created, it's specification is configured to be the most permissive
-  * if you want to remove ALL `default` project's permissions  -> apply the following manifest | namespace / Argo CD is installed
-
-    ```yaml
-    apiVersion: argoproj.io/v1alpha1
-    kind: AppProject
-    metadata:
-      name: default
-    spec:
-      sourceRepos: []
-      sourceNamespaces: []
-      destinations: []
-      namespaceResourceBlacklist:
-        - group: '*'
-          kind: '*'
-    ```
-
-* project
+  * [source code](/server/server.go)'s `initializeDefaultProject`
   * use cases
     * initial testing
+    * if unspecified (ONLY -- through -- `argocd`) -> an application -- belongs to the -- default project
+      * Reason why ONLY -- through -- `argocd`: 🧠declaratively & ArgoCD UI validate it beforehand🧠
+  * created AUTOMATICALLY / 
+    * ORIGINALLY (== | install), MOST permissive
+        ```yaml
+        spec:
+          sourceRepos:
+          - '*'
+          destinations:
+          - namespace: '*'
+              server: '*'
+          clusterResourceWhitelist:
+          - group: '*'
+              kind: '*'
+        ```
+  * allows
+    * | ANY source repo -- deployments to -- ANY cluster
+      * Reason: 🧠-- thanks to -- `spec.sourceRepos` & `spec.destinations`🧠
+    * ALL resource Kinds 
+      * Reason: 🧠-- thanks to -- `spec.clusterResourceWhitelist`🧠
+    * being modified
+      * ❌if there are applications / using it & you edit / stop matching it -> it can NOT be modified❌
+      * ❌NOT deleted ❌
+  * if you want to remove ALL `default` project's permissions  -> apply a manifest | namespace / Argo CD is installed
   * recommendations
     * create DEDICATED projects / EXPLICIT source + destination + resource permissions
 
+### how to create projects?
+
+* ways to ocreate projects
+  * declaratively
+  * ArgoCD UI
+    * Settings > Projects > New
+      * name: <SOME_NAME>
+      * description: <SOME_DESCRIPTION>
+  * `argocd proj create <SOME_PROJECT_NAME>`
+    * _Example:_
+
+### how to manage (modify) projects?
+
+* modify (add, remove) `sourceRepos`
+  * you can ALSO do negations
+
+* ways
+  * `argocd`
+  * ArgoCD UI
+  * declaratively
+
 TODO: 
-AFTER modifying the `default` project,
-any application that attempts to use it will be denied until 
-you explicitly move the application to a more permissive project.
-
-### Creating Projects
-
-* `argocd proj create projectName`
-  * _Example:_ 
-  
-    ```bash
-    # `myproject`   projectName
-    # -d      deploy | cluster,namespaceName    -- https://kubernetes.default.svc == cluster &  mynamespace == namespace  
-    # -s      permitted Git source repository  
-    argocd proj create myproject -d https://kubernetes.default.svc,mynamespace -s https://github.com/argoproj/argocd-example-apps.git
-    ```
-
-* TODO: 
-Additional projects can be created to give separate teams different levels of access to namespaces
-* The following command creates a new project `myproject` which can deploy applications to namespace `mynamespace` of cluster `https://kubernetes.default.svc`
-* The permitted Git source repository is set to `https://github.com/argoproj/argocd-example-apps.git` repository.
-
-### Managing Projects
-
-Permitted source Git repositories are managed using commands:
-
-```bash
-argocd proj add-source <PROJECT> <REPO>
-argocd proj remove-source <PROJECT> <REPO>
-```
-
-We can also do negations of sources (i.e. do _not_ use this repo).
-
-```bash
-argocd proj add-source <PROJECT> !<REPO>
-argocd proj remove-source <PROJECT> !<REPO>
-```
-
-Declaratively we can do something like this:
-
-```yaml
-spec:
-  sourceRepos:
-    # Do not use the test repo in argoproj
-    - '!ssh://git@GITHUB.com:argoproj/test'
-    # Nor any Gitlab repo under group/ 
-    - '!https://gitlab.com/group/**'
-    # Any other repo is fine though
-    - '*'
-```
-
 A source repository is considered valid if the following conditions hold:
 
 1. _Any_ allow source rule (i.e. a rule which isn't prefixed with `!`) permits the source
@@ -205,9 +164,10 @@ spec:
 * requirements
   * user needs permissions -- to -- access the NEW project
 
-```
-argocd app set APPLICATION_NAME --project PROJECT_NAME
-```
+* ways
+  * `argocd`
+  * declaratively
+  * ArgoCD UI
 
 ## Project Roles
 
@@ -232,6 +192,8 @@ argocd app set APPLICATION_NAME --project PROJECT_NAME
 * TODO: A role's policy can only grant access to that role
 * Users are associated with roles based on the groups list
 * Consider the hypothetical AppProject definition below:
+
+-- bound to -- OIDC groups &/OR JWT tokens
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
