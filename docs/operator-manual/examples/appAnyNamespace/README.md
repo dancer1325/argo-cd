@@ -18,7 +18,15 @@
         * microk8s
     * `kubectl config current-context`
         * check Kubectl points to a context
-* [install Argo CD](../../installation.md)
+* [install Argo CD cluster-scoped](../../installation.md)
+* | "argocd-application-controller" & "argocd-server" workloads, 
+  * set `--application-namespaces = <NAMESPACE_FIRST>, <NAMESPACE_SECOND>, ...`
+    * `kubectl patch configmap argocd-cm -n argocd --type merge --patch-file patchToApplyToArgocdCMDParamsConfigmap.yaml`
+    * `kubectl rollout restart -n argocd deployment argocd-server`
+    * `kubectl rollout restart -n argocd statefulset argocd-application-controller`
+* adapt Kubernetes RBAC /
+  * enable `Applications` | OTHER namespaces, can be managed -- by the -- Argo CD API (i.e. the CLI and UI)
+    * `kubectl apply -k /examples/k8s-rbac/argocd-server-applications/`
 
 # Introduction
 ## control plane's namespace, by default, "argocd"
@@ -33,7 +41,7 @@ TODO:
 #### can configure notifications / Argo CD application | specific namespace
 TODO: 
 
-# requirements
+# Introduction
 TODO:
 
 

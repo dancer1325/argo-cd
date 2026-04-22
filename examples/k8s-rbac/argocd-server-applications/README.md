@@ -1,11 +1,8 @@
-This folder contains example RBAC for Kubernetes to allow the Argo CD API
-Server (`argocd-server`) to perform CRUD operations on `Application` CRs
-in all namespaces on the cluster.
+* goal
+  * example RBAC for Kubernetes / enable
+    * Argo CD API Server (`argocd-server`) can perform CRUD operations | `Application` CRs | ALL cluster's namespaces
+    * "argocd-notifications-controller" can notify apps | ALL namespaces
 
-Applying the `ClusterRole` and `ClusterRoleBinding` grant the Argo CD API
-server read and write permissions cluster-wide, which may not be what you
-want. Handle with care.
-
-Only apply these if you have installed Argo CD into the default namespace
-`argocd`. Otherwise, you need to edit the cluster role binding to bind to
-the service account in the correct namespace.
+* requirements
+  * Argo CD is installed | default namespace (`argocd`)
+    * OTHERWISE, edit the "*-clusterrolebinding" / bind to the ServiceAccount | correct namespace

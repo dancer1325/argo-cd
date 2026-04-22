@@ -1,0 +1,4 @@
+### Application name == foo     &   appNamespace=bar
+GET /api/v1/applications/foo?appNamespace=bar
+
+###

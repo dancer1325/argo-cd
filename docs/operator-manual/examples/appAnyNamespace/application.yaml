@@ -6,4 +6,26 @@ metadata:
 spec:
   # refer -- to -- AppProject
   project: some-project
-  # ...
+  # TODO: ...
+
+---
+kind: Application
+apiVersion: argoproj.io/v1alpha1
+metadata:
+  name: app-in-project-one
+  # ALLOWED namespaces: argocd OR namespace-one
+  namespace: namespace-one
+spec:
+  project: project-one
+  # TODO: ...
+
+---
+kind: Application
+apiVersion: argoproj.io/v1alpha1
+metadata:
+  name: app-in-project-two
+  # ALLOWED namespaces: argocd OR namespace-two
+  namespace: namespace-two
+spec:
+  project: project-two
+  # TODO: ...

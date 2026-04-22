@@ -26,5 +26,7 @@ metadata:
   name: project-two
   namespace: argocd
 spec:
+  # ❌NOT specify `argocd`❌
+  # follow the least required privileges principle
   sourceNamespaces:
     - namespace-two

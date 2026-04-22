@@ -104,8 +104,31 @@
 * requirements
   * enable [application | ANY namespace](app-any-namespace.md)
 
+* if namespace == control plane's namespace (by default, `argocd`) -> you can use `<app-project>/<app-name>`
+  * Reason:🧠backwards compatibility🧠
+
+* `*`
+  * ❌do NOT make distinction BETWEEN `<app-project>` & `<app-ns>`❌
+    * _Example:_ 
+
+      ```
+      # ANY application / 
+      #   belong to project == foo
+      #   regardless of the namespace
+      p, somerole, applications, get, foo/*, allow
+      ```
+
+  * `<app-project>/<app-ns>/*`
+    * ANY Application | certain project & namespace
+    * _Example:_
+
+      ``` 
+      p, somerole, applications, get, foo/bar/*, allow
+      ```
+
 ##### Fine-grained Permissions for `update`/`delete` action
 
+TODO: 
 The `update` and `delete` actions, when granted on an application, will allow the user to perform the operation on the application itself,
 but not on its resources.
 
