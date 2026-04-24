@@ -10,8 +10,18 @@
   * features
     * restrict what may be deployed 
       * -- via -- `spec.sourceRepos`
+        * you can ALSO do negations -- via -- `!`
+          * `!*`
+            * ❌NOT useful❌
+          * ⚠️requirements / Application's `spec.source.repoUrl` is valid⚠️
+            * allow source rule (== NOT contain `!`) permits the value
+            * NO deny source rule (== contain `!`) rejects the value
     * restrict destination clusters & namespaces | apps -- may be -- deployed
       * -- via -- `spec.destinations`
+        * you can ALSO do negations -- via -- `!`
+          * ⚠️requirements / Application's `spec.destination` is valid⚠️
+            * allow destination rule (== NOT contain `!`) permits the value
+            * NO deny destinations rule (== contain `!`) rejects the value
     * restrict the kinds of objects may be deployed
       * _Example:_ RBAC, CRDs, DaemonSets, NetworkPolicy, ...
       * -- via -- `*ResourceWhitelist/Blacklist`
@@ -51,7 +61,7 @@
   * recommendations
     * create DEDICATED projects / EXPLICIT source + destination + resource permissions
 
-### how to create projects?
+### how to create projects & assign the Applications -- to a -- project?
 
 * ways to ocreate projects
   * declaratively
@@ -62,112 +72,19 @@
   * `argocd proj create <SOME_PROJECT_NAME>`
     * _Example:_
 
-### how to manage (modify) projects?
+### how to modify projects?
 
-* modify (add, remove) `sourceRepos`
-  * you can ALSO do negations
+* == modify (add, remove) 
+  * `sourceRepos`
+  * `destinations`
+  * `clusterResource` & `namespaceResource`
+    * ⚠️namespace-scoped resources are restricted -- via a -- deny list⚠️
+    * ⚠️cluster-scoped resources are restricted -- via a -- allow list⚠️
 
 * ways
   * `argocd`
   * ArgoCD UI
   * declaratively
-
-TODO: 
-A source repository is considered valid if the following conditions hold:
-
-1. _Any_ allow source rule (i.e. a rule which isn't prefixed with `!`) permits the source
-2. AND *no* deny source (i.e. a rule which is prefixed with `!`) rejects the source
-
-Keep in mind that `!*` is an invalid rule, since it doesn't make any sense to disallow everything.
-
-Permitted destination clusters and namespaces are managed with the commands (for clusters always provide server, 
-the name is not used for matching):
-
-```bash
-argocd proj add-destination <PROJECT> <CLUSTER>,<NAMESPACE>
-argocd proj remove-destination <PROJECT> <CLUSTER>,<NAMESPACE>
-```
-
-As with sources, we can also do negations of destinations (i.e. install anywhere _apart from_).
-
-```bash
-argocd proj add-destination <PROJECT> !<CLUSTER>,!<NAMESPACE>
-argocd proj remove-destination <PROJECT> !<CLUSTER>,!<NAMESPACE>
-```
-
-Declaratively we can do something like this:
-
-```yaml
-spec:
-  destinations:
-  # Do not allow any app to be installed in `kube-system`  
-  - namespace: '!kube-system'
-    server: '*'
-  # Or any cluster that has a URL of `team1-*`   
-  - namespace: '*'
-    server: '!https://team1-*'
-    # Any other namespace or server is fine though.
-  - namespace: '*'
-    server: '*'
-```
-
-As with sources, a destination is considered valid if the following conditions hold:
-
-1. _Any_ allow destination rule (i.e. a rule which isn't prefixed with `!`) permits the destination
-2. AND *no* deny destination (i.e. a rule which is prefixed with `!`) rejects the destination
-
-Keep in mind that `!*` is an invalid rule, since it doesn't make any sense to disallow everything.
-
-Permitted destination K8s resource kinds are managed with the commands
-* Note that namespaced-scoped resources are restricted via a deny list,
-whereas cluster-scoped resources are restricted via allow list.
-
-```bash
-argocd proj allow-cluster-resource <PROJECT> <GROUP> <KIND>
-argocd proj allow-namespace-resource <PROJECT> <GROUP> <KIND> [<NAME>]
-argocd proj deny-cluster-resource <PROJECT> <GROUP> <KIND>
-argocd proj deny-namespace-resource <PROJECT> <GROUP> <KIND> [<NAME>]
-```
-
-#### Restrict Cluster-Scoped Resources by Name
-
-Since the names of certain cluster-scoped resources such as Namespaces and CustomResourceDefinitions (CRDs) 
-have special
-significance, it can be useful to allow only specific resources of these kinds
-* For example, the following AppProject
-config allows only namespaces starting with `team1-`:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: AppProject
-spec:
-  clusterResourceWhitelist:
-  - group: ''
-    kind: Namespace
-    name: team1-*
-```
-
-It is also possible to deny specific names of cluster-scoped resources.
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: AppProject
-spec:
-  clusterResourceBlacklist:
-  - group: ''
-    kind: Namespace
-    name: kube-*
-```
-
-### how to assign the Application -- to -- a project?
-
-* requirements
-  * user needs permissions -- to -- access the NEW project
-
-* ways
-  * `argocd`
-  * declaratively
-  * ArgoCD UI
 
 ## Project Roles
 
@@ -177,153 +94,68 @@ spec:
       * determining
         * WHO
         * WHAT can be done | applications / associated -- with the -- project
-  * uses
+  * use cases
     * | CI pipeline, set RESTRICTED set of permissions / enable sync operations | 1! app
       * NOT change its source OR destination
-  * exist MULTIPLE projects roles / projects
-  * can have DIFFERENT policies
+    * OIDC groups / restricted access
+  * can 
+    * exist MULTIPLE projects roles / project 
+    * have MULTIPLE policies
+    * be -- bound to -- OIDC groups &/OR JWT tokens
+  * ' policies
+    * == permissions /
+      * stored | role -- as a -- list(policy strings)
+    * `p, proj:<PROJECT_NAME>:<ROLE_NAME>, <resource>, <action>, <PROJECT_NAME>/<object>, <effect>`
+      * 💡pattern💡
+        * [MORE](../operator-manual/rbac.md)
+      * `<object>`
+        * ALLOWED ones
+          * [here](/util/rbac/rbac.go)'s `ProjectScoped`
+          * are
+            * applications
+            * applicationsets
+            * logs
+            * exec
+            * clusters
+            * repositories
 
-* policies
-  * == permissions / 
-    * follows the SAME [RBAC pattern / used | Argo CD configuration](../operator-manual/rbac.md)
-    * stored | role
-      * -- as a -- list(policy strings)
+### how to modify?
 
-* TODO: A role's policy can only grant access to that role
-* Users are associated with roles based on the groups list
-* Consider the hypothetical AppProject definition below:
+* ways
+  * declaratively
+  * `argocd`
+  * ArgoCD UI
 
--- bound to -- OIDC groups &/OR JWT tokens
+### JWT tokens / -- bound to a -- role 
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: AppProject
-metadata:
-  name: sample-test-project
-spec:
-  ...
-  roles:
-  - name: custom-project-role
-    description: The "custom-project-role" will be applied to the `some-user` group.
-    groups:
-    - some-user
-    policies:
-    - p, proj:sample-test-project:custom-project-role, applications, *, *, allow
-  ...
-```
-
-Argo CD will use the policies defined in the AppProject roles while authorizing users actions
-* To determine which role a given users is associated with, it will dynamically create groups based on the role name in runtime
-* The project definition above will generate the following Casbin RBAC rules:
-
-```
-    p, proj:sample-test-project:custom-project-role, applications, *, *, allow
-    g, some-user, proj:sample-test-project:custom-project-role
-```
-
-_Note 1_: It is very important that policy roles follow the pattern `proj:<project-name>:<role-name>` or they won't be effective during the Argo CD authorization process.
-
-_Note 2_: The example above used `applications` as the resource for the policy definition
-* However other types of resources can also be used: `applicationsets`, `repositories`, `clusters`, `logs` and `exec`
-* See the [RBAC documentation](../operator-manual/rbac.md) for more details about those resources.
-
-In order to create roles in a project and add policies to a role, a user will need permission to update a project
-*  The following commands can be used to manage a role.
-
-```bash
-argocd proj role list
-argocd proj role get
-argocd proj role create
-argocd proj role delete
-argocd proj role add-policy
-argocd proj role remove-policy
-```
-
-Project roles in itself are not useful without generating a token to associate to that role
-* Argo CD supports JWT tokens as the means to authenticate to a role
-* Since the JWT token is associated with a role's policies, any changes to the role's policies will immediately take effect for that JWT token.
-
-The following commands are used to manage the JWT tokens.
-
-```bash
-argocd proj role create-token PROJECT ROLE-NAME
-argocd proj role delete-token PROJECT ROLE-NAME ISSUED-AT
-```
-
-Since the JWT tokens aren't stored in Argo CD, they can only be retrieved when they are created
-* A user can leverage them in the cli by either passing them in using the `--auth-token` flag or setting the ARGOCD_AUTH_TOKEN environment variable
-* The JWT tokens can be used until they expire or are revoked
-*  The JWT tokens can be created with or without an expiration
-*  By default, the cli creates them without an expirations date
-*  Even if a token has not expired, it cannot be used if the token has been revoked.
-
-Below is an example of leveraging a JWT token to access a guestbook application
-*  It makes the assumption that the user already has a project named myproject and an application called guestbook-default.
-
-```bash
-PROJ=myproject
-APP=guestbook-default
-ROLE=get-role
-argocd proj role create $PROJ $ROLE
-argocd proj role create-token $PROJ $ROLE -e 10m
-JWT=<value from command above>
-argocd proj role list $PROJ
-argocd proj role get $PROJ $ROLE
-
-# This command will fail because the JWT Token associated with the project role does not have a policy to allow access to the application
-argocd app get $APP --auth-token $JWT
-# Adding a policy to grant access to the application for the new role
-argocd proj role add-policy $PROJ $ROLE --action get --permission allow --object $APP
-argocd app get $APP --auth-token $JWT
-
-# Removing the policy we added and adding one with a wildcard.
-argocd proj role remove-policy $PROJ $ROLE -a get -o $APP
-argocd proj role add-policy $PROJ $ROLE -a get --permission allow -o '*'
-# The wildcard allows us to access the application due to the wildcard.
-argocd app get $APP --auth-token $JWT
-argocd proj role get $PROJ $ROLE
-
-
-argocd proj role get $PROJ $ROLE
-# Revoking the JWT token
-argocd proj role delete-token $PROJ $ROLE <id field from the last command>
-# This will fail since the JWT Token was deleted for the project role.
-argocd app get $APP --auth-token $JWT
-```
-
-## Configuring RBAC With Projects
-
-* project Roles
+* JWT token
   * allows
-    * configuring RBAC rules / ⚠️project-scope ⚠️
+    * authenticate to a role
+  * | use it, evaluate DYNAMICALLY the ALLOWED policies
+    * ==
+      * ❌JWT is NOT related -- with a -- role's policies❌
+      * if you change the role's policies & use the SAME JWT -> ALLOWED rights change
+  * ⚠️ONLY | being created, 
+    * they can be retrieved⚠️
+      * Reason:🧠
+        * NOT stored | Argo CD
+        * ArgoCD validates cryptographically -- via -- iat🧠
+  * ways to be used
+    * -- via -- CL's `--auth-token` flag
+    * set `ARGOCD_AUTH_TOKEN` environment variable
+  * can be used UNTIL they
+    * expire OR
+      * ❌by default, NO expire❌
+    * are deleted
+      * ⚠️revokation's priority > expirations's priority⚠️
+        * == if token NOT expired BUT revoked -> can NOT be used
 
-* _Example:_ TODO: add | SOME project
-    ```yaml
-    apiVersion: argoproj.io/v1alpha1
-    kind: AppProject
-    metadata:
-      name: my-project
-      namespace: argocd
-    spec:
-      roles:
-      # A role which provides read-only access -- to -- ALL applications | project
-      - name: read-only
-        description: Read-only privileges to my-project
-        policies:
-        - p, proj:my-project:read-only, applications, get, my-project/*, allow
-        groups:
-        - my-oidc-group
-    ```
+## Global Projects
 
-* ways to configure the policy
-  * `argocd proj role` 
-  * | UI, project details page  
+* requirements
+  * Argo CD v1.8
 
-* if you want to configure CROSS project RBAC rules -> use `argocd-rbac-cm` ConfigMap
-  * see [RBAC](../operator-manual/rbac.md) documentation 
-
-## Configuring Global Projects (v1.8)
-
+TODO: 
 * Global projects
   * provide
     * configurations / OTHER projects can inherit from

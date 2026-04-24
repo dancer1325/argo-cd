@@ -10,6 +10,8 @@ spec:
   destinations:
   - server: https://kubernetes.default.svc
     namespace: default
+  - server: https://kubernetes.default.svc
+    namespace: blue-green
 ---
 # TODO: add clusterResourceWhitelist & clusterResourceBlacklist, but it need create more cluster beforehand
 

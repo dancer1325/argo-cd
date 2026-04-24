@@ -32,6 +32,40 @@ spec:
     namespace: default
 
 ---
+## you can ALSO do negations -- via -- `!`
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-notallowed-to-deploy-project-dueto-sourcereponegations
+  namespace: argocd
+spec:
+  project: appproject-with-sourcerepo-negations
+  source:
+    # repoURL   can NOT be  https://github.com/argocd/argocd-example-apps.git'
+    repoURL: https://github.com/argoproj/argocd-example-apps.git
+    targetRevision: HEAD
+    path: guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+---
+## you can ALSO do negations -- via -- `!`
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-allowed
+  namespace: argocd
+spec:
+  project: appproject-with-sourcerepo-negations
+  source:
+    # repoURL   !=  https://github.com/argocd/argocd-example-apps.git'
+    repoURL: https://github.com/dancer1325/argocd-example-apps.git
+    targetRevision: HEAD
+    path: guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+---
 # feature: restrict destination clusters & namespaces | apps -- may be -- deployed
 #   -- via -- `spec.destinations`
 apiVersion: argoproj.io/v1alpha1
@@ -50,6 +84,22 @@ spec:
     server: https://kubernetes.default.svc
     namespace: notcontainedinproject
 ---
+## you can ALSO do negations -- via -- `!`
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-not-allowed-dueto-destinations
+  namespace: default
+spec:
+  project: appproject-with-destination-negations
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps.git
+    targetRevision: HEAD
+    path: guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+---
 # feature: restrict the kinds of objects may be deployed
 #   -- via -- `*ResourceWhitelist/Blacklist`
 apiVersion: argoproj.io/v1alpha1
@@ -66,3 +116,20 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: default
+---
+# JWT tokens / -- bound to a -- role
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-projectrole-jwttoken
+  namespace: argocd
+spec:
+  project: sample-test-project
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps.git
+    targetRevision: HEAD
+    path: guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+---

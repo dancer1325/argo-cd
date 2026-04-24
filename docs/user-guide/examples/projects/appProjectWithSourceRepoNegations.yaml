@@ -1,11 +1,27 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: default
+  name: appproject-with-sourcerepo-negations
 spec:
   sourceRepos:
+    # deny source repo rule
     - '!https://github.com/argocd/argocd-example-apps.git'
     - '*'
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: default
+  namespaceResourceBlacklist:
+    - group: '*'
+      kind: '*'
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: appproject-with-sourcerepo-negations-all
+spec:
+  sourceRepos:
+    # deny source repo rule
+    - '!*'
   sourceNamespaces: []
   destinations: []
   namespaceResourceBlacklist:

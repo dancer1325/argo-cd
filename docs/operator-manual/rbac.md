@@ -191,7 +191,7 @@ p, example-user, applications, update/*, default/prod-app, deny
 > p, example-user, applications, delete/*/Pod/*, default/prod-app, deny
 > ```
 
-##### The `action` action
+##### `action` action
 
 The `action` action corresponds to either built-in resource customizations defined
 [in the Argo CD repository](https://github.com/argoproj/argo-cd/tree/master/resource_customizations),
@@ -218,7 +218,7 @@ To allow the user to perform any actions:
 p, example-user, applications, action/*, default/*, allow
 ```
 
-##### The `override` action
+##### `override` action
 
 The `override` action privilege can be used to allow passing arbitrary manifests or different revisions when syncing an `Application`. This can e.g. be used for development or testing purposes.
 
@@ -327,6 +327,7 @@ The order in which the policies appears in the policy file configuration has no 
 
 ## Policies Evaluation and Matching
 
+TODO: 
 The evaluation of access is done in two parts: validating against the default policy configuration, then validating against the policies for the current user.
 
 **If an action is allowed or denied by the default policies, then this effect will be effective without further evaluation**.

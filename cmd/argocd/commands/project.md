@@ -88,10 +88,10 @@
 * Add project destination
 * _Example:_
 	```
-	# Add project destination using a server URL (SERVER) in the specified namespace (NAMESPACE) on the project with name PROJECT
+	# Add project destination -- via -- server URL (SERVER) | PROJECT's specified namespace (NAMESPACE) 
 	argocd proj add-destination PROJECT SERVER NAMESPACE
 	
-	# Add project destination using a server name (NAME) in the specified namespace (NAMESPACE) on the project with name PROJECT
+	# Add project destination -- via -- server name (NAME) | PROJECT's specified namespace (NAMESPACE)
 	argocd proj add-destination PROJECT NAME NAMESPACE --name
 	```
 
@@ -136,7 +136,7 @@
 
 ## `func NewProjectAddSourceCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
 * `argocd proj add-source PROJECT URL`
-* Add project source repository 
+* Add project's source repository 
 * _Example:_ 
 	```
 	# Add a source repository (URL) to the project with name PROJECT
@@ -153,97 +153,13 @@
 	```
 
 ## `func NewProjectRemoveSourceNamespace(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
-* `argocd proj remove-source-namespace`
+* `argocd proj remove-source-namespace PROJECT NAMESPACE`
 * Removes the AppProject's source namespace
 * _Example:_
 	```
 	# Remove source NAMESPACE in PROJECT 
 	argocd proj remove-source-namespace PROJECT NAMESPACE
 	```
-
-
-
-func modifyResourceListCmd(getProjIf func(*cobra.Command) (io.Closer, projectpkg.ProjectServiceClient), cmdUse, cmdDesc, examples string, allow bool, namespacedList bool) *cobra.Command {
-	var (
-		listType    string
-		defaultList string
-	)
-	if namespacedList {
-		defaultList = "deny"
-	} else {
-		defaultList = "allow"
-	}
-	command := &cobra.Command{
-		Use:     cmdUse,
-		Short:   cmdDesc,
-		Example: templates.Examples(examples),
-		Run: func(c *cobra.Command, args []string) {
-			ctx := c.Context()
-
-			if namespacedList && len(args) != 3 {
-				c.HelpFunc()(c, args)
-				os.Exit(1)
-			}
-
-			if !namespacedList && (len(args) < 3 || len(args) > 4) {
-				// Cluster-scoped resource command can have an optional NAME argument.
-				c.HelpFunc()(c, args)
-				os.Exit(1)
-			}
-
-			projName, group, kind := args[0], args[1], args[2]
-			var name string
-			if !namespacedList && len(args) > 3 {
-				name = args[3]
-			}
-			conn, projIf := getProjIf(c)
-			defer utilio.Close(conn)
-
-			proj, err := projIf.Get(ctx, &projectpkg.ProjectQuery{Name: projName})
-			errors.CheckError(err)
-			var list, allowList, denyList *[]metav1.GroupKind
-			var clusterList *[]v1alpha1.ClusterResourceRestrictionItem
-			var clusterAllowList, clusterDenyList *[]v1alpha1.ClusterResourceRestrictionItem
-			var listAction string
-			var add bool
-			if namespacedList {
-				allowList, denyList = &proj.Spec.NamespaceResourceWhitelist, &proj.Spec.NamespaceResourceBlacklist
-			} else {
-				clusterAllowList, clusterDenyList = &proj.Spec.ClusterResourceWhitelist, &proj.Spec.ClusterResourceBlacklist
-			}
-
-			if (listType == "allow") || (listType == "white") {
-				list = allowList
-				clusterList = clusterAllowList
-				listAction = "allowed"
-				add = allow
-			} else {
-				list = denyList
-				clusterList = clusterDenyList
-				listAction = "denied"
-				add = !allow
-			}
-
-			if !namespacedList {
-				if ok, msg := modifyClusterResourcesList(clusterList, add, listAction, group, kind, name); ok {
-					c.Println(msg)
-					_, err = projIf.Update(ctx, &projectpkg.ProjectUpdateRequest{Project: proj})
-					errors.CheckError(err)
-				}
-				return
-			}
-
-			if ok, msg := modifyNamespacedResourcesList(list, add, listAction, group, kind); ok {
-				c.Println(msg)
-				_, err = projIf.Update(ctx, &projectpkg.ProjectUpdateRequest{Project: proj})
-				errors.CheckError(err)
-			}
-		},
-	}
-	command.Flags().StringVarP(&listType, "list", "l", defaultList, "Use deny list or allow list. This can only be 'allow' or 'deny'")
-	return command
-}
-
 
 ## `func NewProjectAllowNamespaceResourceCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
 * `argocd proj allow-namespace-resource PROJECT GROUP KIND [FLAG]`
@@ -265,7 +181,7 @@ func modifyResourceListCmd(getProjIf func(*cobra.Command) (io.Closer, projectpkg
     * `--list` / `-l`
       * == defaultList
       * deny list or allow list
-* Adds a namespaced API resource | deny list OR removes a namespaced API resource | allow list 
+* removes a namespaced API resource | allow list 
 * _Example:_
 	```
 	# Adds a namespaced API resource with specified GROUP and KIND from the deny list or removes a namespaced API resource from the allow list for project PROJECT
@@ -274,46 +190,48 @@ func modifyResourceListCmd(getProjIf func(*cobra.Command) (io.Closer, projectpkg
 
 
 ## `func NewProjectDenyClusterResourceCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
-* `argocd proj deny-cluster-resource` 
-	use := "deny-cluster-resource PROJECT GROUP KIND"
-	desc := "Removes a cluster-scoped API resource from the allow list and adds it to deny list"
-	examples := `
-	# Removes a cluster-scoped API resource with specified GROUP and KIND from the allow list and adds it to deny list for project PROJECT
-	argocd proj deny-cluster-resource PROJECT GROUP KIND
-	`
-	getProjIf := func(cmd *cobra.Command) (io.Closer, projectpkg.ProjectServiceClient) {
-		return headless.NewClientOrDie(clientOpts, cmd).NewProjectClientOrDie()
-	}
-	return modifyResourceListCmd(getProjIf, use, desc, examples, false, false)
-}
+* `argocd proj deny-cluster-resource PROJECT GROUP KIND [FLAG]`
+  * `[FLAG]`
+    * `--list` / `-l`
+      * == defaultList
+      * deny list or allow list
+* cluster-scoped API resource
+  * is removed | allow list
+  * is added it | deny list
+* _Examples:_
+    ```
+    # Removes a cluster-scoped API resource with specified GROUP and KIND from the allow list and adds it to deny list for project PROJECT
+    argocd proj deny-cluster-resource PROJECT GROUP KIND
+    ```
 
 
 ## `func NewProjectAllowClusterResourceCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
-* `argocd proj allow-cluster-resource`
-	use := "allow-cluster-resource PROJECT GROUP KIND [NAME]"
-	desc := "Adds a cluster-scoped API resource to the allow list and removes it from deny list"
-	examples := `
-	# Adds a cluster-scoped API resource with specified GROUP and KIND to the allow list and removes it from deny list for project PROJECT
-	argocd proj allow-cluster-resource PROJECT GROUP KIND
-
-	# Adds a cluster-scoped API resource with specified GROUP, KIND and NAME pattern to the allow list and removes it from deny list for project PROJECT
-	argocd proj allow-cluster-resource PROJECT GROUP KIND NAME
-	`
-	getProjIf := func(cmd *cobra.Command) (io.Closer, projectpkg.ProjectServiceClient) {
-		return headless.NewClientOrDie(clientOpts, cmd).NewProjectClientOrDie()
-	}
-	return modifyResourceListCmd(getProjIf, use, desc, examples, true, false)
-}
+* `argocd proj allow-cluster-resource PROJECT GROUP KIND [NAME] [FLAG]`
+  * `[FLAG]`
+    * `--list` / `-l`
+      * == defaultList
+      * deny list or allow list
+* cluster-scoped API resource
+  * is added | allow list 
+  * is removed | deny list
+* _Examples:_
+    ```
+    # Adds a cluster-scoped API resource with specified GROUP and KIND to the allow list and removes it from deny list for project PROJECT
+    argocd proj allow-cluster-resource PROJECT GROUP KIND
+    
+    # Adds a cluster-scoped API resource with specified GROUP, KIND and NAME pattern to the allow list and removes it from deny list for project PROJECT
+    argocd proj allow-cluster-resource PROJECT GROUP KIND NAME
+    ```
 
 
 ## `func NewProjectRemoveSourceCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
 * `argocd proj remove-source PROJECT URL`
 * Remove project source repository
 * _Example:_
-```
-# Remove URL source repository to project PROJECT
-argocd proj remove-source PROJECT URL
-```
+    ```
+    # Remove URL source repository to project PROJECT
+    argocd proj remove-source PROJECT URL
+    ```
 	
 
 ## `func NewProjectDeleteCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`

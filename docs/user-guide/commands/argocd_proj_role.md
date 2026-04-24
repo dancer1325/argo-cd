@@ -1,5 +1,8 @@
 # `argocd proj role` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/project_role.md)'s `func NewProjectRoleCommand(`👀
+
 ## argocd proj role
 
 Manage a project's roles

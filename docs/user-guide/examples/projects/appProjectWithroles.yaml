@@ -1,0 +1,55 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: sample-test-project
+  namespace: argocd
+spec:
+  sourceRepos:
+    - '*'
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: 'default'
+  roles:
+    # NEXT role == NEXT Casbin policy rule
+    # p, proj:sample-test-project:sample-project-role, applications, *, *, allow
+    # g, some-user, proj:sample-test-project:custom-project-role
+    - name: sample-test-project-role
+      description: The "sample-project-role" will be applied | `some-user` group
+      groups:
+        - some-user
+      policies:
+        # ❌NOT valid❌
+        #   1. role's name (sample-test-project-role) != policy's role specified (sample-project-role)
+        #- p, proj:sample-test-project:sample-project-role, applications, *, *, allow
+        #   2. policy's object (*)   !=  `<app-project>/<NAMESPACE>/<OBJECT_name>`  (*)
+        #- p, proj:sample-test-project:sample-project-role, applications, *, *, allow
+        # valid
+        #
+        - p, proj:sample-test-project:sample-test-project-role, applications, *, sample-test-project/*, allow
+
+        # NEXT policy comment OR uncomment
+        #   Reason: check | use it, evaluate DYNAMICALLY the ALLOWED policies
+        #- p, proj:sample-test-project:sample-test-project-role, applications, delete, sample-test-project/*, deny
+
+    # NEXT role
+    # assign appProject role -- to -- JWT token
+    - name: ci-role
+      policies:
+      - p, proj:sample-test-project:ci-role, applications, sync, sample-test-project/my-app, allow
+      - p, proj:sample-test-project:ci-role, logs, get, sample-test-project/my-app, allow
+      jwtTokens:
+      - iat: 1535390316
+
+    # JWT / has expiration
+    - name: jwt-expiration-role
+      policies:
+        - p, proj:sample-test-project:jwt-expiration-role, applications, *, sample-test-project/*, allow
+
+      # JWT / declaratively created
+      #   ❌random token can NOT ever be used❌
+      #     Reason:🧠you can NOT retrieve the UID🧠
+      jwtTokens:
+        # date -j -f "%Y-%m-%d %H:%M:%S" "2026-04-24 18:40:00" +%s
+        - iat: 1535390316
+          exp: 1777048800
