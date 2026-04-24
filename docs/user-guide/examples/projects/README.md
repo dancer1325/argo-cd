@@ -347,4 +347,29 @@ TODO:
 * `argocd proj role get sample-test-project jwt-expiration-role`
   * 's return 1 JWT
 
+# Global Projects
+## requirements: Argo CD v1.8
+* `argocd version`
+  * check returned "argocd-server" > v1.8
+## how to configure: | "argocd-cm" ConfigMap,
+* `kubectl patch configmap argocd-cm -n argocd --type merge --patch-file patchArgoCDCMConfigmap.yaml`
+  * `kubectl describe cm/argocd-cm -n argocd | grep -A10 globalProjects` & check that it's found
+### child project is matched -- via -- "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"
+* see [patchArgoCDCMConfigmap.yaml](patchArgoCDCMConfigmap.yaml)
+## provide: configurations / OTHER projects can inherit from
+* `kubectl apply -f appProjectsCheckGlobalProjects.yaml`
+* `argocd proj get child-project`
+  * 's return
+    * ALSO global project configuration
+### -> you can use global project's configuration
+* `argocd app list project child-project`
+  * NO Application running
+* `kubectl apply -f applicationInChildProjectWithGlobalInherit.yaml`
+* `argocd app list project child-project`
+  * Application running / ALLOWED -- thanks to -- global project
+
+# TODO:
+TODO:
+
+
 # TODO:

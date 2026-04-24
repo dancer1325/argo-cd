@@ -1,0 +1,10 @@
+data:
+  globalProjects: |-
+    - labelSelector:
+        matchExpressions:
+          - key: opt
+            operator: In
+            values:
+              - prod
+      # GLOBAL project name
+      projectName: global-project

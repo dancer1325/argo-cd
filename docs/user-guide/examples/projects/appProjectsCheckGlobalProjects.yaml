@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: global-project
+  namespace: argocd
+spec:
+  sourceRepos:
+    - 'https://github.com/argoproj/argocd-example-apps.git'
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: "argocd"
+  clusterResourceBlacklist:
+    - group: 'rbac.authorization.k8s.io'
+      kind: ClusterRole
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+  # TODO: add namespaceResourceBlacklist & namespaceResourceWhitelist
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: child-project
+  namespace: argocd
+  # inherit -- , thanks to match by label, from -- global-project
+  labels:
+    opt: "prod"
+spec:
+  sourceRepos:
+    - 'https://github.com/dancer1325/argocd-example-apps.git'
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: 'default'

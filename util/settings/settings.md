@@ -1,18 +1,3 @@
-var CommitMessageTemplate = `{{.metadata.drySha | trunc 7}}: {{ .metadata.subject }}
-{{- if .metadata.body }}
-
-{{ .metadata.body }}
-{{- end }}
-{{ range $ref := .metadata.references }}
-{{- if and $ref.commit $ref.commit.author }}
-Co-authored-by: {{ $ref.commit.author }}
-{{- end }}
-{{- end }}
-{{- if .metadata.author }}
-Co-authored-by: {{ .metadata.author }}
-{{- end }}
-`
-
 // ArgoCDSettings holds in-memory runtime configuration options.
 type ArgoCDSettings struct {
 	// URL is the externally facing URL users will visit to reach Argo CD.

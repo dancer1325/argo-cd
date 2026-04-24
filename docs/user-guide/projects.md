@@ -155,42 +155,22 @@
 * requirements
   * Argo CD v1.8
 
-TODO: 
 * Global projects
   * provide
     * configurations / OTHER projects can inherit from
+      * are
+        * `clusterResourceBlacklist`
+        * `clusterResourceWhitelist`
+        * `destinations`
+        * `namespaceResourceBlacklist`
+        * `namespaceResourceWhitelist`
+        * `sourceRepos`
+        * `syncWindows`
+      * -> you can use global project's configuration
   * how to configure
-    * | "argocd-cm" ConfigMap
-
-      ```yaml
-      data:
-        globalProjects: |-
-          - labelSelector:
-              matchExpressions:
-                - key: opt
-                  operator: In
-                  values:
-                    - prod
-            # GLOBAL project name
-            projectName: proj-global-test
-      kind: ConfigMap
-      ``` 
-
-* projects / match `matchExpressions` specified | `argocd-cm` ConfigMap,
-  * -> inherit the global project's following fields
-    * `namespaceResourceBlacklist`
-    * `namespaceResourceWhitelist`
-    * `clusterResourceBlacklist`
-    * `clusterResourceWhitelist`
-    * `SyncWindows`
-    * `SourceRepos`
-    * `Destinations`
-
-* ALLOWED operators
-  * `In`
-  * `NotIn`
-  * `Exists`
-  * `DoesNotExist`
+    * | "argocd-cm" ConfigMap,
+      * 💡[`type GlobalProjectSettings struct`](/util/settings/settings.go)💡
+        * child project is matched -- via -- "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"
 
 ## Project scoped Repositories and Clusters
 
