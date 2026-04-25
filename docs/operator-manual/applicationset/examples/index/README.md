@@ -6,7 +6,7 @@
     * `kubectl` commands are wrapped -- via -- `minikube kubectl`
   * [microk8s](https://canonical.com/microk8s)
     * `kubectl` commands are wrapped -- via -- `microk8s kubectl`
-* run ⚠️2⚠️ local Kubernetes cluster
+* run local Kubernetes cluster
   * -- via --
     * [Docker Desktop](https://docs.docker.com/desktop/use-desktop/kubernetes/#enable-kubernetes)
       * | Docker Desktop
@@ -25,20 +25,39 @@
   * `argocd login localhost:8080 --insecure`
     * user: admin
     * password: pasteInitialAdminPassword
-* configure 2 clusterS | Argo CD
-  * Docker Desktop + Minikube
-    * `argocd cluster add minikube --server localhost:8080 --insecure`
-      * Problems:
-        * Problem1: "failed to get server version: Get \"https://127.0.0.1:55552/version?timeout=32s"
-          * Solution: `kubectl config set-cluster minikube --server=https://192.168.49.2:8443 --insecure-skip-tls-verify=true`
-            * Reason: 🧠set right minikube IP
-              * got -- through -- `docker ps | grep minikube`🧠
-        * Problem2: "failed to create service account \"argocd-manager\" in namespace \"kube-system"
-          * Solution: TODO:
-  * Kind1 + Kind2
-    * TODO: 
 
-# FROM 1! Argo CD Application template, generate -- , via generators, -- MULTIPLE Applications
-* _Example:_ `ApplicationSet` resource / Argo CD Application -- targeted, via list generator, to -- MULTIPLE clusters
-* TODO:
-* 
+# ApplicationSet controller
+## == Kubernetes controller / support -- for -- `ApplicationSet` CRD 
+* [create BEFORE an ApplicationSet](#parameter-substitution--applicationsets-spectemplate)
+* `kubectl logs -n argocd -l app.kubernetes.io/name=argocd-application-controller | grep -i "reconcil"`
+  * run reconciliation loop -> done -- by -- controller
+## | Argo CD v2.3, ApplicationSet controller is bundled | Argo CD (== installed INDEPENDENTLY)
+TODO:
+## allows: | 1! Kubernetes manifest,
+### target MULTIPLE Kubernetes clusters
+* [applicationsetWhatAllow.yaml](applicationsetWhatAllow.yaml)
+### 💡manage MULTIPLE Argo CD Applications 💡-- as a -- 1! unit
+* [applicationsetWhatAllow.yaml](applicationsetWhatAllow.yaml)
+### deploy MULTIPLE applications -- from -- >=1 Git repositories
+* [applicationsetWhatAllow.yaml](applicationsetWhatAllow.yaml)
+
+# Parameter substitution | ApplicationSet's `spec.template`
+## use cases
+### | ANY generator
+TODO:
+## allows: parameters / generated -- by a -- generator, can be substituted | `spec.template` -- via -- `{{parameter_name}}`
+* `kubectl create namespace dev`
+* `kubectl create namespace staging`
+* `kubectl apply -n argocd -f applicationset.yaml`
+  * `kubectl get applications -n argocd | grep guestbook`
+    * 's return: ALL Applications'
+    * `kubectl get all -n dev` && `kubectl get all -n staging`
+      * 's return: 'No resources found ...'
+      * Reason:🧠ArgoCD Application are OutOfSync🧠
+        TODO:
+  * `argocd app sync guestbook-dev` & `argocd app sync guestbook-staging`
+    * `kubectl get all -n dev` && `kubectl get all -n staging`
+      * 's return: deployment & services
+
+## steps to processing it
+TODO:

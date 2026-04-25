@@ -3,21 +3,35 @@
 * managed clusters 
   * are stored | ArgoCD namespace's [secrets](../declarative-setup.md#clusters)
 
-* TODO: The ApplicationSet controller uses those same Secrets to generate parameters to identify and target available clusters.
+* TODO: The ApplicationSet controller uses those same Secrets to generate parameters to identify and 
+target available clusters.
 
-For each cluster registered with Argo CD, the Cluster generator produces parameters based on the list of items found within the cluster secret.
+For each cluster registered with Argo CD, the Cluster generator produces parameters based on
+the list of items found within the cluster secret.
 
-It automatically provides the following parameter values to the Application template for each cluster:
+* built-in parameters
+  - `name`
+  - `nameNormalized`
+    - == `name` / ONLY contain
+      - lowercase alphanumeric characters
+      - '-'
+      - '.'
+  - `server`
+  - `project`
+    - ==  Secret's 'project' field
+    - OPTIONAL,
+      - by default, ''
+  - `metadata.labels.<key>` 
+    - / EACH Secret's label
+  - `metadata.annotations.<key>`
+    - / EACH Secret's annotation 
 
-- `name`
-- `nameNormalized` *('name' but normalized to contain only lowercase alphanumeric characters, '-' or '.')*
-- `server`
-- `project` *(the Secret's 'project' field, if present; otherwise, it defaults to '')*
-- `metadata.labels.<key>` *(for each label in the Secret)*
-- `metadata.annotations.<key>` *(for each annotation in the Secret)*
-
+TODO: 
 > [!NOTE]
-> Use the `nameNormalized` parameter if your cluster name contains characters (such as underscores) that are not valid for Kubernetes resource names. This prevents rendering invalid Kubernetes resources with names like `my_cluster-app1`, and instead would convert them to `my-cluster-app1`.
+> Use the `nameNormalized` parameter if your cluster name contains characters (such as underscores) that
+> are not valid for Kubernetes resource names
+> This prevents rendering invalid Kubernetes resources with names like `my_cluster-app1`, and
+> instead would convert them to `my-cluster-app1`.
 
 
 Within [Argo CD cluster Secrets](../declarative-setup.md#clusters) are data fields describing the cluster:
@@ -35,7 +49,8 @@ metadata:
 # (...)
 ```
 
-The Cluster generator will automatically identify clusters defined with Argo CD, and extract the cluster data as parameters:
+The Cluster generator will automatically identify clusters defined with Argo CD, and
+extract the cluster data as parameters:
 ```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
@@ -60,9 +75,10 @@ spec:
         server: '{{.server}}' # 'server' field of the secret
         namespace: guestbook
 ```
-(*The [full example](https://github.com/argoproj/argo-cd/tree/master/applicationset/examples/cluster).*)
+* _Example:_ [here](/applicationset/examples/cluster)
 
-In this example, the cluster secret's `name` and `server` fields are used to populate the `Application` resource `name` and `server`, which are then used to target that same cluster.
+In this example, the cluster secret's `name` and `server` fields are used to populate the `Application` resource
+`name` and `server`, which are then used to target that same cluster.
 
 ### Label selector
 
@@ -106,9 +122,11 @@ metadata:
 
 The cluster selector also supports set-based requirements, as used by [several core Kubernetes resources](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#resources-that-support-set-based-requirements).
 
-### Deploying to the local cluster
+### Deploy | local cluster
 
-In Argo CD, the 'local cluster' is the cluster upon which Argo CD (and the ApplicationSet controller) is installed. This is to distinguish it from 'remote clusters', which are those that are added to Argo CD [declaratively](../declarative-setup.md#clusters) or via the [Argo CD CLI](../../getting_started.md#5-register-a-cluster-to-deploy-apps-to-optional).
+In Argo CD, the 'local cluster' is the cluster upon which Argo CD (and the ApplicationSet controller) 
+is installed
+This is to distinguish it from 'remote clusters', which are those that are added to Argo CD [declaratively](../declarative-setup.md#clusters) or via the [Argo CD CLI](../../getting_started.md#5-register-a-cluster-to-deploy-apps-to-optional).
  
 The cluster generator will automatically target both local and non-local clusters, for every cluster that matches the cluster selector.
 
@@ -130,7 +148,8 @@ spec:
         #      - "true"
 ```
 
-This selector will not match the default local cluster, since the default local cluster does not have a Secret (and thus does not have the `argocd.argoproj.io/secret-type` label on that secret). Any cluster selector that selects on that label will automatically exclude the default local cluster.
+This selector will not match the default local cluster, since the default local cluster does not have a Secret (and thus does not have the `argocd.argoproj.io/secret-type` label on that secret)
+* Any cluster selector that selects on that label will automatically exclude the default local cluster.
 
 However, if you do wish to target both local and non-local clusters, while also using label matching, you can create a secret for the local cluster within the Argo CD web UI:
 
@@ -144,8 +163,10 @@ These steps might seem counterintuitive, but the act of changing one of the defa
 
 ### Fetch clusters based on their K8s version
 
-There is also the possibility to fetch clusters based upon their Kubernetes version. To do this, the label `argocd.argoproj.io/auto-label-cluster-info` needs to be set to `true` on the cluster secret. 
-Once that has been set, the controller will dynamically label the cluster secret with the Kubernetes version it is running on. To retrieve that value, you need to use the
+There is also the possibility to fetch clusters based upon their Kubernetes version
+* To do this, the label `argocd.argoproj.io/auto-label-cluster-info` needs to be set to `true` on the cluster secret. 
+Once that has been set, the controller will dynamically label the cluster secret with the Kubernetes version it is running on
+* To retrieve that value, you need to use the
 `argocd.argoproj.io/kubernetes-version`, as the example below demonstrates:
 
 ```yaml
@@ -167,7 +188,8 @@ spec:
 
 ### Pass additional key-value pairs via `values` field
 
-You may pass additional, arbitrary string key-value pairs via the `values` field of the cluster generator. Values added via the `values` field are added as `values.(field)`
+You may pass additional, arbitrary string key-value pairs via the `values` field of the cluster generator
+* Values added via the `values` field are added as `values.(field)`
 
 In this example, a `revision` parameter value is passed, based on matching labels on the cluster secret:
 ```yaml
@@ -207,7 +229,8 @@ spec:
 In this example the `revision` value from the `generators.clusters` fields is passed into the template as `values.revision`, containing either `HEAD` or `stable` (based on which generator generated the set of parameters).
 
 > [!NOTE]
-> The `values.` prefix is always prepended to values provided via `generators.clusters.values` field. Ensure you include this prefix in the parameter name within the `template` when using it.
+> The `values.` prefix is always prepended to values provided via `generators.clusters.values` field
+* Ensure you include this prefix in the parameter name within the `template` when using it.
 
 In `values` we can also interpolate the following parameter values (i.e. the same values as presented in the beginning of this page)
 
@@ -294,7 +317,8 @@ spec:
         namespace: guestbook
 ```
 
-Given that you have two cluster secrets matching with names cluster1 and cluster2, this would generate the **single** following Application:
+Given that you have two cluster secrets matching with names cluster1 and cluster2, 
+this would generate the **single** following Application:
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -315,4 +339,6 @@ spec:
           - name: cluster2
 ```
 
-In case you are using several cluster generators, each with the flatList option, one Application would be generated by cluster generator, as we can't simply merge values and templates that would potentially differ in each generator.
+In case you are using several cluster generators, each with the flatList option, 
+one Application would be generated by cluster generator, as we can't simply merge values and templates that
+would potentially differ in each generator.

@@ -1,0 +1,127 @@
+# allows: | 1! Kubernetes manifest,
+## target MULTIPLE Kubernetes clusters
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook-multi-cluster
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters: {}
+  template:
+    metadata:
+      name: '{{.name}}-guestbook'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/argoproj/argocd-example-apps.git
+        targetRevision: HEAD
+        path: guestbook
+      destination:
+        # server -- depends on -- generator's parameter
+        server: '{{.server}}'
+        namespace: default
+---
+## 💡manage MULTIPLE Argo CD Applications 💡-- as a -- 1! unit
+# --- Generated Applications (1 ArgoCD Application / EACH registered cluster | Argo CD) ---
+#
+# Application 1 (in-cluster):
+#
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: in-cluster-guestbook
+#   namespace: argocd
+# spec:
+#   project: default
+#   source:
+#     repoURL: https://github.com/argoproj/argocd-example-apps.git
+#     targetRevision: HEAD
+#     path: guestbook
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: default
+#
+# Application 2 (if a second cluster "staging" is registered):
+#
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: staging-guestbook
+#   namespace: argocd
+# spec:
+#   project: default
+#   source:
+#     repoURL: https://github.com/argoproj/argocd-example-apps.git
+#     targetRevision: HEAD
+#     path: guestbook
+#   destination:
+#     server: https://staging-cluster.example.com
+#     namespace: default
+
+---
+## deploy MULTIPLE applications -- from -- >=1 Git repositories
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: multi-app-multi-repo
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          - appName: frontend
+            repoURL: https://github.com/dancer1325/argocd-example-apps.git
+            path: guestbook
+          - appName: backend
+            repoURL: https://github.com/dancer1325/argocd-example-apps.git
+            path: helm-guestbook
+  template:
+    metadata:
+      name: '{{.appName}}'
+    spec:
+      project: default
+      source:
+        repoURL: '{{.repoURL}}'
+        targetRevision: HEAD
+        path: '{{.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: default
+# --- Generated Applications ---
+#
+# Application 1 (frontend):
+#
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: frontend
+#   namespace: argocd
+# spec:
+#   project: default
+#   source:
+#     repoURL: https://github.com/dancer1325/argocd-example-apps.git
+#     targetRevision: HEAD
+#     path: guestbook
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: default
+#
+# Application 2 (backend):
+#
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: backend
+#   namespace: argocd
+# spec:
+#   project: default
+#   source:
+#     repoURL: https://github.com/dancer1325/argocd-example-apps.git
+#     targetRevision: HEAD
+#     path: helm-guestbook
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: default

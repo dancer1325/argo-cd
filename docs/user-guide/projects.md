@@ -172,24 +172,27 @@
       * 💡[`type GlobalProjectSettings struct`](/util/settings/settings.go)💡
         * child project is matched -- via -- "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"
 
-## Project scoped Repositories and Clusters
+## Repositories & Clusters / project-scoped 
 
-* Argo CD admin
-  * ORIGINALLY
-    * creates a project
-    * decides the clusters & Git repositories / it defines
-  * PROBLEMS AFTERWARD use cases
-    * add a repository OR cluster
-      * -> developer need to contact -- to -- their Argo CD admin
+* history
+  * Argo CD admin
+    * ORIGINALLY
+      * creates a project
+      * decides the clusters & Git repositories / it defines
+  * ⚠️PROBLEMS AFTERWARD use cases⚠️ 
+    * if developer add a repository OR cluster -> need to contact -- to -- their Argo CD admin
+
+* 
 
 TODO: 
 It is possible to offer a self-service process for developers so that
-they can add a repository and/or cluster in a project on their own even after the initial creation of the project.
+they can add a repository and/or cluster in a project on their own even 
+after the initial creation of the project.
 
-For this purpose Argo CD supports project-scoped repositories and clusters.
-
-To begin the process, Argo CD admins must configure RBAC security to allow this self-service behavior.
-For example, to allow users to add project scoped repositories an admin would have to add the following RBAC rules:
+To begin the process, Argo CD admins must configure RBAC security to 
+allow this self-service behavior.
+For example, to allow users to add project scoped repositories an 
+admin would have to add the following RBAC rules:
 
 ```
 p, proj:my-project:admin, repositories, create, my-project/*, allow
@@ -203,7 +206,8 @@ This provides extra flexibility so that admins can have stricter rules. e.g.:
 p, proj:my-project:admin, repositories, update, my-project/https://github.example.com/*, allow
 ```
 
-Once the appropriate RBAC rules are in place, developers can create their own Git repositories and (assuming they have the correct credentials)
+Once the appropriate RBAC rules are in place, developers can create 
+their own Git repositories and (assuming they have the correct credentials)
 can add them in an existing project either from the UI or the CLI.
 Both the User interface and the CLI have the ability to optionally specify a project
 * If a project is specified then the respective cluster/repository is considered project scoped:

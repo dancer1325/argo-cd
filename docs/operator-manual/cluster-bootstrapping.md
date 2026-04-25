@@ -102,9 +102,13 @@ spec:
       prune: true
 ```
 
-This example sets the sync policy to automated with pruning enabled, so child apps are automatically created, synced, and deleted when the parent app's manifest changes. You may wish to disable automated sync for more control over when changes are applied. The finalizer ensures that child app resources are properly cleaned up on deletion.
+This example sets the sync policy to automated with pruning enabled, so child apps are automatically created, synced, and deleted
+when the parent app's manifest changes. You may wish to disable automated sync for more control over when changes are applied
+The finalizer ensures that child app resources are properly cleaned up on deletion.
 
-Fix the revision to a specific Git commit SHA to make sure that, even if the child apps repo changes, the app will only change when the parent app change that revision. Alternatively, you can set it to HEAD or a branch name.
+Fix the revision to a specific Git commit SHA to make sure that, even if the child apps repo changes, 
+the app will only change when the parent app change that revision
+Alternatively, you can set it to HEAD or a branch name.
 
 As you probably want to override the cluster server, this is a templated values.
 
@@ -132,7 +136,8 @@ The parent app will appear as in-sync but the child apps will be out of sync:
 ![New App Of Apps](../assets/new-app-of-apps.png)
 
 > [!NOTE]
-> You may want to modify this behavior to bootstrap your cluster in waves; see [the health assessment of Applications](./health.md#argocd-app) for information on changing this.
+> You may want to modify this behavior to bootstrap your cluster in waves; 
+> see [the health assessment of Applications](./health.md#argocd-app) for information on changing this.
 
 You can either sync via the UI, firstly filter by the correct label:
 
@@ -154,7 +159,8 @@ View [the example on GitHub](https://github.com/argoproj/argocd-example-apps/tre
 
 ### Cascading deletion
 
-If you want to ensure that child-apps and all of their resources are deleted when the parent-app is deleted make sure to add the appropriate [finalizer](../user-guide/app_deletion.md#about-the-deletion-finalizer) to your `Application` definition
+If you want to ensure that child-apps and all of their resources are deleted when the parent-app is deleted 
+make sure to add the appropriate [finalizer](../user-guide/app_deletion.md#about-the-deletion-finalizer) to your `Application` definition
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1

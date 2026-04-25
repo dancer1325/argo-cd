@@ -5,7 +5,8 @@ metadata:
   namespace: argocd
 spec:
   generators:
-    # The list generator generates a set of two application which then filter by the key value to only select the env with value staging
+    # list generator
+    #   generates 2 applicationS / filtered by selector
     - list:
         elements:
           - cluster: engineering-dev
@@ -14,7 +15,7 @@ spec:
           - cluster: engineering-prod
             url: https://kubernetes.default.svc
             env: prod
-        # The generator's template field takes precedence over the spec's template fields
+        # spec.generator[*].template's priority > spec.template
         template:
           metadata: {}
           spec:
@@ -26,7 +27,8 @@ spec:
               path: 'applicationset/examples/template-override/{{cluster}}-override'
             destination: {}
 
-      # Selector allows to post-filter all generator.
+      # Selector /
+      #   post-filter ALL generator -- via -- the label
       selector:
         matchLabels:
           env: staging
@@ -238,14 +240,17 @@ spec:
         requeueAfterSeconds: 30
                 
               
-  # Determines whether go templating will be used in the `template` field below.
+  # enable OR disable go templating | below `template` field
   goTemplate: true
-  # Optional list of go templating options, see https://pkg.go.dev/text/template#Template.Option
-  # This is only relevant if `goTemplate` is true
+
+  # == list of go templating options
+  #   https://pkg.go.dev/text/template#Template.Option
+  # OPTIONAL
+  #   requirements
+  #     `goTemplate: true`
   goTemplateOptions: ["missingkey=error"]
 
-  # These fields are identical to the Application spec.
-  # The generator's template field takes precedence over the spec's template fields
+  # spec.generator[*].template's priority > spec.template
   template:
     metadata:
       name: test-hello-world-app
