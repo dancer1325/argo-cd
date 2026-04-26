@@ -44,7 +44,7 @@ TODO:
 # Parameter substitution | ApplicationSet's `spec.template`
 ## use cases
 ### | ANY generator
-TODO:
+* see | EACH corresponding generator
 ## allows: parameters / generated -- by a -- generator, can be substituted | `spec.template` -- via -- `{{parameter_name}}`
 * `kubectl create namespace dev`
 * `kubectl create namespace staging`
@@ -54,10 +54,12 @@ TODO:
     * `kubectl get all -n dev` && `kubectl get all -n staging`
       * 's return: 'No resources found ...'
       * Reason:🧠ArgoCD Application are OutOfSync🧠
-        TODO:
   * `argocd app sync guestbook-dev` & `argocd app sync guestbook-staging`
     * `kubectl get all -n dev` && `kubectl get all -n staging`
       * 's return: deployment & services
+  * `kubectl describe application guestbook-dev -n argocd` && `kubectl describe application guestbook-staging -n argocd`
+    * parameters are substituted | `spec.template`
 
-## steps to processing it
+## how does it work?
 TODO:
+

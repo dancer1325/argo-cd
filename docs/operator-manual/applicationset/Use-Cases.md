@@ -51,6 +51,8 @@
       * MULTIPLE applications | 1! cluster -- via -- Argo CD
       * MULTIPLE clusters -- via -- Argo CD
 
+![selfServiceApplicationsOnMultiTenantClusters diagram](../../assets/applicationset/Use-Cases/ApplicationSetSelfServiceMultiTenantCluster.png)
+
 * ways to implement it
   * Attempt1: | Git repository,
     * ArgoCD Application manifestS / follow [app-of-apps pattern](../cluster-bootstrapping.md#app-of-apps-pattern-alternative)

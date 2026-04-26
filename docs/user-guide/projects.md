@@ -182,7 +182,6 @@
   * ⚠️PROBLEMS AFTERWARD use cases⚠️ 
     * if developer add a repository OR cluster -> need to contact -- to -- their Argo CD admin
 
-* 
 
 TODO: 
 It is possible to offer a self-service process for developers so that
