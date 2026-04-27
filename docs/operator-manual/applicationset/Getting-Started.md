@@ -33,7 +33,9 @@
     - RoleBinding /
       - bind the ServiceAccount -- & -- Role
 
-## Enabling high availability mode
+## how to enable high availability mode?
+
+* Reason:🧠[HA](/manifests/ha/install.yaml) do NOT configure ApplicationSet as HA🧠
 
 * steps
   * | `Deployment` / "argocd-applicationset-controller" name
@@ -49,25 +51,20 @@
                 - --enable-leader-election=true
         ```
 
-* see [ha/install.yaml](/manifests/ha/install.yaml)
+## how to add Post-Upgrade Safeguards?
 
-### Optional: Additional Post-Upgrade Safeguards
+* [here](Controlling-Resource-Modification.md) 
 
 * TODO:
-See the [Controlling Resource Modification](Controlling-Resource-Modification.md) page for information on additional parameters you may wish to 
-add to the ApplicationSet Resource in `install.yaml`, to provide extra security against any initial, 
-unexpected post-upgrade behaviour. 
 
-For instance, to temporarily prevent the upgraded ApplicationSet controller from making any changes, you could:
-
-- Enable dry-run
-- Use a create-only policy
 - Enable `preserveResourcesOnDeletion` on your ApplicationSets
 - Temporarily disable automated sync in your ApplicationSets' template
 
-These parameters would allow you to observe/control the behaviour of the new version of the ApplicationSet controller in your environment,
+These parameters would allow you to observe/control the behaviour of the new version
+of the ApplicationSet controller in your environment,
 to ensure you are happy with the result (see the ApplicationSet log file for details)
 * Just don't forget to remove any temporary changes when you are done testing!
 
-However, as mentioned above, these steps are not strictly necessary: upgrading the ApplicationSet controller should be a minimally invasive process,
+However, as mentioned above, these steps are not strictly necessary: 
+upgrading the ApplicationSet controller should be a minimally invasive process,
 and these are only suggested as an optional precaution for extra safety.

@@ -2,8 +2,11 @@
 
 * 💡combines 2 child generators' parameters -- by -- iterating through EVERY generator's generated parameters combination 💡
   * -> 👀gain BOTH generators' intrinsic properties 👀
-  * if BOTH child generators are Git generators -> 1 OR BOTH -- must use the -- `pathParamPrefix` option
-    * Reason: 🧠| merge the child generators’ items, avoid conflicts 🧠 
+  * ⚠️if matrix generator use 2 child Git generators -> 1 OR BOTH MUST use the `pathParamPrefix` option⚠️
+    * Reason: 🧠
+      * | merge the child generators’ items, avoid conflicts 
+        * BOTH produce `path`-related parameters
+        * OTHERWISE, the matrix generator fails🧠 
   * _Example:_
     - *SCM Provider Generator + Cluster Generator*
       - scan the GitHub organization's repositories
@@ -15,170 +18,18 @@
       - locate application resources | Git repository's folders
       - deploy application resources | list of clusters / provided -- via an -- EXTERNAL custom resource
 
-## Example: Git Directory generator + Cluster generator
+* child generator's parameters can be used | POST child generatorS
+  * _Example:_ [here](/applicationset/examples/matrix/cluster-and-gitfile.yaml)
 
-* _Example:_
-  * let's have 2 clusters
-    * `staging` cluster | `https://1.2.3.4`
-    * `production` cluster | `https://2.4.6.8`
+## child generatorS's parameters / SAME name, can be overridden | ANOTHER POST child generator
 
-* FULL example [here](/applicationset/examples/matrix)
-  * TODO: Move ALL here?
-* And our application YAMLs are defined in a Git repository:
+* use cases
+  * | one child generator, define default values / ALL stages + override them -- with -- stage-specific values | ANOTHER generator
 
-- [Argo Workflows controller](https://github.com/argoproj/argo-cd/tree/master/applicationset/examples/git-generator-directory/cluster-addons/argo-workflows)
-- [Prometheus operator](https://github.com/argoproj/argo-cd/tree/master/applicationset/examples/git-generator-directory/cluster-addons/prometheus-operator)
-
-Our goal is to deploy both applications onto both clusters, and, more generally, in the future to automatically deploy new applications in the Git repository, and to new clusters defined within Argo CD, as well.
-
-For this we will use the Matrix generator, with the Git and the Cluster as child generators:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: cluster-git
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-    # matrix 'parent' generator
-    - matrix:
-        generators:
-          # git generator, 'child' #1
-          - git:
-              repoURL: https://github.com/argoproj/argo-cd.git
-              revision: HEAD
-              directories:
-                - path: applicationset/examples/matrix/cluster-addons/*
-          # cluster generator, 'child' #2
-          - clusters:
-              selector:
-                matchLabels:
-                  argocd.argoproj.io/secret-type: cluster
-  template:
-    metadata:
-      name: '{{.path.basename}}-{{.name}}'
-    spec:
-      project: '{{index .metadata.labels "environment"}}'
-      source:
-        repoURL: https://github.com/argoproj/argo-cd.git
-        targetRevision: HEAD
-        path: '{{.path.path}}'
-      destination:
-        server: '{{.server}}'
-        namespace: '{{.path.basename}}'
-```
-
-First, the Git directory generator will scan the Git repository, discovering directories under the specified path. It discovers the argo-workflows and prometheus-operator applications, and produces two corresponding sets of parameters:
-```yaml
-- path: /examples/git-generator-directory/cluster-addons/argo-workflows
-  path.basename: argo-workflows
-
-- path: /examples/git-generator-directory/cluster-addons/prometheus-operator
-  path.basename: prometheus-operator
-```
-
-Next, the Cluster generator scans the [set of clusters defined in Argo CD](Generators-Cluster.md), finds the staging and production cluster secrets, and produce two corresponding sets of parameters:
-```yaml
-- name: staging
-  server: https://1.2.3.4
-
-- name: production
-  server: https://2.4.6.8
-```
-
-Finally, the Matrix generator will combine both sets of outputs, and produce:
-```yaml
-- name: staging
-  server: https://1.2.3.4
-  path: /examples/git-generator-directory/cluster-addons/argo-workflows
-  path.basename: argo-workflows
-
-- name: staging
-  server: https://1.2.3.4
-  path: /examples/git-generator-directory/cluster-addons/prometheus-operator
-  path.basename: prometheus-operator
-
-- name: production
-  server: https://2.4.6.8
-  path: /examples/git-generator-directory/cluster-addons/argo-workflows
-  path.basename: argo-workflows
-
-- name: production
-  server: https://2.4.6.8
-  path: /examples/git-generator-directory/cluster-addons/prometheus-operator
-  path.basename: prometheus-operator
-```
-(*The [full example](https://github.com/argoproj/argo-cd/tree/master/applicationset/examples/matrix).*)
-
-## Using Parameters from one child generator in another child generator
-
-The Matrix generator allows using the parameters generated by one child generator inside another child generator. 
-Below is an example that uses a git-files generator in conjunction with a cluster generator.
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: cluster-git
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-    # matrix 'parent' generator
-    - matrix:
-        generators:
-          # git generator, 'child' #1
-          - git:
-              repoURL: https://github.com/argoproj/applicationset.git
-              revision: HEAD
-              files:
-                - path: "examples/git-generator-files-discovery/cluster-config/**/config.json"
-          # cluster generator, 'child' #2
-          - clusters:
-              selector:
-                matchLabels:
-                  argocd.argoproj.io/secret-type: cluster
-                  kubernetes.io/environment: '{{.path.basename}}'
-  template:
-    metadata:
-      name: '{{.name}}-guestbook'
-    spec:
-      project: default
-      source:
-        repoURL: https://github.com/argoproj/applicationset.git
-        targetRevision: HEAD
-        path: "examples/git-generator-files-discovery/apps/guestbook"
-      destination:
-        server: '{{.server}}'
-        namespace: guestbook
-```
-Here is the corresponding folder structure for the git repository used by the git-files generator:
-
-```
-├── apps
-│   └── guestbook
-│       ├── guestbook-ui-deployment.yaml
-│       ├── guestbook-ui-svc.yaml
-│       └── kustomization.yaml
-├── cluster-config
-│   └── engineering
-│       ├── dev
-│       │   └── config.json
-│       └── prod
-│           └── config.json
-└── git-generator-files.yaml
-```
-In the above example, the `{{.path.basename}}` parameters produced by the git-files generator will resolve to `dev` and `prod`.
-In the 2nd child generator, the label selector with label `kubernetes.io/environment: {{.path.basename}}` will resolve with the values produced by the first child generator's parameters (`kubernetes.io/environment: prod` and `kubernetes.io/environment: dev`). 
-
-So in the above example, clusters with the label `kubernetes.io/environment: prod` will have only prod-specific configuration (ie. `prod/config.json`) applied to it, whereas clusters
-with the label `kubernetes.io/environment: dev` will have only dev-specific configuration (ie. `dev/config.json`)
-
-## Overriding parameters from one child generator in another child generator
-
-The Matrix Generator allows parameters with the same name to be defined in multiple child generators. This is useful, for example, to define default values for all stages in one generator and override them with stage-specific values in another generator. The example below generates a Helm-based application using a matrix generator with two git generators: the first provides stage-specific values (one directory per stage) and the second provides global values for all stages.
+TODO: 
+The example below generates a Helm-based application using a matrix generator with two git generators:
+  the first provides stage-specific values (one directory per stage) and 
+  the second provides global values for all stages.
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -256,104 +107,6 @@ The matrix generator above would yield the following results:
   cpuRequest: 200m
   memoryLimit: 512Mi
   debugEnabled: false
-```
-
-## Example: Two Git Generators Using `pathParamPrefix`
-
-The matrix generator will fail if its children produce results containing identical keys with differing values.
-This poses a problem for matrix generators where both children are Git generators since they auto-populate `path`-related parameters in their outputs.
-To avoid this problem, specify a `pathParamPrefix` on one or both of the child generators to avoid conflicting parameter keys in the output.
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: two-gits-with-path-param-prefix
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-    - matrix:
-        generators:
-          # git file generator referencing files containing details about each
-          # app to be deployed (e.g., `appName`).
-          - git:
-              repoURL: https://github.com/some-org/some-repo.git
-              revision: HEAD
-              files:
-                - path: "apps/*.json"
-              pathParamPrefix: app
-          # git file generator referencing files containing details about
-          # locations to which each app should deploy (e.g., `region` and
-          # `clusterName`).
-          - git:
-              repoURL: https://github.com/some-org/some-repo.git
-              revision: HEAD
-              files:
-                - path: "targets/{{.appName}}/*.json"
-              pathParamPrefix: target
-  template: {} # ...
-```
-
-Then, given the following file structure/content:
-
-```
-├── apps
-│   ├── app-one.json
-│   │   { "appName": "app-one" }
-│   └── app-two.json
-│       { "appName": "app-two" }
-└── targets
-    ├── app-one
-    │   ├── east-cluster-one.json
-    │   │   { "region": "east", "clusterName": "cluster-one" }
-    │   └── east-cluster-two.json
-    │       { "region": "east", "clusterName": "cluster-two" }
-    └── app-two
-        ├── east-cluster-one.json
-        │   { "region": "east", "clusterName": "cluster-one" }
-        └── west-cluster-three.json
-            { "region": "west", "clusterName": "cluster-three" }
-```
-
-…the matrix generator above would yield the following results:
-
-```yaml
-- appName: app-one
-  app.path: /apps
-  app.path.filename: app-one.json
-  # plus additional path-related parameters from the first child generator, all
-  # prefixed with "app".
-  region: east
-  clusterName: cluster-one
-  target.path: /targets/app-one
-  target.path.filename: east-cluster-one.json
-  # plus additional path-related parameters from the second child generator, all
-  # prefixed with "target".
-
-- appName: app-one
-  app.path: /apps
-  app.path.filename: app-one.json
-  region: east
-  clusterName: cluster-two
-  target.path: /targets/app-one
-  target.path.filename: east-cluster-two.json
-
-- appName: app-two
-  app.path: /apps
-  app.path.filename: app-two.json
-  region: east
-  clusterName: cluster-one
-  target.path: /targets/app-two
-  target.path.filename: east-cluster-one.json
-
-- appName: app-two
-  app.path: /apps
-  app.path.filename: app-two.json
-  region: west
-  clusterName: cluster-three
-  target.path: /targets/app-two
-  target.path.filename: west-cluster-three.json
 ```
 
 ## Restrictions

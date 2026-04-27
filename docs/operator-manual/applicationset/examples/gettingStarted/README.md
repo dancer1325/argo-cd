@@ -21,10 +21,27 @@
 
 # ways to install ApplicationSet controller
 ## | Argo CD v2.3+, ALREADY part of Argo CD
-* TODO:
+* follow the steps
+* `kubectl get crd`
+  * check ALSO returns "applicationsets.argoproj.io"
 
-## | Argo CD v2.3+, part of Argo CD
+## | Argo CD v2.3-, install ApplicationSet
 * TODO:
+### Kubernetes manifests / require the ApplicationSet controller
+#### | [manifests/install.yaml](/manifests/install.yaml)
+* see the Kubernetes resources / depend on it
+
+# how to enable high availability mode?
+## Reason:🧠[HA](/manifests/ha/install.yaml) do NOT configure ApplicationSet as HA🧠
+* check | [HA](/manifests/ha/install.yaml) / "argocd-applicationset-controller" deployment has replicas: 1
+## steps
+* `kubectl get deployment/argocd-applicationset-controller -n argocd`
+  * 's return: 1! deployment
+* `kubectl patch deployment argocd-applicationset-controller -n argocd --type json --patch-file patchEnableApplicationSetAsHA.yaml`
+  * `kubectl get deployment/argocd-applicationset-controller -n argocd`
+    * 's return: 2 deploymentS
+  * `kubectl get deployment argocd-applicationset-controller -n argocd -o jsonpath='{.spec.template.spec.containers[0].args}'`
+    * 's return: --enable-leader-election=true
 
 # TODO:
 * TODO:

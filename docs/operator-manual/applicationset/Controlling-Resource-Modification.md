@@ -1,14 +1,27 @@
 # Controlling if/when the ApplicationSet controller modifies `Application` resources
 
-The ApplicationSet controller supports a number of settings that limit the ability of the controller to make changes to generated Applications, for example, preventing the controller from deleting child Applications.
+* goal
+  * avoid unexpected post-upgrade behaviors
 
-These settings allow you to exert control over when, and how, changes are made to your Applications, and to their corresponding cluster resources (`Deployments`, `Services`, etc).
+The ApplicationSet controller supports a number of settings that limit the ability of the controller to
+make changes to generated Applications, for example, preventing the controller from deleting child Applications.
+
+These settings allow you to exert control over when, and how, changes are made to your Applications, and 
+to their corresponding cluster resources (`Deployments`, `Services`, etc).
 
 Here are some of the controller settings that may be modified to alter the ApplicationSet controller's resource-handling behaviour.
 
-## Dry run: prevent ApplicationSet from creating, modifying, or deleting all Applications
+## Dry run
 
-To prevent the ApplicationSet controller from creating, modifying, or deleting any `Application` resources, you may enable `dry-run` mode. This essentially switches the controller into a "read only" mode, where the controller Reconcile loop will run, but no resources will be modified.
+* prevent ApplicationSet can
+  * create ALL Applications
+  * modify ALL Applications
+  * delete ALL Applications
+
+To prevent the ApplicationSet controller from creating, modifying, or deleting any `Application` resources, 
+you may enable `dry-run` mode
+This essentially switches the controller into a "read only" mode, where the controller Reconcile loop will run,
+but no resources will be modified.
 
 To enable dry-run, add `--dryrun true` to the ApplicationSet Deployment's container launch parameters.
 
@@ -16,9 +29,12 @@ See 'How to modify ApplicationSet container parameters' below for detailed steps
 
 ## Managed Applications modification Policies
 
-The ApplicationSet controller supports a parameter `--policy`, which is specified on launch (within the controller Deployment container), and which restricts what types of modifications will be made to managed Argo CD `Application` resources.
+The ApplicationSet controller supports a parameter `--policy`, which is specified on launch
+(within the controller Deployment container), and 
+which restricts what types of modifications will be made to managed Argo CD `Application` resources.
 
-The `--policy` parameter takes four values: `sync`, `create-only`, `create-delete`, and `create-update`. (`sync` is the default, which is used if the `--policy` parameter is not specified; the other policies are described below).
+The `--policy` parameter takes four values: `sync`, `create-only`, `create-delete`, and `create-update`
+(`sync` is the default, which is used if the `--policy` parameter is not specified; the other policies are described below).
 
 It is also possible to set this policy per ApplicationSet.
 
@@ -32,18 +48,30 @@ spec:
 
 ```
 
-- Policy `create-only`: Prevents ApplicationSet controller from modifying or deleting Applications. **WARNING**: It doesn't prevent Application controller from deleting Applications according to [ownerReferences](https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/) when deleting ApplicationSet.
-- Policy `create-update`: Prevents ApplicationSet controller from deleting Applications. Update is allowed. **WARNING**: It doesn't prevent Application controller from deleting Applications according to [ownerReferences](https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/) when deleting ApplicationSet.
-- Policy `create-delete`: Prevents ApplicationSet controller from modifying Applications. Delete is allowed.
+- Policy `create-only`: Prevents ApplicationSet controller from modifying or deleting Applications
+  * **WARNING**: It doesn't prevent Application controller from deleting Applications according to [ownerReferences](https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/) when deleting ApplicationSet.
+- Policy `create-update`: Prevents ApplicationSet controller from deleting Applications
+  * Update is allowed
+  * **WARNING**: It doesn't prevent Application controller from deleting Applications according to [ownerReferences](https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/) when deleting ApplicationSet.
+- Policy `create-delete`: Prevents ApplicationSet controller from modifying Applications
+  * Delete is allowed.
 - Policy `sync`: Create, Update and Delete are allowed.
 
-If the controller parameter `--policy` is set, it takes precedence on the field `applicationsSync`. It is possible to allow per ApplicationSet sync policy by setting variable `ARGOCD_APPLICATIONSET_CONTROLLER_ENABLE_POLICY_OVERRIDE` to argocd-cmd-params-cm `applicationsetcontroller.enable.policy.override` or directly with controller parameter `--enable-policy-override` (default to `false`).
+If the controller parameter `--policy` is set, it takes precedence on the field `applicationsSync`
+* It is possible to allow per ApplicationSet sync policy by setting variable `ARGOCD_APPLICATIONSET_CONTROLLER_ENABLE_POLICY_OVERRIDE` to argocd-cmd-params-cm `applicationsetcontroller.enable.policy.override` or directly with controller parameter `--enable-policy-override` (default to `false`).
 
-### Policy - `create-only`: Prevent ApplicationSet controller from modifying and deleting Applications
+### Policy - `create-only`
+
+* prevent ApplicationSet controller can
+  * modify Applications
+  * delete Applications
+
 
 To allow the ApplicationSet controller to *create* `Application` resources, but prevent any further modification, such as *deletion*, or modification of Application fields, add this parameter in the ApplicationSet controller:
 
-**WARNING**: "*deletion*" indicates the case as the result of comparing generated Application between before and after, there are Applications which no longer exist. It doesn't indicate the case Applications are deleted according to ownerReferences to ApplicationSet. See [How to prevent Application controller from deleting Applications when deleting ApplicationSet](#how-to-prevent-application-controller-from-deleting-applications-when-deleting-applicationset)
+**WARNING**: "*deletion*" indicates the case as the result of comparing generated Application between before and after, there are Applications which no longer exist
+* It doesn't indicate the case Applications are deleted according to ownerReferences to ApplicationSet
+* See [How to prevent Application controller from deleting Applications when deleting ApplicationSet](#how-to-prevent-application-controller-from-deleting-applications-when-deleting-applicationset)
 
 ```
 --policy create-only
@@ -64,7 +92,9 @@ spec:
 
 To allow the ApplicationSet controller to create or modify `Application` resources, but prevent Applications from being deleted, add the following parameter to the ApplicationSet controller `Deployment`:
 
-**WARNING**: "*deletion*" indicates the case as the result of comparing generated Application between before and after, there are Applications which no longer exist. It doesn't indicate the case Applications are deleted according to ownerReferences to ApplicationSet. See [How to prevent Application controller from deleting Applications when deleting ApplicationSet](#how-to-prevent-application-controller-from-deleting-applications-when-deleting-applicationset)
+**WARNING**: "*deletion*" indicates the case as the result of comparing generated Application between before and after, there are Applications which no longer exist
+* It doesn't indicate the case Applications are deleted according to ownerReferences to ApplicationSet
+* See [How to prevent Application controller from deleting Applications when deleting ApplicationSet](#how-to-prevent-application-controller-from-deleting-applications-when-deleting-applicationset)
 
 ```
 --policy create-update
@@ -104,7 +134,8 @@ spec:
 The ApplicationSet spec includes an `ignoreApplicationDifferences` field, which allows you to specify which fields of 
 the ApplicationSet should be ignored when comparing Applications.
 
-The field supports multiple ignore rules. Each ignore rule may specify a list of either `jsonPointers` or 
+The field supports multiple ignore rules
+* Each ignore rule may specify a list of either `jsonPointers` or 
 `jqPathExpressions` to ignore.
 
 You may optionally also specify a `name` to apply the ignore rule to a specific Application, or omit the `name` to apply
@@ -127,7 +158,8 @@ spec:
 One of the most common use cases for ignoring differences is to allow temporarily toggling auto-sync for an Application.
 
 For example, if you have an ApplicationSet that is configured to automatically sync Applications, you may want to temporarily
-disable auto-sync for a specific Application. You can do this by adding an ignore rule for the `spec.syncPolicy.automated` field.
+disable auto-sync for a specific Application
+* You can do this by adding an ignore rule for the `spec.syncPolicy.automated` field.
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -141,13 +173,16 @@ spec:
 ### Limitations of `ignoreApplicationDifferences`
 
 When an ApplicationSet is reconciled, the controller will compare the ApplicationSet spec with the spec of each Application
-that it manages. If there are any differences, the controller will generate a patch to update the Application to match the
+that it manages
+* If there are any differences, the controller will generate a patch to update the Application to match the
 ApplicationSet spec.
 
-The generated patch is a MergePatch. According to the MergePatch documentation, "existing lists will be completely 
+The generated patch is a MergePatch
+* According to the MergePatch documentation, "existing lists will be completely 
 replaced by new lists" when there is a change to the list.
 
-This limits the effectiveness of `ignoreApplicationDifferences` when the ignored field is in a list. For example, if you
+This limits the effectiveness of `ignoreApplicationDifferences` when the ignored field is in a list
+* For example, if you
 have an application with multiple sources, and you want to ignore changes to the `targetRevision` of one of the sources,
 changes in other fields or in other sources will cause the entire `sources` list to be replaced, and the `targetRevision`
 field will be reset to the value defined in the ApplicationSet.
@@ -200,8 +235,10 @@ spec:
 
 > [!NOTE]
 > [Future improvements](https://github.com/argoproj/argo-cd/issues/15975) to the ApplicationSet controller may 
-> eliminate this problem. For example, the `ref` field might be made a merge key, allowing the ApplicationSet 
-> controller to generate and use a StrategicMergePatch instead of a MergePatch. You could then target a specific 
+> eliminate this problem
+* For example, the `ref` field might be made a merge key, allowing the ApplicationSet 
+> controller to generate and use a StrategicMergePatch instead of a MergePatch
+* You could then target a specific 
 > source by `ref`, ignore changes to a field in that source, and changes to other sources would not cause the ignored 
 > field to be overwritten.
 
@@ -261,7 +298,8 @@ spec:
     # (...)
 ```
 
-Save and exit the editor. Wait for a new `Pod` to start containing the updated parameters.
+Save and exit the editor
+* Wait for a new `Pod` to start containing the updated parameters.
 
 ### Or, B) Edit the `install.yaml` manifest for the ApplicationSet installation
 
@@ -290,10 +328,12 @@ kubectl apply -n argocd --server-side --force-conflicts -f install.yaml
 
 > [!NOTE]
 > The same behavior can be achieved on a per-app basis using the [`ignoreApplicationDifferences`](#ignore-certain-changes-to-applications) 
-> feature described above. However, preserved fields may be configured globally, a feature that is not yet available
+> feature described above
+* However, preserved fields may be configured globally, a feature that is not yet available
 > for `ignoreApplicationDifferences`.
 
-It is common practice in Kubernetes to store state in annotations, operators will often make use of this. To allow for this, it is possible to configure a list of annotations that the ApplicationSet should preserve when reconciling.
+It is common practice in Kubernetes to store state in annotations, operators will often make use of this
+* To allow for this, it is possible to configure a list of annotations that the ApplicationSet should preserve when reconciling.
 
 For example, imagine that we have an Application created from an ApplicationSet, but a custom annotation and label has since been added (to the Application) that does not exist in the `ApplicationSet` resource:
 ```yaml
@@ -331,7 +371,8 @@ By default, the Argo CD notifications and the Argo CD refresh type annotations a
 
 ## Debugging unexpected changes to Applications
 
-When the ApplicationSet controller makes a change to an application, it logs the patch at the debug level. To see these
+When the ApplicationSet controller makes a change to an application, it logs the patch at the debug level
+* To see these
 logs, set the log level to debug in the `argocd-cmd-params-cm` ConfigMap in the `argocd` namespace:
 
 ```yaml
@@ -347,11 +388,13 @@ data:
 ## Previewing changes
 
 To preview changes that the ApplicationSet controller would make to Applications, you can create the AppSet in dry-run 
-mode. This works whether the AppSet already exists or not.
+mode
+* This works whether the AppSet already exists or not.
 
 ```shell
 argocd appset create --dry-run ./appset.yaml -o json | jq -r '.status.resources[].name'
 ```
 
 The dry-run will populate the returned ApplicationSet's status with the Applications which would be managed with the 
-given config. You can compare to the existing Applications to see what would change.
+given config
+* You can compare to the existing Applications to see what would change.

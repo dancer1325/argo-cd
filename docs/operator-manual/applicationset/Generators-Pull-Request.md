@@ -1,32 +1,22 @@
 # Pull Request Generator
 
-The Pull Request generator uses the API of an SCMaaS provider (GitHub, Gitea, or Bitbucket Server) to automatically discover open pull requests within a repository. This fits well with the style of building a test environment when you create a pull request.
+* _Example:_ GitHub,Gitea, or Bitbucket Server
+* AUTOMATICALLY discover -- , via SCMaaS provider's API, -- open PR | organization
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: myapps
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-  - pullRequest:
-      # When using a Pull Request generator, the ApplicationSet controller polls every `requeueAfterSeconds` interval (defaulting to every 30 minutes) to detect changes.
-      requeueAfterSeconds: 1800
-      # See below for provider specific options.
-      github:
-        # ...
-```
+* use case
+  * | create a PR, 
+    * build a test environment 
 
-> [!NOTE]
-> Know the security implications of PR generators in ApplicationSets.
-> [Only admins may create ApplicationSets](./Security.md#only-admins-may-createupdatedelete-applicationsets) to avoid
-> leaking Secrets, and [only admins may create PRs](./Security.md#templated-project-field) if the `project` field of
-> an ApplicationSet with a PR generator is templated, to avoid granting management of out-of-bounds resources.
+* `spec.generators[pullRequest].requeueAfterSeconds`
+  * == interval | ApplicationSet controller polls -- to -- detect changes
+  * by default, 
+    * 30 minutes
+
+* [POSSIBLE risks](./Security.md)
 
 ## GitHub
 
+TODO: 
 Specify the repository from which to fetch the GitHub Pull requests.
 
 ```yaml
@@ -63,9 +53,13 @@ spec:
 * `owner`: Required name of the GitHub organization or user.
 * `repo`: Required name of the GitHub repository.
 * `api`: If using GitHub Enterprise, the URL to access it. (Optional)
-* `tokenRef`: A `Secret` name and key containing the GitHub access token to use for requests. If not specified, will make anonymous requests which have a lower rate limit and can only see public repositories. (Optional)
-* `labels`: Filter the PRs to those containing **all** of the labels listed. (Optional)
-* `appSecretName`: A `Secret` name containing a GitHub App secret in [repo-creds format][repo-creds].
+* `tokenRef`
+  * A `Secret` name and key containing the GitHub access token to use for requests
+  * If not specified, will make anonymous requests which have a lower rate limit and can only see public repositories. (Optional)
+* `labels`
+  * Filter the PRs to those containing **all** of the labels listed. (Optional)
+* `appSecretName`
+  * A `Secret` name containing a GitHub App secret in [repo-creds format][repo-creds].
 
 [repo-creds]: ../declarative-setup.md#repository-credentials
 

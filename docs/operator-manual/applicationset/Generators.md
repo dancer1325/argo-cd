@@ -3,8 +3,7 @@
 * Generators
   * 👀generate parameters / 
     * == key/value pairs
-      * | render the template, they are substituted | ApplicationSet resource's `spec.template` section
-    * are rendered | ApplicationSet resource's `template:` 👀
+      * | render the template, they are substituted | ApplicationSet resource's `spec.template` section👀
     * -- primarily based on -- data sources
       * == ⚠️-- depend on -- the generator⚠️
   * if you want to filter -> use [Post Selector](Generators-Post-Selector.md)

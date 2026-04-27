@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-configmap
+data:
+  # target resource's apiVersion
+  apiVersion: mallard.io/v1beta1
+
+  # target resource's kind
+  kind: ducks
+
+  # holds the list of Argo CD clusters
+  statusListKey: decisions
+
+  # key | status list /
+  #   's value == cluster name / found | Argo CD
+  matchKey: clusterName

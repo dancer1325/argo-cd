@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/argoproj/argo-cd.git
+        revision: HEAD
+        files:
+          - path: "applicationset/examples/git-generator-files-discovery/cluster-config/**/config.json"
+        # ADDITIONAL parameters
+        values:
+          base_dir: "{{index .path.segments 0}}/{{index .path.segments 1}}/{{index .path.segments 2}}"
+  template:
+    metadata:
+      name: '{{.cluster.name}}-guestbook'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/argoproj/argo-cd.git
+        targetRevision: HEAD
+        # use values -- by -- `.values.` prefix
+        path: "{{.values.base_dir}}/apps/guestbook"
+      destination:
+        server: '{{.cluster.address}}'
+        namespace: guestbook

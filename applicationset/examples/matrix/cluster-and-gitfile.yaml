@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-git
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    # matrix 'parent' generator
+    - matrix:
+        generators:
+          # git file generator, 'child' #1
+          - git:
+              repoURL: https://github.com/dancer1325/argo-cd.git
+              revision: HEAD
+              files:
+                - path: "applicationset/examples/git-generator-files-discovery/cluster-config/**/config.json"
+          # cluster generator, 'child' #2
+          - clusters:
+              selector:
+                matchLabels:
+                  argocd.argoproj.io/secret-type: cluster
+                  # use child 1 git generator here
+                  #   1. dev
+                  #   2. prod
+                  kubernetes.io/environment: '{{.path.basename}}'
+  template:
+    metadata:
+      name: '{{.name}}-guestbook'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/dancer1325/argo-cd.git
+        targetRevision: HEAD
+        path: "applicationset/examples/git-generator-files-discovery/apps/guestbook"
+      destination:
+        server: '{{.server}}'
+        namespace: guestbook

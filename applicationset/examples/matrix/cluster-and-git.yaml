@@ -1,7 +1,5 @@
-# This example demonstrates the combining of the git generator with a cluster generator
-# The expected output would be an application per git directory and a cluster (application_count = git directory * clusters)
-#
-#
+# git generator + cluster generator
+#   's expected output: 1 application / git directory & cluster
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -10,24 +8,62 @@ spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
+  # matrix 'parent' generator
   - matrix:
       generators:
+        # git generator, 'child' #1
         - git:
-            repoURL: https://github.com/argoproj/argo-cd.git
+            repoURL: https://github.com/dancer1325/argo-cd.git
             revision: HEAD
             directories:
             - path: applicationset/examples/matrix/cluster-addons/*
+          # produced parameters
+          #   1.
+          #     path: /examples/git-generator-directory/cluster-addons/argo-workflows
+          #     path.basename: argo-workflows
+          #   2.
+          #     path: /examples/git-generator-directory/cluster-addons/prometheus-operator
+          #     path.basename: prometheus-operator
+
+        # cluster generator, 'child' #2
         - clusters:
             selector:
               matchLabels:
                 argocd.argoproj.io/secret-type: cluster
+          # produced parameters / EACH cluster / defined | ArgoCD
+          #   cluster-x
+          #     name: <CLUSTER_NAME_X>
+          #     server: <CLUSTER_SERVER_X>
+          #   cluster-y
+          #     ...
+    # matrix generator output parameters
+    # 1 + cluster-x
+    #       path: /examples/git-generator-directory/cluster-addons/argo-workflows
+    #       path.basename: argo-workflows
+    #       name: <CLUSTER_NAME_X>
+    #       server: <CLUSTER_SERVER_X>
+    # 1 + cluster-Y
+    #       path: /examples/git-generator-directory/cluster-addons/argo-workflows
+    #       path.basename: argo-workflows
+    #       name: <CLUSTER_NAME_Y>
+    #       server: <CLUSTER_SERVER_Y>
+    # 2 + cluster-x
+    #       path: /examples/git-generator-directory/cluster-addons/prometheus-operator
+    #       path.basename: prometheus-operator
+    #       name: <CLUSTER_NAME_X>
+    #       server: <CLUSTER_SERVER_X>
+    # 2 + cluster-Y
+    #       path: /examples/git-generator-directory/cluster-addons/prometheus-operator
+    #       path.basename: prometheus-operator
+    #       name: <CLUSTER_NAME_Y>
+    #       server: <CLUSTER_SERVER_Y>
   template:
     metadata:
       name: '{{.path.basename}}-{{.name}}'
     spec:
       project: '{{.metadata.labels.environment}}'
       source:
-        repoURL: https://github.com/argoproj/argo-cd.git
+        repoURL: https://github.com/dancer1325/argo-cd.git
         targetRevision: HEAD
         path: '{{.path.path}}'
       destination:

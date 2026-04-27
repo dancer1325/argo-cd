@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: myplugin
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - plugin:
+        # configMap location -- for the -- plugin configuration
+        configMapRef:
+          name: my-plugin
+
+        # == plugin's arbitrary parameters
+        #   OPTIONAL
+        #   uses
+        #     RPC call -- to the -- plugin
+        # == map /
+        #   's values: ANY_TYPE
+        # if you want to use | generator's output -> use `generator.input.parameters` key
+        input:
+          parameters:
+            key1: "value1"
+            key2: "value2"
+            list: ["list", "of", "values"]
+            boolean: true
+            map:
+              key1: "value1"
+              key2: "value2"
+              key3: "value3"
+
+        # `values`
+        #   allows
+        #     attach arbitrary values | generator's output
+        #   uses
+        #     | spec.template, -- via -- `values`
+        values:
+          value1: something
+
+        # == interval | ApplicationSet controller polls -- to -- detect changes
+        # by default, 30'
+        requeueAfterSeconds: 30
+  template:
+    metadata:
+      name: myplugin
+      annotations:
+        example.from.input.parameters: "{{ index .generator.input.parameters.map "key1" }}"
+        example.from.values: "{{ .values.value1 }}"
+        # The plugin determines what else it produces.
+        example.from.plugin.output: "{{ .something.from.the.plugin }}"

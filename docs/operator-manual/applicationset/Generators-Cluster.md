@@ -126,11 +126,15 @@ The cluster selector also supports set-based requirements, as used by [several c
 
 In Argo CD, the 'local cluster' is the cluster upon which Argo CD (and the ApplicationSet controller) 
 is installed
-This is to distinguish it from 'remote clusters', which are those that are added to Argo CD [declaratively](../declarative-setup.md#clusters) or via the [Argo CD CLI](../../getting_started.md#5-register-a-cluster-to-deploy-apps-to-optional).
+This is to distinguish it from 'remote clusters', which are those that are added to Argo CD [declaratively](../declarative-setup.md#clusters) or
+via the [Argo CD CLI](../../getting_started.md#5-register-a-cluster-to-deploy-apps-to-optional).
  
-The cluster generator will automatically target both local and non-local clusters, for every cluster that matches the cluster selector.
+The cluster generator will automatically target both local and non-local clusters, 
+for every cluster that matches the cluster selector.
 
-If you wish to target only remote clusters with your Applications (e.g. you want to exclude the local cluster), then use a cluster selector with labels, for example:
+If you wish to target only remote clusters with your Applications (e.g. you want to exclude the local cluster), 
+then use a cluster selector with labels, for example:
+
 ```yaml
 spec:
   goTemplate: true
@@ -148,18 +152,26 @@ spec:
         #      - "true"
 ```
 
-This selector will not match the default local cluster, since the default local cluster does not have a Secret (and thus does not have the `argocd.argoproj.io/secret-type` label on that secret)
+This selector will not match the default local cluster, since the default local cluster does not have a Secret 
+(and thus does not have the `argocd.argoproj.io/secret-type` label on that secret)
 * Any cluster selector that selects on that label will automatically exclude the default local cluster.
 
-However, if you do wish to target both local and non-local clusters, while also using label matching, you can create a secret for the local cluster within the Argo CD web UI:
+However, if you do wish to target both local and non-local clusters, while also using label matching, 
+you can create a secret for the local cluster within the Argo CD web UI:
 
 1. Within the Argo CD web UI, select *Settings*, then *Clusters*.
 2. Select your local cluster, usually named `in-cluster`.
-3. Click the *Edit* button, and change the *NAME* of the cluster to another value, for example `in-cluster-local`. Any other value here is fine.
+3. Click the *Edit* button, and change the *NAME* of the cluster to another value, for example `in-cluster-local`
+   * Any other value here is fine.
 4. Leave all other fields unchanged.
 5. Click *Save*.
 
-These steps might seem counterintuitive, but the act of changing one of the default values for the local cluster causes the Argo CD Web UI to create a new secret for this cluster. In the Argo CD namespace, you should now see a Secret resource named `cluster-(cluster suffix)` with label `argocd.argoproj.io/secret-type": "cluster"`. You may also create a local [cluster secret declaratively](../declarative-setup.md#clusters), or with the CLI using `argocd cluster add "(context name)" --in-cluster`, rather than through the Web UI.
+These steps might seem counterintuitive, but the act of changing one of the default values
+for the local cluster causes the Argo CD Web UI to create a new secret for this cluster
+In the Argo CD namespace, you should now see a Secret resource named `cluster-(cluster suffix)`
+with label `argocd.argoproj.io/secret-type": "cluster"`
+You may also create a local [cluster secret declaratively](../declarative-setup.md#clusters), or 
+with the CLI using `argocd cluster add "(context name)" --in-cluster`, rather than through the Web UI.
 
 ### Fetch clusters based on their K8s version
 
@@ -226,13 +238,15 @@ spec:
         namespace: guestbook
 ```
 
-In this example the `revision` value from the `generators.clusters` fields is passed into the template as `values.revision`, containing either `HEAD` or `stable` (based on which generator generated the set of parameters).
+In this example the `revision` value from the `generators.clusters` fields is passed into the template as `values.revision`, 
+containing either `HEAD` or `stable` (based on which generator generated the set of parameters).
 
 > [!NOTE]
 > The `values.` prefix is always prepended to values provided via `generators.clusters.values` field
 * Ensure you include this prefix in the parameter name within the `template` when using it.
 
-In `values` we can also interpolate the following parameter values (i.e. the same values as presented in the beginning of this page)
+In `values` we can also interpolate the following parameter values
+(i.e. the same values as presented in the beginning of this page)
 
 - `name`
 - `nameNormalized` *('name' but normalized to contain only lowercase alphanumeric characters, '-' or '.')*

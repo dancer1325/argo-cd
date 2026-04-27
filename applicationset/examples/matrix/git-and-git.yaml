@@ -1,0 +1,86 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: two-gits-with-path-param-prefix
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - matrix:
+        generators:
+          - git:
+              repoURL: https://github.com/dancer1325/argo-cd.git
+              revision: HEAD
+              files:
+                # app's details
+                #   app / want to be deployed
+                - path: "applicationset/examples/matrix/apps/*.json"
+              # ⚠️if matrix generator use 2 child Git generators -> 1 OR BOTH MUST use the `pathParamPrefix` option⚠️
+              #   Reason: 🧠| merge the child generators’ items, avoid conflicts🧠
+              pathParamPrefix: app
+          - git:
+              repoURL: https://github.com/dancer1325/argo-cd.git
+              revision: HEAD
+              files:
+                # details -- about -- where to deploy the apps
+                - path: "applicationset/examples/matrix/targets/{{.appName}}/*.json"
+              # ⚠️if matrix generator use 2 child Git generators -> 1 OR BOTH MUST use the `pathParamPrefix` option⚠️
+              #   Reason: 🧠| merge the child generators’ items, avoid conflicts🧠
+              pathParamPrefix: target
+  template: {} # ...
+
+# matrix generator output parameters
+# 1. app-one.json + east-cluster-one.json
+#    # 1.1 -- from --  app-one.json
+#  - appName: app-one
+#    # git files generator's built-in parameters / has `pathParamPrefix` = app
+#    app.path: /apps
+#    app.path.filename: app-one.json
+#
+#    # 1.2 -- from --  east-cluster-one.json
+#    region: east
+#    clusterName: cluster-one
+#    # git files generator's built-in parameters / has `pathParamPrefix` = target
+#    target.path: /targets/app-one
+#    target.path.filename: east-cluster-one.json
+
+# 2. app-one.json + east-cluster-two.json
+#    # 2.1 -- from --  app-one.json
+#  - appName: app-one
+#    # git files generator's built-in parameters / has `pathParamPrefix` = app
+#    app.path: /apps
+#    app.path.filename: app-one.json
+#
+#    # 2.2 -- from --  east-cluster-two.json
+#    region: east
+#    clusterName: cluster-two
+#    # git files generator's built-in parameters / has `pathParamPrefix` = target
+#    target.path: /targets/app-one
+#    target.path.filename: east-cluster-two.json
+#
+# 3. app-two.json + east-cluster-one.json
+#    # 3.1 -- from --  app-two.json
+#  - appName: app-two
+#    # git files generator's built-in parameters / has `pathParamPrefix` = app
+#    app.path: /apps
+#    app.path.filename: app-two.json
+#
+#    # 3.2 -- from --  east-cluster-one.json
+#    region: east
+#    clusterName: cluster-one
+#    # git files generator's built-in parameters / has `pathParamPrefix` = target
+#    target.path: /targets/app-two
+#    target.path.filename: east-cluster-one.json
+#
+# 4. app-two.json + east-cluster-two.json
+#    # 4.1 -- from --  app-two.json
+#  - appName: app-two
+#    app.path: /apps
+#    app.path.filename: app-two.json
+#
+#    # 4.2 -- from --  east-cluster-two.json
+#    region: west
+#    clusterName: cluster-three
+#    # git files generator's built-in parameters / has `pathParamPrefix` = target
+#    target.path: /targets/app-two
+#    target.path.filename: west-cluster-three.json

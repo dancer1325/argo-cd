@@ -175,49 +175,12 @@ spec:
         namespace: '{{.path.basename}}'
 ```
 
-### Pass additional key-value pairs via `values` field
+### `values`
 
-You may pass additional, arbitrary string key-value pairs via the `values` field of the git directory generator
-* Values added via the `values` field are added as `values.(field)`.
-
-In this example, a `cluster` parameter value is passed
-* It is interpolated from the `path` variable, to then be used to determine the destination namespace.
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: cluster-addons
-  namespace: argocd
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-  - git:
-      repoURL: https://github.com/example/example-repo.git
-      revision: HEAD
-      directories:
-      - path: '*'
-      values:
-        cluster: '{{.path.basename}}'
-  template:
-    metadata:
-      name: '{{.path.basename}}'
-    spec:
-      project: "my-project"
-      source:
-        repoURL: https://github.com/example/example-repo.git
-        targetRevision: HEAD
-        path: '{{.path.path}}'
-      destination:
-        server: https://kubernetes.default.svc
-        namespace: '{{.values.cluster}}'
-```
-
-> [!NOTE]
-> The `values.` prefix is always prepended to values provided via `generators.git.values` field
-* Ensure you include this prefix in the parameter name within the `template` when using it.
-
-In `values` we can also interpolate all fields set by the git directory generator as mentioned above.
+* allows
+  * passing ADDITIONAL string key-value pairs
+* how to use?
+  * `values.(DEFINED_VALUES_KEY)`
 
 ## Git Generator: Files
 
@@ -302,46 +265,12 @@ This example excludes the `config.json` file in the `dev` directory from the lis
 
 (*The [full example](https://github.com/argoproj/argo-cd/tree/master/applicationset/examples/git-generator-files-discovery/excludes).*)
 
-### Pass additional key-value pairs via `values` field
+### `values`
 
-You may pass additional, arbitrary string key-value pairs via the `values` field of the git files generator. Values added via the `values` field are added as `values.(field)`.
-
-In this example, a `base_dir` parameter value is passed. It is interpolated from `path` segments, to then be used to determine the source path.
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: guestbook
-  namespace: argocd
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-  - git:
-      repoURL: https://github.com/argoproj/argo-cd.git
-      revision: HEAD
-      files:
-      - path: "applicationset/examples/git-generator-files-discovery/cluster-config/**/config.json"
-      values:
-        base_dir: "{{index .path.segments 0}}/{{index .path.segments 1}}/{{index .path.segments 2}}"
-  template:
-    metadata:
-      name: '{{.cluster.name}}-guestbook'
-    spec:
-      project: default
-      source:
-        repoURL: https://github.com/argoproj/argo-cd.git
-        targetRevision: HEAD
-        path: "{{.values.base_dir}}/apps/guestbook"
-      destination:
-        server: '{{.cluster.address}}'
-        namespace: guestbook
-```
-
-> [!NOTE]
-> The `values.` prefix is always prepended to values provided via `generators.git.values` field. Ensure you include this prefix in the parameter name within the `template` when using it.
-
-In `values` we can also interpolate all fields set by the git files generator as mentioned above.
+* allows
+  * passing ADDITIONAL string key-value pairs
+* how to use?
+  * `values.(DEFINED_VALUES_KEY)`
 
 ## Git Polling Interval
 

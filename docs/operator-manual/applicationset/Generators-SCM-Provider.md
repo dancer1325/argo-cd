@@ -1,32 +1,21 @@
 # SCM Provider Generator
 
-The SCM Provider generator uses the API of an SCMaaS provider (eg GitHub) to automatically discover repositories within an organization. This fits well with GitOps layout patterns that split microservices across many repositories.
+* _Example:_ GitHub
+* AUTOMATICALLY discover -- , via SCMaaS provider's API, -- repositories | organization
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: myapps
-spec:
-  generators:
-  - scmProvider:
-      # Which protocol to clone using.
-      cloneProtocol: ssh
-      # See below for provider specific options.
-      github:
-        # ...
-```
+* `spec.generators.scmProvider`
+  * `.cloneProtocol`
+    * == protocol / 
+      * use -- for the -- SCM URL
+      * ⚠️provider-specific⚠️
+    * recommendations
+      * use ssh
 
-* `cloneProtocol`: Which protocol to use for the SCM URL. Default is provider-specific but ssh if possible. Not all providers necessarily support all protocols, see provider documentation below for available options.
-
-> [!NOTE]
-> Know the security implications of using SCM generators. [Only admins may create ApplicationSets](./Security.md#only-admins-may-createupdatedelete-applicationsets)
-> to avoid leaking Secrets, and [only admins may create repos/branches](./Security.md#templated-project-field) if the
-> `project` field of an ApplicationSet with an SCM generator is templated, to avoid granting management of
-> out-of-bounds resources.
+* [POSSIBLE risks](./Security.md)
 
 ## GitHub
 
+TODO: 
 The GitHub mode uses the GitHub API to scan an organization in either github.com or GitHub Enterprise.
 
 ```yaml
@@ -54,10 +43,14 @@ spec:
   # ...
 ```
 
-* `organization`: Required name of the GitHub organization to scan. If you have multiple organizations, use multiple generators.
+* `organization`: Required name of the GitHub organization to scan
+  * If you have multiple organizations, use multiple generators.
 * `api`: If using GitHub Enterprise, the URL to access it.
-* `allBranches`: By default (false) the template will only be evaluated for the default branch of each repo. If this is true, every branch of every repository will be passed to the filters. If using this flag, you likely want to use a `branchMatch` filter.
-* `tokenRef`: A `Secret` name and key containing the GitHub access token to use for requests. If not specified, will make anonymous requests which have a lower rate limit and can only see public repositories.
+* `allBranches`: By default (false) the template will only be evaluated for the default branch of each repo
+  * If this is true, every branch of every repository will be passed to the filters
+  * If using this flag, you likely want to use a `branchMatch` filter.
+* `tokenRef`: A `Secret` name and key containing the GitHub access token to use for requests
+  * If not specified, will make anonymous requests which have a lower rate limit and can only see public repositories.
 * `appSecretName`: A `Secret` name containing a GitHub App secret in [repo-creds format][repo-creds].
 
 [repo-creds]: ../declarative-setup.md#repository-credentials

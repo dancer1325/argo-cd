@@ -1,0 +1,15 @@
+# HTTP server - sample request
+POST http://localhost:4355/api/v1/getparams.execute
+Authorization: Bearer strong-password
+Content-Type: application/x-www-form-urlencoded
+
+{
+  "applicationSetName": "fake-appset",
+  "input": {
+    "parameters": {
+      "param1": "value1"
+    }
+  }
+}
+
+###

@@ -25,13 +25,42 @@
 * NOT possible to check
   * ONLY, check the generated ApplicationS
 ### == key/value pairs
-TODO: 
+* see `spec.generators[].<SOME_FIELD>`
+  * [List generator](/applicationset/examples/list-generator/list-example.yaml)
+    * `spec.generators.list.elements`
+      ```
+      cluster: <CLUSTER_VALUE>
+      url: <URL_VALUE>
+      ```
+  * [Cluster generator](/applicationset/examples/cluster)
+    * `spec.generators.clusters`
+  * Git generator
+    * 's [directory type](/applicationset/examples/git-generator-directory)
+      * built-in parameters
+      * `spec.generators.git.values`
+    * 's [files discovery type](/applicationset/examples/git-generator-files-discovery)
+      * built-in parameters
+      * `spec.generators.git.values`
+  * [Matrix generator](/applicationset/examples/matrix)
+    * combination of child generator's parameters
+  * Merge generator
+    * TODO:
+  * SCM provider
+    * TODO:
+  * PR
+    * TODO:
+  * Plugin
+    * TODO:
 #### | render the template, they are substituted | ApplicationSet resource's `spec.template` section
-TODO: 
-### are rendered | ApplicationSet resource's `template:` 👀
-TODO:
+* / EACH generator use case
+  * `kubectl get applicationset <APPLICATION_NAME> -n argocd -o jsonpath='{.spec.template}' | jq .`
 ### -- primarily based on -- data sources
-* [list generator](../../Generators-List.md)
-* 
-TODO:
-
+* [List generator](../../Generators-List.md)
+* [Cluster generator](../../Generators-Cluster.md)
+* [Git generator](../../Generators-Git.md)
+* [Matrix generator](../../Generators-Matrix.md)
+* [Merge generator](../../Generators-Merge.md)
+* [SCM Provider generator](../../Generators-SCM-Provider.md)
+* [Pull Request generator](../../Generators-Pull-Request.md)
+* [Cluster Decision Resource generator](../../Generators-Cluster-Decision-Resource.md)
+* [Plugin generator](../../Generators-Plugin.md)

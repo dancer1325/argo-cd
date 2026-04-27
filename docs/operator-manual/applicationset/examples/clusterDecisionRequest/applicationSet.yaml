@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusterDecisionResource:
+        # ConfigMap with GVK information for the duck type resource
+        configMapRef: my-configmap
+        name: quak           # Choose either "name" of the resource or "labelSelector"
+        labelSelector:
+          matchLabels:       # OPTIONAL
+            duck: spotted
+          matchExpressions:  # OPTIONAL
+            - key: duck
+              operator: In
+              values:
+                - "spotted"
+                - "canvasback"
+        # OPTIONAL: Checks for changes every 60sec (default 3min)
+        requeueAfterSeconds: 60
+  template:
+    metadata:
+      name: '{{.name}}-guestbook'
+    spec:
+      project: "default"
+      source:
+        repoURL: https://github.com/argoproj/argocd-example-apps/
+        targetRevision: HEAD
+        path: guestbook
+      destination:
+        server: '{{.clusterName}}' # 'server' field of the secret
+        namespace: guestbook

@@ -1,0 +1,12 @@
+apiVersion: mallard.io/v1beta1
+kind: Duck
+metadata:
+  name: quak
+spec: {}
+status:
+  # Duck-typing
+  #   ignores ALL OTHER aspects of the resource
+  #   does NOT ignore the "decisions" list
+  decisions:
+    - clusterName: cluster-01
+    - clusterName: cluster-02
