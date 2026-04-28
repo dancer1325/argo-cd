@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook-argocd-integration
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: integrationfirst
+          - env: integrationtwo
+  template:
+    metadata:
+      name: 'guestbook-{{env}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/dancer1325/argocd-example-apps.git
+        targetRevision: HEAD
+        path: guestbook
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{env}}'
