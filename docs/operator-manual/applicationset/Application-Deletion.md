@@ -1,29 +1,23 @@
 # Application Pruning & Resource Deletion
 
-All `Application` resources created by the ApplicationSet controller (from an ApplicationSet) will contain:
+* if Application is created -- via -- an `ApplicationSet` -> ALL `Application` contain
+  * `.metadata.ownerReferences` 
+    * == *parent* `ApplicationSet` resource
+  * & if `.syncPolicy.preserveResourcesOnDeletion` = `false` -> `.metadata.finalizers` == `resources-finalizer.argocd.argoproj.io`  
 
-- A `.metadata.ownerReferences` reference back to the *parent* `ApplicationSet` resource
-- An Argo CD `resources-finalizer.argocd.argoproj.io` finalizer in `.metadata.finalizers` of the Application if `.syncPolicy.preserveResourcesOnDeletion` is set to false.
+* if you delete an ApplicationSet ->
+  * `ApplicationSet` resource itself is deleted
+  * `Application` resources / were created -- from -- this `ApplicationSet` -> will be deleted
+  * ⚠️ANY deployed resources  | managed cluster / were created -- from -- that `Application` resource -> will be deleted⚠️
+    * _Example of deployed resources:_ `Deployments`, `Services`, `ConfigMaps`, etc 
+    * Argo CD handle -- , via [the deletion finalizer](../../user-guide/app_deletion.md#deletion-finalizer), -- this deletion 
+    * 💡if you want to preserve them -> | ApplicationSet, set `.syncPolicy.preserveResourcesOnDeletion` == true 💡
+      * [MORE](Controlling-Resource-Modification.md)
 
-The end result is that when an ApplicationSet is deleted, the following occurs (in rough order):
+* by default,
+  * lifecycle of the `ApplicationSet` == lifecycle of the `Application` == lifecycle of the  `Application`'s resources
+    * Reason:🧠default behavior🧠
 
-- The `ApplicationSet` resource itself is deleted
-- Any `Application` resources that were created from this `ApplicationSet` (as identified by owner reference) will be deleted
-- Any deployed resources (`Deployments`, `Services`, `ConfigMaps`, etc) on the managed cluster, that were created from that `Application` resource (by Argo CD), will be deleted.
-    - Argo CD is responsible for handling this deletion, via [the deletion finalizer](../../user-guide/app_deletion.md#about-the-deletion-finalizer).
-    - To preserve deployed resources, set `.syncPolicy.preserveResourcesOnDeletion` to true in the ApplicationSet.
-
-Thus the lifecycle of the `ApplicationSet`, the `Application`, and the `Application`'s resources, are equivalent.
-
-> [!NOTE]
-> See also the [controlling resource modification](Controlling-Resource-Modification.md) page for more information about how to prevent deletion or modification of Application resources by the ApplicationSet controller.
-
-It *is* still possible to delete an `ApplicationSet` resource, while preventing `Application`s (and their deployed resources) from also being deleted, using a non-cascading delete:
-```
-kubectl delete ApplicationSet (NAME) --cascade=orphan
-```
-
-> [!WARNING]
-> Even if using a non-cascaded delete, the `resources-finalizer.argocd.argoproj.io` is still specified on the `Application`. Thus, when the `Application` is deleted, all of its deployed resources will also be deleted. (The lifecycle of the Application, and its *child* objects, are still equivalent.)
-> 
-> To prevent the deletion of the resources of the Application, such as Services, Deployments, etc, set `.syncPolicy.preserveResourcesOnDeletion` to true in the ApplicationSet. This syncPolicy parameter prevents the finalizer from being added to the Application.
+* ways to delete an ApplicationSet
+  * `kubectl delete applicationset <APPLICATIONSET_NAME> -n <argocd_OR_NAMESPACE_WHERE_IT_LIVES>`, OR
+  * `argocd appset delete <APPLICATIONSET_NAME>`

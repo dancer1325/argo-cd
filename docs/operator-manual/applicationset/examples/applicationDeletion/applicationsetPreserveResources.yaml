@@ -1,0 +1,58 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook-notpreserve-resources
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: notpreserve
+  template:
+    metadata:
+      name: 'guestbook-{{env}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/dancer1325/argocd-example-apps.git
+        targetRevision: HEAD
+        path: guestbook
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{env}}'
+  # NOT preserve resources
+#  syncPolicy:
+#    # | delete the ApplicationSet,
+#    #   ApplicationSet is deleted
+#    #   Application "guestbook-dev" is deleted
+#    #   Application "guestbook-dev"'s deployed resources (pods, services, etc.) are preserved
+#    preserveResourcesOnDeletion: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook-preserve-resources
+  namespace: argocd
+spec:
+  generators:
+  - list:
+      elements:
+      - env: preserve
+  template:
+    metadata:
+      name: 'guestbook-{{env}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/dancer1325/argocd-example-apps.git
+        targetRevision: HEAD
+        path: guestbook
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{env}}'
+  syncPolicy:
+    # | delete the ApplicationSet,
+    #   ApplicationSet is deleted
+    #   Application "guestbook-dev" is deleted
+    #   Application "guestbook-dev"'s deployed resources (pods, services, etc.) are preserved
+    preserveResourcesOnDeletion: true

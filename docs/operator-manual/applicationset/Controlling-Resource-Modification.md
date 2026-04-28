@@ -242,22 +242,9 @@ spec:
 > source by `ref`, ignore changes to a field in that source, and changes to other sources would not cause the ignored 
 > field to be overwritten.
 
-## Prevent an `Application`'s child resources from being deleted, when the parent Application is deleted
+## ALTHOUGH `Application` is deleted, prevent the `Application`'s child resources are deleted 
 
-By default, when an `Application` resource is deleted by the ApplicationSet controller, all of the child resources of the Application will be deleted as well (such as, all of the Application's `Deployments`, `Services`, etc).
-
-To prevent an Application's child resources from being deleted when the parent Application is deleted, add the `preserveResourcesOnDeletion: true` field to the `syncPolicy` of the ApplicationSet:
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-spec:
-  # (...)
-  syncPolicy:
-    preserveResourcesOnDeletion: true
-```
-
-More information on the specific behaviour of `preserveResourcesOnDeletion`, and deletion in ApplicationSet controller and Argo CD in general, can be found on the [Application Deletion](Application-Deletion.md) page.
-
+* [here](Application-Deletion.md)
 
 ## Prevent an Application's child resources from being modified
 
