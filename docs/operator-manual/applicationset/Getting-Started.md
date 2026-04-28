@@ -57,7 +57,6 @@
 
 * TODO:
 
-- Enable `preserveResourcesOnDeletion` on your ApplicationSets
 - Temporarily disable automated sync in your ApplicationSets' template
 
 These parameters would allow you to observe/control the behaviour of the new version

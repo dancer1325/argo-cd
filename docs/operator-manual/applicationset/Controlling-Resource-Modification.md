@@ -246,11 +246,14 @@ spec:
 
 * [here](Application-Deletion.md)
 
-## Prevent an Application's child resources from being modified
+## Prevent that Application's child resources are modified
 
-Changes made to the ApplicationSet will propagate to the Applications managed by the ApplicationSet, and then Argo CD will propagate the Application changes to the underlying cluster resources (as per [Argo CD Integration](Argo-CD-Integration.md)).
+Changes made to the ApplicationSet will propagate to the Applications managed by the ApplicationSet, and
+then Argo CD will propagate the Application changes to the underlying cluster resources 
+(as per [Argo CD Integration](Argo-CD-Integration.md)).
 
-The propagation of Application changes to the cluster is managed by the [automated sync settings](../../user-guide/auto_sync.md), which are referenced in the ApplicationSet `template` field:
+The propagation of Application changes to the cluster is managed by the [automated sync settings](../../user-guide/auto_sync.md), 
+which are referenced in the ApplicationSet `template` field:
 
 - `spec.template.syncPolicy.automated`: If enabled, changes to Applications will automatically propagate to the cluster resources of the cluster. 
     - Unset this within the ApplicationSet template to 'pause' updates to cluster resources managed by the `Application` resource.
