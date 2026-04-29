@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+spec:
+  # (...)
+  syncPolicy:
+    applicationsSync: create-only
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+spec:
+  # (...)
+  syncPolicy:
+    applicationsSync: create-update

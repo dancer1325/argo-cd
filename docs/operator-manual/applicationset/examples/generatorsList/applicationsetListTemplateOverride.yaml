@@ -1,0 +1,78 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook-list-template-override
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - list:
+      elements:
+      - env: dev
+      - env: staging
+      # list generator's template
+      #   overrides spec.template
+      template:
+        metadata:
+          name: 'custom-{{.env}}'
+        spec:
+          project: default
+          source:
+            repoURL: https://github.com/dancer1325/argocd-example-apps.git
+            targetRevision: HEAD
+            path: guestbook
+          destination:
+            server: https://kubernetes.default.svc
+            namespace: '{{.env}}'
+  # spec.template
+  # uses
+  #   fallback | generators WITHOUT their OWN template
+  template:
+    metadata:
+      name: 'default-{{.env}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/argoproj/argocd-example-apps.git
+        targetRevision: HEAD
+        path: guestbook
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{.env}}'
+
+# list generator has its own template, so:
+# - name uses "custom-" prefix (not "default-")
+# - repoURL uses "dancer1325" (not "argoproj")
+#
+# --- Generated Applications ---
+#
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: custom-dev          # from generator's template, NOT "default-dev"
+#   namespace: argocd
+# spec:
+#   project: default
+#   source:
+#     repoURL: https://github.com/dancer1325/argocd-example-apps.git  # from generator's template
+#     targetRevision: HEAD
+#     path: guestbook
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: dev
+#
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: custom-staging
+#   namespace: argocd
+# spec:
+#   project: default
+#   source:
+#     repoURL: https://github.com/dancer1325/argocd-example-apps.git  # from generator's template
+#     targetRevision: HEAD
+#     path: guestbook
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: staging

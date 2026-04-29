@@ -307,130 +307,92 @@ A note on noProxy: Argo CD uses exec to interact with different tools such as he
 ### Cluster credentials
 
 * Cluster credentials
+  * allows
+    * ArgoCD can connect -- to -- Kubernetes cluster
   * 💡are stored | secrets💡
-    * requirements of the secrets
-      * label `argocd.argoproj.io/secret-type: cluster`
-      * fields
-        * `name`
-          * == cluster name
-        * `server` 
-          * == cluster api server url
-        * `namespaces`
-          * OPTIONAL
-          * == comma-separated list of namespaces / accessible | that cluster
-            * -> cluster-level resources are ignored
-              * ⚠️EXCEPTION: `clusterResources=true`⚠️
-        * `clusterResources` 
-          * OPTIONAL
-          * == boolean string (== `"true"` OR `"false"`)
-            * specify whether Argo CD can manage cluster-level resources | this cluster
-          * requirements
-            * `namespaces` is specified
-        * `project` 
-          * OPTIONAL
-          * == string / mark this -- as a -- project-scoped cluster
-        * `config`
-          * == JSON / data structure
-
-          ```yaml
-          # Basic authentication settings
-          username: string
-          password: string
-          # Bearer authentication settings
-          bearerToken: string
-          # IAM authentication configuration
-          awsAuthConfig:
-          clusterName: string
-          roleARN: string
-          profile: string
-          # Configure external command to supply client credentials
-          # See https://godoc.org/k8s.io/client-go/tools/clientcmd/api#ExecConfig
-          execProviderConfig:
-          command: string
-          args: [
-          string
-          ]
-          env: {
-          key: value
-          }
-          apiVersion: string
-          installHint: string
-          # Proxy URL for the kubernetes client to use when connecting to the cluster api server
-          proxyUrl: string
-          # Transport layer security configuration settings
-          tlsClientConfig:
-          # Base64 encoded PEM-encoded bytes (typically read from a client certificate file).
-          caData: string
-          # Base64 encoded PEM-encoded bytes (typically read from a client certificate file).
-          certData: string
-          # Server should be accessed without verifying the TLS certificate
-          insecure: boolean
-          # Base64 encoded PEM-encoded bytes (typically read from a client certificate key file).
-          keyData: string
-          # ServerName is passed to the server for SNI and is used in the client to check server
-          # certificates against. If ServerName is empty, the hostname used to contact the
-          # server is used.
-          serverName: string
-          # Disable automatic compression for requests to the cluster
-          disableCompression: boolean
-          ```
-
-TODO:
-
-> [!IMPORTANT]
-> When `namespaces` is set, Argo CD will perform a separate list/watch operation for each namespace
-> This can cause
-> the Application controller to exceed the maximum number of idle connections allowed for the Kubernetes API server.
-> To resolve this issue, you can increase the `ARGOCD_K8S_CLIENT_MAX_IDLE_CONNECTIONS` environment variable in the
-> Application controller.
-
-> [!IMPORTANT]
-> Note that if you specify a command to run under `execProviderConfig`,
-> that command must be available in the Argo CD image
-> See [BYOI (Build Your Own Image)](custom_tools.md#byoi-build-your-own-image).
-
-### Skipping Cluster Reconciliation
-
-You can prevent the application controller from reconciling all apps targeting a cluster by annotating its
-secret with `argocd.argoproj.io/skip-reconcile: "true"`. This uses the same annotation as
-[Skip Application Reconcile](../user-guide/skip_reconcile.md), but applied at the cluster level.
-
-The cluster remains visible in API responses (`argocd cluster list`), but the controller treats it as unmanaged.
+    * [data structure](/pkg/apis/application/v1alpha1/types.go)'s `type Cluster struct`
 
 ```yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: mycluster-secret
+  name: <SOME_CLUSTER_SECRET_NAME>
+  namespace: argocd
   labels:
     argocd.argoproj.io/secret-type: cluster
-  annotations:
-    argocd.argoproj.io/skip-reconcile: "true"
 type: Opaque
 stringData:
-  name: mycluster.example.com
-  server: https://mycluster.example.com
+  # name  
+  #   == cluster name
+  name: <CLUSTER_NAME>
+  server: <CLUSTER_SERVER_URL>
+  # server: https://my-cluster.example.com
+  
+  # namespaces
+  #   OPTIONAL
+  #     if you specify it -> Argo CD performs a separate list/watch operation / EACH namespace
+  #   == namespace1,namespace2, .... / accessible | that cluster
+  #     -> cluster-level resources are ignored
+  #       ⚠️EXCEPTION: `clusterResources=true`⚠️
+  #   POSSIBLE PROBLEMS:
+  #     Problem1: Application controller can exceed the MAXIMUM number of Kubernetes API server'S ALLOWED idle connections
+  #       Solution: | Application controller, increase the `ARGOCD_K8S_CLIENT_MAX_IDLE_CONNECTIONS` environment variable
+  namespaces: "<NAMESPACE_FIRST>,<NAMESPACE_SECOND>"
+  
+  #   OPTIONAL
+  #   ALLOWED values: "true" OR "false"
+  #   requirements
+  #     specify `namespaces`
+  clusterResources: "false"
+  
+  # OPTIONAL
+  # uses
+  #   mark this Secret -- as a -- project-scoped cluster
+  project: <PROJECT_NAME>
+  
+  # config: ClusterConfig
+  #   `execProviderConfig.command`
+  #     requirements: be AVAILABLE | [Build Your Own Image](custom_tools.md#byoi-build-your-own-image)
   config: |
     {
-      "bearerToken": "<authentication token>",
+      "username": "<username>",
+      "password": "<password>",
+      "bearerToken": "<token>",
+      "awsAuthConfig": {
+        "clusterName": "<eks-cluster-name>",
+        "roleARN": "<arn:aws:iam::role>",
+        "profile": "<aws-profile>"
+      },
+      "execProviderConfig": {
+        "command": "<binary>",
+        "args": ["<arg1>", "<arg2>"],
+        "env": {"<key>": "<value>"},
+        "apiVersion": "client.authentication.k8s.io/v1beta1",
+        "installHint": "<install instructions>"
+      },
       "tlsClientConfig": {
         "insecure": false,
-        "caData": "<base64 encoded certificate>"
-      }
+        "serverName": "<sni-hostname>",
+        "caData": "<base64-encoded-ca>",
+        "certData": "<base64-encoded-cert>",
+        "keyData": "<base64-encoded-key>"
+      },
+      "proxyUrl": "http://proxy.example.com:8080",
+      "disableCompression": false
     }
 ```
 
-To skip an existing cluster:
+### Skipping Cluster Reconciliation
 
-```bash
-kubectl -n argocd annotate secret mycluster-secret argocd.argoproj.io/skip-reconcile=true
-```
+* goal
+  * cluster skip reconcile ALL their apps
 
-To resume reconciliation:
+* == [annotation | Application-level](../user-guide/skip_reconcile.md)
 
-```bash
-kubectl -n argocd annotate secret mycluster-secret argocd.argoproj.io/skip-reconcile-
-```
+* steps
+  * | Cluster credential secret, add
+    * the `argocd.argoproj.io/skip-reconcile: "true"` annotation
+      * if you want to resume afterwards -> `kubectl -n argocd annotate secret <CLUSTER_SECRET> argocd.argoproj.io/skip-reconcile-`
 
 ### EKS
 
@@ -1026,7 +988,7 @@ stringData:
 ## Helm
 
 * Helm charts
-  * can be sourced -- from a --
+  * support the sources
     * Helm repository OR
     * OCI registry
 

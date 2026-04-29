@@ -3,119 +3,65 @@
 * goal
   * avoid unexpected post-upgrade behaviors
 
-The ApplicationSet controller supports a number of settings that limit the ability of the controller to
-make changes to generated Applications, for example, preventing the controller from deleting child Applications.
+* ApplicationSet controller 
+  * supports 
+    * 👀settings 👀/ 
+      * limit the ability of the controller -- to -- make changes | generated Applications
+        * _Example:_ prevent the controller can delete child Applications
+      * specify when & how, changes are made | your Applications & 's corresponding cluster resources
 
-These settings allow you to exert control over when, and how, changes are made to your Applications, and 
-to their corresponding cluster resources (`Deployments`, `Services`, etc).
+## ApplicationSet / `dry-run` mode
 
-Here are some of the controller settings that may be modified to alter the ApplicationSet controller's resource-handling behaviour.
+* == "read only" mode
+  * prevent 
+    * ApplicationSet can create/modify/delete Applications
+      * == NO resource is modified
+  * allows
+    * controller Reconcile loop will run
 
-## Dry run
+* [ways to enable | ApplicationSet Deployment's container launch parameters](#how-to-modify-applicationset-container-launch-parameters)
 
-* prevent ApplicationSet can
-  * create ALL Applications
-  * modify ALL Applications
-  * delete ALL Applications
+## policies / manage the ALLOWED operations / ApplicationSet apply | 's managed Applications
 
-To prevent the ApplicationSet controller from creating, modifying, or deleting any `Application` resources, 
-you may enable `dry-run` mode
-This essentially switches the controller into a "read only" mode, where the controller Reconcile loop will run,
-but no resources will be modified.
+* ways to configure
+  * | ApplicationSet controller's parameter `--policy`
+    * == specified | controller Deployment container
+    * ⚠️'s priority > / EACH ApplicationSet's priority⚠️
+      * if you want that / EACH ApplicationSet's priority takes priority -> ways
+        * | ApplicationSet controller's parameter, `--enable-policy-override: true`
+        * | ApplicationSet Deployment, set the the environment variable `ARGOCD_APPLICATIONSET_CONTROLLER_ENABLE_POLICY_OVERRIDE: true`
+        * | "argocd-cmd-params-cm" ConfigMap, set `applicationsetcontroller.enable.policy.override: true`
+  * / EACH ApplicationSet 
+    * `spec.syncPolicy.applicationsSync`
 
-To enable dry-run, add `--dryrun true` to the ApplicationSet Deployment's container launch parameters.
+* restricts the types of modifications / made -- to -- managed Argo CD `Application` resources
 
-See 'How to modify ApplicationSet container parameters' below for detailed steps on how to add this parameter to the controller.
+* ALLOWED values: 
+  * `sync`
+    * default one
+    * == ApplicationSet controller can create/update/delete Applications
+  * [`create-only`](#create-only)
+  * `create-delete`
+    * == ❌ApplicationSet controller can NOT update Applications❌
+  * [`create-update`](#create-update)
 
-## Managed Applications modification Policies
+### `create-only`
 
-The ApplicationSet controller supports a parameter `--policy`, which is specified on launch
-(within the controller Deployment container), and 
-which restricts what types of modifications will be made to managed Argo CD `Application` resources.
-
-The `--policy` parameter takes four values: `sync`, `create-only`, `create-delete`, and `create-update`
-(`sync` is the default, which is used if the `--policy` parameter is not specified; the other policies are described below).
-
-It is also possible to set this policy per ApplicationSet.
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-spec:
-  # (...)
-  syncPolicy:
-    applicationsSync: create-only # create-update, create-delete sync
-
-```
-
-- Policy `create-only`: Prevents ApplicationSet controller from modifying or deleting Applications
-  * **WARNING**: It doesn't prevent Application controller from deleting Applications according to [ownerReferences](https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/) when deleting ApplicationSet.
-- Policy `create-update`: Prevents ApplicationSet controller from deleting Applications
-  * Update is allowed
-  * **WARNING**: It doesn't prevent Application controller from deleting Applications according to [ownerReferences](https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/) when deleting ApplicationSet.
-- Policy `create-delete`: Prevents ApplicationSet controller from modifying Applications
-  * Delete is allowed.
-- Policy `sync`: Create, Update and Delete are allowed.
-
-If the controller parameter `--policy` is set, it takes precedence on the field `applicationsSync`
-* It is possible to allow per ApplicationSet sync policy by setting variable `ARGOCD_APPLICATIONSET_CONTROLLER_ENABLE_POLICY_OVERRIDE` to argocd-cmd-params-cm `applicationsetcontroller.enable.policy.override` or directly with controller parameter `--enable-policy-override` (default to `false`).
-
-### Policy - `create-only`
-
-* prevent ApplicationSet controller can
+* == ApplicationSet controller can NOT
   * modify Applications
   * delete Applications
+    * NOT prevent: if you delete ApplicationSet  -> delete -- [due to cascade deletion](Application-Deletion.md) -- Application
 
+### `create-update`
 
-To allow the ApplicationSet controller to *create* `Application` resources, but prevent any further modification, such as *deletion*, or modification of Application fields, add this parameter in the ApplicationSet controller:
+* == ❌ApplicationSet controller can NOT delete Applications❌
+  * NOT prevent: if you delete ApplicationSet -> delete -- [due to cascade deletion](Application-Deletion.md) -- Application
 
-**WARNING**: "*deletion*" indicates the case as the result of comparing generated Application between before and after, there are Applications which no longer exist
-* It doesn't indicate the case Applications are deleted according to ownerReferences to ApplicationSet
-* See [How to prevent Application controller from deleting Applications when deleting ApplicationSet](#how-to-prevent-application-controller-from-deleting-applications-when-deleting-applicationset)
+### How to prevent Application controller can delete Applications when deleting ApplicationSet
 
-```
---policy create-only
-```
-
-At ApplicationSet level
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-spec:
-  # (...)
-  syncPolicy:
-    applicationsSync: create-only
-```
-
-### Policy - `create-update`: Prevent ApplicationSet controller from deleting Applications
-
-To allow the ApplicationSet controller to create or modify `Application` resources, but prevent Applications from being deleted, add the following parameter to the ApplicationSet controller `Deployment`:
-
-**WARNING**: "*deletion*" indicates the case as the result of comparing generated Application between before and after, there are Applications which no longer exist
-* It doesn't indicate the case Applications are deleted according to ownerReferences to ApplicationSet
-* See [How to prevent Application controller from deleting Applications when deleting ApplicationSet](#how-to-prevent-application-controller-from-deleting-applications-when-deleting-applicationset)
-
-```
---policy create-update
-```
-
-This may be useful to users looking for additional protection against deletion of the Applications generated by the controller.
-
-At ApplicationSet level
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-spec:
-  # (...)
-  syncPolicy:
-    applicationsSync: create-update
-```
-
-### How to prevent Application controller from deleting Applications when deleting ApplicationSet
-
-By default, `create-only` and `create-update` policy isn't effective against preventing deletion of Applications when deleting ApplicationSet.
+TODO: 
+By default, `create-only` and `create-update` policy isn't effective against preventing deletion of Applications 
+when deleting ApplicationSet.
 You must set the finalizer to ApplicationSet to prevent deletion in such case, and use background cascading deletion.
 If you use foreground cascading deletion, there's no guarantee to preserve applications.
 
@@ -246,26 +192,18 @@ spec:
 
 * [here](Application-Deletion.md)
 
-## Prevent that Application's child resources are modified
+## how to prevent that Application's child resources are modified?
 
-Changes made to the ApplicationSet will propagate to the Applications managed by the ApplicationSet, and
-then Argo CD will propagate the Application changes to the underlying cluster resources 
-(as per [Argo CD Integration](Argo-CD-Integration.md)).
+* [Argo CD Integration](Argo-CD-Integration.md)
+* [Application automated sync settings](../../user-guide/auto_sync.md)
 
-The propagation of Application changes to the cluster is managed by the [automated sync settings](../../user-guide/auto_sync.md), 
-which are referenced in the ApplicationSet `template` field:
+## How to modify ApplicationSet container launch parameters?
 
-- `spec.template.syncPolicy.automated`: If enabled, changes to Applications will automatically propagate to the cluster resources of the cluster. 
-    - Unset this within the ApplicationSet template to 'pause' updates to cluster resources managed by the `Application` resource.
-- `spec.template.syncPolicy.automated.prune`: By default, Automated sync will not delete resources when Argo CD detects the resource is no longer defined in Git.
-    - For extra safety, set this to false to prevent unexpected changes to the backing Git repository from affecting cluster resources.
+* ways
+  * [`kubectl edit`](#kubectl-edit--modify-the-deployment--cluster)
+  * [edit the "install.yaml" manifest -- for the -- ApplicationSet installation](#edit-the-installyaml-manifest----for-the----applicationset-installation)
 
-
-## How to modify ApplicationSet container launch parameters
-
-There are a couple of ways to modify the ApplicationSet container parameters, so as to enable the above settings.
-
-### A) Use `kubectl edit` to modify the deployment on the cluster
+### `kubectl edit` / modify the deployment | cluster
 
 Edit the applicationset-controller `Deployment` resource on the cluster:
 ```
@@ -291,9 +229,10 @@ spec:
 Save and exit the editor
 * Wait for a new `Pod` to start containing the updated parameters.
 
-### Or, B) Edit the `install.yaml` manifest for the ApplicationSet installation
+### edit the "install.yaml" manifest -- for the -- ApplicationSet installation
 
-Rather than directly editing the cluster resource, you may instead choose to modify the installation YAML that is used to install the ApplicationSet controller:
+Rather than directly editing the cluster resource, you may instead choose to modify 
+the installation YAML that is used to install the ApplicationSet controller:
 
 Applicable for applicationset versions less than 0.4.0. 
 ```bash
@@ -359,32 +298,20 @@ By default, the Argo CD notifications and the Argo CD refresh type annotations a
 > One can also set global preserved fields for the controller by passing a comma separated list of annotations and labels to 
 > `ARGOCD_APPLICATIONSET_CONTROLLER_GLOBAL_PRESERVED_ANNOTATIONS` and `ARGOCD_APPLICATIONSET_CONTROLLER_GLOBAL_PRESERVED_LABELS` respectively.
 
-## Debugging unexpected changes to Applications
+## how to debug unexpected changes | Applications?
 
-When the ApplicationSet controller makes a change to an application, it logs the patch at the debug level
-* To see these
-logs, set the log level to debug in the `argocd-cmd-params-cm` ConfigMap in the `argocd` namespace:
+* if the ApplicationSet controller makes a change | an application -> it logs the patch | debug level
+  * steps to modify the log level 
+    * | "argocd-cmd-params-cm" ConfigMap | `argocd` namespace,
+      * `data.applicationsetcontroller.log.level: debug`
 
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: argocd-cmd-params-cm
-  namespace: argocd
-data:
-  applicationsetcontroller.log.level: debug
-```
+## how to preview changes?
 
-## Previewing changes
+* `argocd appset create --dry-run <PATH_TO_APPLICATIONSET>`
+  * _Example:_ `argocd appset create --dry-run ./appset.yaml -o json | jq -r '.status.resources[].name'`
 
-To preview changes that the ApplicationSet controller would make to Applications, you can create the AppSet in dry-run 
-mode
-* This works whether the AppSet already exists or not.
+* allows
+  * preview changes / ApplicationSet controller would make | Applications 
 
-```shell
-argocd appset create --dry-run ./appset.yaml -o json | jq -r '.status.resources[].name'
-```
-
-The dry-run will populate the returned ApplicationSet's status with the Applications which would be managed with the 
-given config
-* You can compare to the existing Applications to see what would change.
+* ❌NOT require❌
+  * AppSet ALREADY exist

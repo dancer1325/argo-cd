@@ -19,13 +19,48 @@
     * `kubectl config current-context`
         * check Kubectl points to a context
 * [install Argo CD](../../installation.md)
+* recommendations
+  * `kind create cluster` & `kind create cluster --name kind2` 
 
 # TODO:
-
 
 # Repositories
 
 # Clusters
+## Cluster credentials
+### allows: ArgoCD can connect -- to -- Kubernetes cluster
+* `kubectl config view --raw --context kind-kind2 -o jsonpath='{.users[?(@.name=="kind-kind2")].user}' | jq keys`
+  * check type of keys
+    * | Kind, == TLS
+* `KIND2_IP=$(docker inspect kind2-control-plane --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')`
+* `CA_DATA=$(kubectl config view --raw -o jsonpath='{.clusters[?(@.name=="kind-kind2")].cluster.certificate-authority-data}')`
+* `CERT_DATA=$(kubectl config view --raw -o jsonpath='{.users[?(@.name=="kind-kind2")].user.client-certificate-data}')`
+* `KEY_DATA=$(kubectl config view --raw -o jsonpath='{.users[?(@.name=="kind-kind2")].user.client-key-data }')`
+* `kubectl apply -f clusterSecret.yaml`
+* `argocd cluster list`
+  * recognize the kind2 cluster
+* `argocd app create -f applicationInCluster2.yaml`
+  * `argocd app list` & `argocd app get test-kind2`
+    * Application is deployed | kind cluster
+* `argocd app sync test-kind2`
+  * `kubectl get all -n default --context kind-kind2`
+    * check k8s resources are deployed | cluster kind2
+### 💡are stored | secrets💡
+* [here](clusterSecret.yaml)
+## Skipping Cluster Reconciliation
+* `kubectl -n argocd annotate secret mycluster-secret argocd.argoproj.io/skip-reconcile="true"`
+* `argocd app create -f applicationInCluster2.yaml`
+* `kubectl rollout restart -n argocd statefulset argocd-application-controller`
+* `argocd app sync test-kind2`
+* `kubectl get all --context kind-kind2`
+* `argocd app get test-kind2`
+* `kubectl scale deployment guestbook-ui --replicas=5 --context kind-kind2`
+  * force the drift BETWEEN GitOps & cluster state
+* `argocd app get test-kind2`
+  TODO: 
+
+# Helm
+
 
 # TODO:
 

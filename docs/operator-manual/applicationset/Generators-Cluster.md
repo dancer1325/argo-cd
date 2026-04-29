@@ -3,86 +3,46 @@
 * managed clusters 
   * are stored | ArgoCD namespace's [secrets](../declarative-setup.md#clusters)
 
-* TODO: The ApplicationSet controller uses those same Secrets to generate parameters to identify and 
-target available clusters.
-
-For each cluster registered with Argo CD, the Cluster generator produces parameters based on
-the list of items found within the cluster secret.
+* Cluster generator
+  * [data structure](/manifests/crds/applicationset-crd.yaml)'s `spec.generators[*].cluster`
+    * `.flatList`
+      * here 
+    * `.selector`
+      * TODO:
+    * `.template`
+      * TODO:
+    * `.value`
+      * TODO: 
+  * generate parameters / EACH registered cluster | Argo CD
+    * == Cluster credential secrets
 
 * built-in parameters
-  - `name`
-  - `nameNormalized`
-    - == `name` / ONLY contain
-      - lowercase alphanumeric characters
-      - '-'
-      - '.'
-  - `server`
-  - `project`
-    - ==  Secret's 'project' field
-    - OPTIONAL,
-      - by default, ''
-  - `metadata.labels.<key>` 
-    - / EACH Secret's label
-  - `metadata.annotations.<key>`
-    - / EACH Secret's annotation 
-
-TODO: 
-> [!NOTE]
-> Use the `nameNormalized` parameter if your cluster name contains characters (such as underscores) that
-> are not valid for Kubernetes resource names
-> This prevents rendering invalid Kubernetes resources with names like `my_cluster-app1`, and
-> instead would convert them to `my-cluster-app1`.
-
-
-Within [Argo CD cluster Secrets](../declarative-setup.md#clusters) are data fields describing the cluster:
-```yaml
-kind: Secret
-data:
-  # Within Kubernetes these fields are actually encoded in Base64; they are decoded here for convenience.
-  # (They are likewise decoded when passed as parameters by the Cluster generator)
-  config: "{'tlsClientConfig':{'insecure':false}}"
-  name: "in-cluster2"
-  server: "https://kubernetes.default.svc"
-metadata:
-  labels:
-    argocd.argoproj.io/secret-type: cluster
-# (...)
-```
-
-The Cluster generator will automatically identify clusters defined with Argo CD, and
-extract the cluster data as parameters:
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: guestbook
-  namespace: argocd
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-  - clusters: {} # Automatically use all clusters defined within Argo CD
-  template:
-    metadata:
-      name: '{{.name}}-guestbook' # 'name' field of the Secret
-    spec:
-      project: "my-project"
-      source:
-        repoURL: https://github.com/argoproj/argocd-example-apps/
-        targetRevision: HEAD
-        path: guestbook
-      destination:
-        server: '{{.server}}' # 'server' field of the secret
-        namespace: guestbook
-```
-* _Example:_ [here](/applicationset/examples/cluster)
-
-In this example, the cluster secret's `name` and `server` fields are used to populate the `Application` resource
-`name` and `server`, which are then used to target that same cluster.
+  * == 👀[cluster credential secrets](../declarative-setup.md#clusters) 👀
+    - `name`
+      - == `stringData.name`
+    - `nameNormalized`
+      - == `name` / ONLY contain
+        - lowercase alphanumeric characters
+        - '-'
+        - '.'
+      - uses
+        - your cluster name contains characters / NOT valid | k8s resources
+          - _Examples:_ `_`
+    - `server`
+      - == `stringData.servert`
+    - `project`
+      - == `stringData.project`
+    - `metadata.labels.<key>` 
+      - / EACH Secret's label
+    - `metadata.annotations.<key>`
+      - / EACH Secret's annotation
+    - | template it,
+      - they are decoded
 
 ### Label selector
 
-A label selector may be used to narrow the scope of targeted clusters to only those matching a specific label:
+A label selector may be used to narrow the scope of targeted clusters to only those matching a 
+specific label:
 ```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
@@ -293,66 +253,16 @@ spec:
         server: '{{.values.clusterName}}'
         namespace: guestbook
 ```
-### Gather cluster information as a flat list
+### `.flatList`
 
-You may sometimes need to gather your clusters information, without having to deploy one application per cluster found.
-For that, you can use the option `flatList` in the cluster generator.
+* allows
+  * gather cluster information -- as a -- flat list
+    * == ⚠️deploy 1! ApplicationSet⚠️
+      * != deploy 1 application / cluster found
+    * generator parameter: `.clusters`
+      * == ALL clusterS
 
-Here is an example of cluster generator using this option:
-```yaml
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-  - clusters:
-      selector:
-        matchLabels:
-          type: 'staging'
-      flatList: true
-  template:
-    metadata:
-      name: 'flat-list-guestbook'
-    spec:
-      project: "my-project"
-      source:
-        repoURL: https://github.com/argoproj/argocd-example-apps/
-        # The cluster values field for each generator will be substituted here:
-        targetRevision: 'HEAD'
-        path: helm-guestbook
-        helm:
-          values: |
-            clusters:
-            {{- range .clusters }}
-              - name: {{ .name }}
-            {{- end }}
-      destination:
-        # In this case this is equivalent to just using {{name}}
-        server: 'my-cluster'
-        namespace: guestbook
-```
-
-Given that you have two cluster secrets matching with names cluster1 and cluster2, 
-this would generate the **single** following Application:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: flat-list-guestbook
-  namespace: guestbook
-spec:
-  project: "my-project"
-  source:
-    repoURL: https://github.com/argoproj/argocd-example-apps/
-    targetRevision: 'HEAD'
-    path: helm-guestbook
-    helm:
-      values: |
-        clusters:
-          - name: cluster1
-          - name: cluster2
-```
-
+TODO: 
 In case you are using several cluster generators, each with the flatList option, 
 one Application would be generated by cluster generator, as we can't simply merge values and templates that
 would potentially differ in each generator.

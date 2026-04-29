@@ -2,6 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: guestbook
+  namespace: argocd
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
@@ -9,6 +10,8 @@ spec:
   - clusters: {}
   template:
     metadata:
+      # {{.name}}
+      #   == cluster generator parameter
       name: '{{.name}}-guestbook'
     spec:
       project: "default"
@@ -17,5 +20,7 @@ spec:
         targetRevision: HEAD
         path: guestbook
       destination:
+        # {{.server}}
+        #   == cluster generator parameter
         server: '{{.server}}'
         namespace: guestbook

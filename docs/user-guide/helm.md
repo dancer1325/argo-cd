@@ -2,21 +2,15 @@
 
 ## Declarative
 
-* ways to install Helm charts
-  * -- through -- Argo CD UI
-  * -- via -- declarative GitOps way  
-
 * Argo CD 
   * ⭐️ONLY uses Helm -- , through `helm template`, to -- [inflate charts](../faq.md#after-deploying-my-helm-application----with----argo-cd-i-can-not-see-it----through----helm-ls-or-other-helm-commands)⭐️
-    * [how to configure DECLARATIVELY -- using -- Helm](../operator-manual/declarative-setup.md#helm)
-    * [ways to provide values](#helm-value-precedence)
-
-* (application / helm-based) 's lifecycle
-  * ⭐️handled -- by -- Argo CD⭐️
-    * ❌NOT -- by -- Helm❌
+    * -> (application / helm-based) 's lifecycle
+      * ⭐️handled -- by -- Argo CD⭐️
+      * ❌NOT handled -- by -- Helm❌
 
 ## Values Files
 
+TODO: 
 * --values 
   * Helm CLI command option
     * _Example:_ `helm someCommand --values file1 --values file2 ...`

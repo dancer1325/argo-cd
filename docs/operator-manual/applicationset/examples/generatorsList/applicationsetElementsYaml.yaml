@@ -1,0 +1,69 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook-elements-yaml
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - list:
+      # elementsYaml
+      #   == YAML / expressed -- as -- string
+      elementsYaml: |
+        - env: dev
+          namespace: dev
+        - env: staging
+          namespace: staging
+  template:
+    metadata:
+      name: 'guestbook-{{.env}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/argoproj/argocd-example-apps.git
+        targetRevision: HEAD
+        path: guestbook
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{.namespace}}'
+
+# elementsYaml vs elements:
+# elements
+#     == key/value pairs / defined -- as -- YAML objects
+# elementsYaml
+#     == YAML string / parsed into elements | runtime
+#     uses
+#       | combine List generator + Matrix generator
+#
+# --- Generated Applications ---
+#
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: guestbook-dev
+#   namespace: argocd
+# spec:
+#   project: default
+#   source:
+#     repoURL: https://github.com/argoproj/argocd-example-apps.git
+#     targetRevision: HEAD
+#     path: guestbook
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: dev
+#
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: guestbook-staging
+#   namespace: argocd
+# spec:
+#   project: default
+#   source:
+#     repoURL: https://github.com/argoproj/argocd-example-apps.git
+#     targetRevision: HEAD
+#     path: guestbook
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: staging
