@@ -1,15 +1,25 @@
+# valueFiles, | Argo CD v2.6+, git repository | values files (can be) != git repository | Helm chart
 apiVersion: argoproj.io/v1alpha1
 kind: Application
+metadata:
+  name: helm-guestbook-valuesfiles-differentrepo
+  namespace: argocd
 spec:
+  project: default
   sources:
-    - repoURL: 'https://prometheus-community.github.io/helm-charts'
-      chart: prometheus
-      targetRevision: 15.7.1
+    - repoURL: https://github.com/dancer1325/argocd-example-apps
+      path: helm-guestbook
       helm:
         valueFiles:
-          - $values/charts/prometheus/values.yaml
-          # $values
-    # source -- with -- the values
-    - repoURL: 'https://git.example.com/org/value-files.git'
-      targetRevision: dev
-      ref: values   # map -- to the -- variable `$values`   -> resolve to "value-files" repository | root
+          - $values/docs/user-guide/examples/multipleSources/values-production.yaml  # $values = ANOTHER repo's root
+    - repoURL: https://github.com/dancer1325/argo-cd
+      targetRevision: HEAD
+      # ref
+      #   creates the $values variable
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helm-guestbook-valuesfiles-differentrepo
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
