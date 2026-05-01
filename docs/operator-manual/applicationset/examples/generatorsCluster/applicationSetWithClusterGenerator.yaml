@@ -1,3 +1,5 @@
+---
+# .flatList
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -15,11 +17,11 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/argoproj/argocd-example-apps.git
+        repoURL: https://github.com/dancer1325/argocd-example-apps.git
         targetRevision: HEAD
         path: helm-guestbook
         # .clusters
-        #     
+        #
         helm:
           values: |
             clusters:
@@ -31,11 +33,13 @@ spec:
         server: https://kubernetes.default.svc
         namespace: default
 ---
-# .selector: filters which clusters to target based on labels
+# .selector
+##   .matchLabels
+##      filters which clusters to target based on labels
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: cluster-selector
+  name: cluster-selector-label
   namespace: argocd
 spec:
   goTemplate: true
@@ -45,12 +49,39 @@ spec:
       selector:
         matchLabels:
           env: staging
-        # matchExpressions:
-        # - key: env
-        #   operator: In
-        #   values:
-        #   - staging
-        #   - dev
+  template:
+    metadata:
+      name: '{{.name}}-guestbook'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/argoproj/argocd-example-apps.git
+        targetRevision: HEAD
+        path: guestbook
+      destination:
+        server: '{{.server}}'
+        namespace: default
+# Only generates Applications for clusters with label env=staging
+---
+# .selector
+##   .matchExpressions
+##      filters which clusters to target based -- on -- expressions
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-selector-expression
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters:
+        selector:
+           matchExpressions:
+           - key: env
+             operator: In
+             values:
+             - staging
   template:
     metadata:
       name: '{{.name}}-guestbook'
