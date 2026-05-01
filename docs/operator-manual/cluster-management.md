@@ -9,24 +9,23 @@
   * [declaratively](./declarative-setup.md#clusters)
   * [`argocd cluster` Command Reference](../user-guide/commands/argocd_cluster.md)
 
+## "in-cluster"
+
+* == default cluster | ArgoCD is installed
+
+* 👀if you want to disable deploying ArgoCD Applications | `in-cluster` cluster -> | "argocd-cm" ConfigMap, set `.data.cluster.inClusterEnabled: "false"`👀
+  * -> ❌by default, you can NOT deploy Argo CD Applications❌
+
 ## how to add a cluster?
+
+* requirements
+  * [Cluster credentials](declarative-setup.md#cluster-credentials)
 
 * allows
   * 💡Argo CD can deploy Applications | MULTIPLE clusters (EVEN != cluster | Argo CD is installed)💡
     * Reason:🧠
       * ArgoCD does NOT have access -- to your -- local kubeconfig
       * OTHERWISE, Argo CD can NOT install Applications | OTHER clusters🧠
-
-* what does Argo CD under the hood?
-  1. | target cluster,
-     * creates 
-       * SA "argocd-manager"  / FULL cluster RBAC
-       * secret -- with -- bearer token
-  2. | source cluster's "argocd" namespace, stores -- as a -- Secret / label `argocd.argoproj.io/secret-type: cluster`
-     * token
-     * server URL
-     * TLS
-  4. | sync an `Application` / `destination.server: https://...`, Application Controller connect -- , via that Secret, to -- that cluster
 
 ### declaratively
 * [here](./declarative-setup.md#clusters)
@@ -37,6 +36,17 @@
   * privileged access -- to the -- cluster
   * `contextName` MUST ALREADY exist
     * check the AVAILABLE one -- via -- `kubectl config get-contexts`
+
+* what does Argo CD under the hood?
+  1. | target cluster,
+    * creates
+      * SA "argocd-manager"  / FULL cluster RBAC
+      * secret -- with -- bearer token
+  2. | source cluster's "argocd" namespace, stores -- as a -- Secret / label `argocd.argoproj.io/secret-type: cluster`
+    * token
+    * server URL
+    * TLS
+  4. | sync an `Application` / `destination.server: https://...`, Application Controller connect -- , via that Secret, to -- that cluster
 
 ## how to skip cluster reconciliation?
 
@@ -63,6 +73,3 @@ See [Declarative Setup - Skipping Cluster Reconciliation](./declarative-setup.md
 
 * "in-cluster"
   * ❌can NOT be removed❌
-  * if you want to disable the `in-cluster` configuration -> | "argocd-cm" ConfigMap,
-    * set `.data.cluster.inClusterEnabled: "false"`
-    * _Example of "argocd-cm": [here](examples/argocd-cm.yaml)

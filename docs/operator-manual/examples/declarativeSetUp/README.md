@@ -25,6 +25,7 @@
 # TODO:
 
 # Repositories
+TODO:
 
 # Clusters
 ## Cluster credentials
@@ -47,6 +48,25 @@
     * check k8s resources are deployed | cluster kind2
 ### 💡are stored | secrets💡
 * [here](clusterSecret.yaml)
+### ❌MANUAL ALTERNATIVE NOT recommended / WITHOUT using credentials❌
+* `kubectl config use-context kind-kind`
+* `ARGOCD_PASSWORD=$(kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d)`
+  * export Argo CD password
+* create configMap / has cluster configurations
+  * `kind get kubeconfig --name kind2 > /tmp/kind2-kubeconfig`
+    * copy Kube config file
+* `KIND2_IP=$(docker inspect kind2-control-plane --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')`
+  * export a kind2's internal IP
+* `sed -i '' "s|server: https://.*:.*|server: https://$KIND2_IP:6443|g" /tmp/kind2-kubeconfig`
+  * | the copied kube config file,
+    * update the kind2's server  
+* `kubectl create configmap kind2-kubeconfig --from-file=config=/tmp/kind2-kubeconfig -n argocd`
+* `kubectl apply -f podWithArgoCD.yaml`
+* `kubectl -n argocd exec -it argocd-cli -- sh`
+  * `argocd login argocd-server.argocd.svc.cluster.local --insecure --username admin --password <PREVIOUS_EXPORTED_PASSWORD>`
+  * `argocd cluster add kind-kind2 --insecure`
+  * 's return succeed
+  * `exit`
 ## Skipping Cluster Reconciliation
 * `kubectl -n argocd annotate secret mycluster-secret argocd.argoproj.io/skip-reconcile="true"`
 * `argocd app create -f applicationInCluster2.yaml`
@@ -58,9 +78,6 @@
   * force the drift BETWEEN GitOps & cluster state
 * `argocd app get test-kind2`
   TODO: 
-
-# Helm
-
 
 # TODO:
 

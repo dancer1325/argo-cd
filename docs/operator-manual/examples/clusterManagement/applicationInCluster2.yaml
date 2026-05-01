@@ -10,6 +10,7 @@ spec:
     targetRevision: HEAD
     path: guestbook
   destination:
+    #server: "https://<docker inspect kind2-control-plane --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'>:6443"
     server: https://172.18.0.3:6443
     namespace: guestbook
   syncPolicy:

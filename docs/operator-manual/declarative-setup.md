@@ -163,7 +163,17 @@
 
 #### Helm Chart repositories
 
-* [here](#helm)
+TODO: 
+* uses
+  * 👀Helm charts are located | sources / require ADDITIONAL configuration👀
+    * _Examples:_ authentication OR TLS connection details
+* keys / you can include (== `stringData.`)
+  * `url`
+  * `type`
+  * `name`
+  * `username` & `password`
+  * `tlsClientCertData` & `tlsClientCertKey`
+  * `enableOCI: "true"`
 
 ### Repositories using self-signed TLS certificates (or are signed by custom CA)
 
@@ -396,6 +406,7 @@ stringData:
 
 ### EKS
 
+TODO: 
 EKS cluster secret example using argocd-k8s-auth and [IRSA](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) and [Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html):
 
 ```yaml
@@ -989,25 +1000,9 @@ stringData:
 
 * Helm charts
   * support the sources
-    * Helm repository OR
-    * OCI registry
-
-* | "Application",
-  * `spec.source.helm.releaseName`
-    * allows
-      * customize the Helm release name
-
-* _repository_ Secret
-  * uses
-    * 👀Helm charts are located | sources / require ADDITIONAL configuration👀
-      * _Examples:_ authentication OR TLS connection details
-  * keys / you can include (== `stringData.`)
-    * `url`
-    * `type`
-    * `name`
-    * `username` & `password`
-    * `tlsClientCertData` & `tlsClientCertKey`
-    * `enableOCI: "true"`
+    * [Helm repository](../user-guide/helm.md) OR
+    * [OCI registry](../user-guide/oci.md)
+  * [if they live | private repository](#repositories)
 
 ## Resource Exclusion/Inclusion
 
