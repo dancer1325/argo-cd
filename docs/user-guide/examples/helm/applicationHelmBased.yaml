@@ -31,3 +31,223 @@ spec:
   destination:
     name: "in-cluster"
     namespace: nginx
+---
+# valueFiles
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: helm-guestbook-valuesfiles
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps
+    targetRevision: HEAD
+    path: helm-guestbook
+    helm:
+      # valueFiles
+      #   relative path -- to -- spec.source.repoURL
+      #     this case: https://github.com/dancer1325/argocd-example-apps/helm-guestbook/values-production.yaml
+      valueFiles:
+      - values-production.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helm-guestbook-valuesfiles
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+---
+# valueFiles
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: helm-guestbook-valuesfiles-missing
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps
+    targetRevision: HEAD
+    path: helm-guestbook
+    helm:
+      # valueFiles
+      #   relative path -- to -- spec.source.repoURL
+      #     this case: https://github.com/dancer1325/argocd-example-apps/helm-guestbook/values-random.yaml
+      valueFiles:
+        - values-random.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helm-guestbook-valuesfiles-missing
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+---
+# valueFiles
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: helm-guestbook-valuesfiles-ignoremissing
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps
+    targetRevision: HEAD
+    path: helm-guestbook
+    helm:
+      # valueFiles
+      #   relative path -- to -- spec.source.repoURL
+      #     this case: https://github.com/dancer1325/argocd-example-apps/helm-guestbook/values-random.yaml
+      valueFiles:
+        - values-production.yaml
+        - values-random.yaml
+      ignoreMissingValueFiles: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helm-guestbook-valuesfiles-ignoremissing
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+---
+# values
+## valuesObject
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: helm-guestbook-valuesobject
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps
+    targetRevision: HEAD
+    path: helm-guestbook
+    helm:
+      # valuesObject
+      valuesObject:
+        service:
+          type: ClusterIP
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helm-guestbook-valuesobject
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+---
+# values
+## values
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: helm-guestbook-values
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps
+    targetRevision: HEAD
+    path: helm-guestbook
+    helm:
+      # values
+      values: |
+        service:
+          type: ClusterIP
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helm-guestbook-values
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+## TODO:
+---
+# values
+## valuesObject' priority vs values' priority
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: helm-guestbook-valuesobject-priority
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps
+    targetRevision: HEAD
+    path: helm-guestbook
+    helm:
+      valuesObject:
+        service:
+          type: ClusterIP
+      values: |
+        service:
+          type: Ingress
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helm-guestbook-valuesobject-priority
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+---
+# Helm parameters
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: helm-guestbook-parameters
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps
+    targetRevision: HEAD
+    path: helm-guestbook
+    helm:
+      parameters:
+      - name: "service.type"
+        value: ClusterIP
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helm-guestbook-parameters
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+---
+# releaseName
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: helm-guestbook-releasename-default
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps
+    targetRevision: HEAD
+    path: helm-guestbook
+    helm:
+      #releaseName: helm-guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helm-guestbook-releasename-default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+---
+# releaseName
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: helm-guestbook-releasename-specified
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps
+    targetRevision: HEAD
+    path: helm-guestbook
+    helm:
+      releaseName: helm-guestbook-releasename-specified-declaratively
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helm-guestbook-releasename-specified
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

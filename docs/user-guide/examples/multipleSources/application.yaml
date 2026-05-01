@@ -1,7 +1,28 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: my-billing-app
+  name: multiple-sources-app
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  # source
+  #   ignored because it's ALSO specified sources
+  source:
+    repoURL: https://github.com/argoproj/argocd-example-apps.git
+    path: guestbook
+  sources:
+    - repoURL: https://github.com/dancer1325/argocd-example-apps.git
+      path: guestbook
+    - repoURL: https://github.com/dancer1325/argocd-example-apps.git
+      path: helm-guestbook
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: multiple-sources-which-produce-sameresource-app
   namespace: argocd
 spec:
   project: default
@@ -9,9 +30,9 @@ spec:
     server: https://kubernetes.default.svc
     namespace: default
   sources:
-    - repoURL: https://github.com/mycompany/billing-app.git
-      path: manifests
-      targetRevision: 8.5.1
-    - repoURL: https://github.com/mycompany/common-settings.git
-      path: configmaps-billing
-      targetRevision: HEAD
+    - repoURL: https://github.com/argoproj/argocd-example-apps.git
+      path: guestbook
+    # NEXT source
+    #   produce SAME k8s resource
+    - repoURL: https://github.com/dancer1325/argocd-example-apps.git
+      path: guestbook

@@ -9,7 +9,6 @@
         * Argo CD
           * compiles ALL the sources
             * == generate SEPARATELY the manifests / EACH source
-          * combine BOTH manifests
       * `spec.sources`
         * == MULTIPLE entries
         * if you specify it -> Argo CD ignores `spec.source`
@@ -22,7 +21,7 @@
     * [app-of-apps](../operator-manual/cluster-bootstrapping.md)
   * if MULTIPLE sources produce the SAME resource (== SAME `group`, `kind`, `name`, and `namespace`) -> 
     * the last source to produce the resource take precedence
-      * == resource | chat is override -- with a -- resource | Git repo
+      * == resource | chart is override -- with a -- resource | Git repo
     * `RepeatedResourceWarning` is produced
     * STILL sync the resources
 
@@ -31,19 +30,21 @@
 * use case
   * combine the external Helm chart + your own local values
 
-* how to configure the external Git repository / contain the value files
-  * | "Application", 
-    * | Values git repo, 
-      * specify 
-        * `spec.sources[*].ref: ValuesGitRepoReference`
-        * `spec.sources[*].path: PathToKubernetesManifests`
-          * OPTIONAL
-          * uses
-            * generate Kubernetes objects
-    * | helm chart git repo,
-      * specify `spec.sources[*].helm.valueFiles`
-        * `$ValuesGitRepoReference` variable
-          * can ONLY be used | beginning
-          * == 👀Values git repo's root 👀
+* how to configure the ArgoCD Application?
 
-* ❌NOT specify `spec.sources[*].chart`❌
+  ```yaml
+  spec:
+    sources:
+    # Helm chart repo
+    - repoURL: <HELM_CHART_REPO_URL>
+      path: <PATH_TO_CHART>
+      helm:
+        valueFiles:
+        # $<REF_NAME> = root of the values repo
+        - $<REF_NAME>/<PATH_TO_VALUES_FILE>
+    # Values repo
+    - repoURL: <VALUES_REPO_URL>
+      targetRevision: <BRANCH_OR_TAG>
+      ref: <REF_NAME>       # creates the $<REF_NAME> variable
+      # path: <OPTIONAL>    # if set, also generates manifests from this repo
+  ```

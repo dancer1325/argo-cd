@@ -1,124 +1,62 @@
 # Helm
 
-## Declarative
-
 * Argo CD 
   * ⭐️ONLY uses Helm -- , through `helm template`, to -- [inflate charts](../faq.md#after-deploying-my-helm-application----with----argo-cd-i-can-not-see-it----through----helm-ls-or-other-helm-commands)⭐️
     * -> (application / helm-based) 's lifecycle
       * ⭐️handled -- by -- Argo CD⭐️
       * ❌NOT handled -- by -- Helm❌
 
+* [data structure / helm-related](/manifests/crds/application-crd.yaml)'s `spec.source.helm`
+
 ## Values Files
 
-TODO: 
-* --values 
-  * Helm CLI command option
-    * _Example:_ `helm someCommand --values file1 --values file2 ...`
-  * 💡ALSO valid -- as -- Argo CD CLI command option💡
-    * _Example:_ `argocd app set helm-guestbook --values values-production.yaml`
+* | [Application](/manifests/crds/application-crd.yaml),
+  * 💡`spec.source.helm.valueFiles`💡
+    * == relative path -- to -- `spec.source.repoURL` 
+      * | Argo CD v2.6+,
+        * git repository | values files (can be) != git repository | Helm chart
+          * Reason:🧠thanks -- to -- [multiple sources for Applications](./multiple_sources.md#helm-value-files----from----external-git-repository)🧠
+    * ⚠️requirements⚠️
+      * | Argo CD v2.6-,
+        * git repository | values files (MUST be) == git repository | Helm chart
 
-* | Argo CD v2.6-,
-  * git repository | live values files (MUST be) == git repository | live Helm chart
-* | Argo CD v2.6+, 
-  * git repository | live values files (can be) != git repository | live Helm chart
-    * Reason:🧠thanks -- to -- [multiple sources for Applications](./multiple_sources.md#helm-value-files----from----external-git-repository)🧠
-    * TODO: The files can be in a different location in which case it can be accessed using
-      a relative path relative to the root directory of the Helm chart.
+* ways to specify
+  * declaratively
+  * `argocd <SOME_COMMAND> --values <RELATIVE_PATH_TO_SOURECE_REPO>` 
+    * == Helm CLI command option
+      * _Example:_ `helm someCommand --values file1 --values file2 ...`
 
-In the declarative syntax:
-
-```yaml
-source:
-  helm:
-    valueFiles:
-    - values-production.yaml
-```
-
-If Helm is passed a non-existing value file during template expansion, it will error out. Missing
-values files can be ignored (meaning, not passed to Helm) using the `--ignore-missing-value-files`. This can be
-particularly helpful to implement a [default/override
-pattern](https://github.com/argoproj/argo-cd/issues/7767#issue-1060611415) with [Application
-Sets](./application-set.md).
-
-In the declarative syntax:
-```yaml
-source:
-  helm:
-    valueFiles:
-    - values-common.yaml
-    - values-optional-override.yaml
-    ignoreMissingValueFiles: true
-```
+* if you specify a value file / NO exist -> it fails
+  * | template expansion, it errors "Missing"
+  * if you want to skip this error -> set `--ignore-missing-value-files: true`
 
 ## Values
 
-Argo CD supports the equivalent of a values file directly in the Application manifest using the `source.helm.valuesObject` key.
+* `spec.source.helm.valuesObject`
+  * == Helm values / passed -- to -- Helm template  
+    * defined -- as a -- map
+  * ways to specify
+    * declaratively
+  * 's priority > `spec.source.helm.values`'s priority
 
-```yaml
-source:
-  helm:
-    valuesObject:
-      ingress:
-        enabled: true
-        path: /
-        hosts:
-          - mydomain.example.com
-        annotations:
-          kubernetes.io/ingress.class: nginx
-          kubernetes.io/tls-acme: "true"
-        labels: {}
-        tls:
-          - secretName: mydomain-tls
-            hosts:
-              - mydomain.example.com
-```
-
-Alternatively, values can be passed in as a string using the `source.helm.values` key.
-
-```yaml
-source:
-  helm:
-    values: |
-      ingress:
-        enabled: true
-        path: /
-        hosts:
-          - mydomain.example.com
-        annotations:
-          kubernetes.io/ingress.class: nginx
-          kubernetes.io/tls-acme: "true"
-        labels: {}
-        tls:
-          - secretName: mydomain-tls
-            hosts:
-              - mydomain.example.com
-```
+* `spec.source.helm.values`
+  * == Helm values / passed -- to -- Helm template
+    * defined -- as -- a string
 
 ## Helm Parameters
 
-Helm has the ability to set parameter values, which override any values in
-a `values.yaml`. For example, `service.type` is a common parameter which is exposed in a Helm chart:
+* == [parameters / exposed | Helm chart](https://helm.sh/docs/helm/helm_template/#options)
+  * allows
+    * override values / defined | "values.yaml"
+  * uses
+    * | manifest generation, -- by -- `helm template`
+  * _Example:_ `helm template . --set service.type=LoadBalancer`
 
-```bash
-helm template . --set service.type=LoadBalancer
-```
 
-Similarly, Argo CD can override values in the `values.yaml` parameters using `argocd app set` command,
-in the form of `-p PARAM=VALUE`. For example:
-
-```bash
-argocd app set helm-guestbook -p service.type=LoadBalancer
-```
-
-In the declarative syntax:
-
-```yaml
-source:
-  helm:
-    parameters:
-    - name: "service.type"
-      value: LoadBalancer
-```
+* `spec.source.helm.parameters`
+  * ways to specify
+    * declaratively
+    * `argocd app set <ARGO_CD_APPLICATION_NAME> -p <PARAMETER_KEY>=<PARAMETER_VALUE>`
 
 ## Helm Value Precedence
 Values injections have the following order of precedence
@@ -203,29 +141,25 @@ source:
 
 ## Helm Release Name
 
-By default, the Helm release name is equal to the Application name to which it belongs. Sometimes, especially on a centralised Argo CD,
-you may want to override that  name, and it is possible with the `release-name` flag on the cli:
+* `spec.source.helm.releaseName`
+  * by default, == Application name / it belongs
+  * ways to specify 
+    * declaratively
+    * `argocd app set <ARGO_CD_APPLICATION_NAME> --release-name <SPECIFY_RELEASE_NAME>` 
 
-```bash
-argocd app set helm-guestbook --release-name myRelease
-```
-
- or using the releaseName for yaml:
-
-```yaml
-source:
-    helm:
-      releaseName: myRelease
-```
-
-> [!WARNING]
-> **Important notice on overriding the release name**
->
-> Please note that overriding the Helm release name might cause problems when the chart you are deploying is using the `app.kubernetes.io/instance` label. Argo CD injects this label with the value of the Application name for tracking purposes. So when overriding the release name, the Application name will stop being equal to the release name. Because Argo CD will overwrite the label with the Application name it might cause some selectors on the resources to stop working. In order to avoid this we can configure Argo CD to use another label for tracking in the [ArgoCD configmap argocd-cm.yaml](../operator-manual/argocd-cm.yaml) - check the lines describing `application.instanceLabelKey`.
+* use cases
+  * centralised Argo CD
+    * Reason:🧠OTHERWISE, it's the default one🧠
+ 
+* recommendations
+  * ⚠️if the chart / you are deploying is using the `app.kubernetes.io/instance` label -> NOT specify it⚠️
+    * Reason:🧠it might cause some selectors | resources, stop working🧠
+    * SOLUTION: configure | [ArgoCD configmap "argocd-cm.yaml"](../operator-manual/examples/argocd-cm.yaml), `application.instanceLabelKey`
 
 ## Helm Hooks
 
-Helm hooks are similar to [Argo CD hooks](resource_hooks.md). In Helm, a hook
+Helm hooks are similar to [Argo CD hooks](resource_hooks.md)
+* In Helm, a hook
 is any normal Kubernetes resource annotated with the `helm.sh/hook` annotation.
 
 Argo CD supports many (most?) Helm hooks by mapping the Helm annotations onto Argo CD's own hook annotations:

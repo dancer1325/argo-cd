@@ -11,6 +11,7 @@ spec:
       path: helm-guestbook
       helm:
         valueFiles:
+          # path -- to -- value files | ANOTHER git repo
           - $values/docs/user-guide/examples/multipleSources/values-production.yaml  # $values = ANOTHER repo's root
     - repoURL: https://github.com/dancer1325/argo-cd
       targetRevision: HEAD
