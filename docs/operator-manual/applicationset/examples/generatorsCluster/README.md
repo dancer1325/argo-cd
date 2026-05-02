@@ -41,6 +41,8 @@
 * [here](applicationSetWithClusterGenerator.yaml)
 
 ## `.selector`
+### allows: narrow the scope of targeted clusters
+* NEXT sections
 ### `.matchLabels`
 * `kind create cluster --name kind3`
   * Problems:
@@ -53,34 +55,80 @@
           * `sudo sysctl -w fs.inotify.max_user_watches=1048576`
           * `sudo sysctl -w fs.inotify.max_user_instances=8192`
           * `exit`
-
-TODO:
+* `kubectl apply -f applicationSetWithClusterGenerator.yaml`
+* `argocd app list | grep guestbook-selector-label`
+  * 's return: ONLY 1! Application | kind2
 ### `.matchExpressions`
+* `kubectl apply -f applicationSetWithClusterGenerator.yaml`
+* `argocd app list | grep guestbook-selector-expression`
+  * 's return: ONLY 1! Application | kind2
 
 ## `.template`
-TODO:
+### override default ApplicationSet `spec.template`
+* `kubectl apply -f applicationSetWithClusterGenerator.yaml`
+* `argocd appset get guestbook-clustergenerator-template-override`
+  * ONLY appear default one
+* `argocd app list | grep clustergenerator`
+  * check source == https://github.com/dancer1325/argocd-example-apps.git
 
-## `.value`
-TODO:
-
-# generate parameters / EACH registered cluster | Argo CD
-## == Cluster credential secrets
-TODO:
+## `.values`
+* [here](applicationSetWithClusterGenerator.yaml)'s "cluster-values"
+* `kubectl apply -f applicationSetWithClusterGenerator.yaml`
+* `argocd app list | grep values`
+  * check existing Applications / related to this ApplicationSet
+* `argocd app get in-cluster-guestbook-values`
+  * check `source.target` & `namespace`
 
 # built-in parameters
 ## == cluster credential secrets
 ### `name` 
-TODO:
+* [here](applicationSetWithClusterGenerator.yaml)
+  * see `{{.name}}`
 ### `nameNormalized`
-TODO:
+* [here](applicationSetWithClusterGenerator.yaml)
+  * see `{{.nameNormalized}}`
 ### `server`
-TODO:
+* [here](applicationSetWithClusterGenerator.yaml)
+  * see `{{.server}}`
 ### `project`
-TODO:
+* [here](applicationSetWithClusterGenerator.yaml)
+  * see `{{.project}}`
 ### `metadata.labels.<key>`
-TODO:
+* [definition | Cluster credentials](clusterSecret.yaml)'s `metadata.labels`
+* [here](applicationSetWithClusterGenerator.yaml)
+  * see `{{index .metadata.labels`
+* `kubectl apply -f applicationSetWithClusterGenerator.yaml`
+* `argocd app list | grep builtin-metadata`
+  * 's return: ONLY -- for -- filtered clusters
+* `argocd app get clustergenerator-guestbook-builtin-metadata-kind2 -o yaml`
+  * check `metadata.annotations`
 ### `metadata.annotations.<key>`
-TODO:
-## \| template it, they are decoded
-TODO:
+* [definition | Cluster credentials](clusterSecret.yaml)'s `metadata.annotations`
+* [here](applicationSetWithClusterGenerator.yaml)
+    * see `{{index .metadata.annotations`
+* `kubectl apply -f applicationSetWithClusterGenerator.yaml`
+* `argocd app list | grep builtin-metadata`
+    * 's return: ONLY -- for -- filtered clusters
+* `argocd app get clustergenerator-guestbook-builtin-metadata-kind2 -o yaml`
+    * check `metadata.annotations`
 
+## \| template it, they are decoded
+* see final output | [PREVIOUS subsection](#-cluster-credential-secrets)
+
+
+
+# filter clusters -- based on -- their K8s version
+* `kind create cluster --config clusterWithKubernetesVersionConfig.yaml`
+* get ALL TLS configuration / register kind4 | cluster 
+  * see [clusterSecret.yaml](clusterSecret.yaml)
+* `kubectl apply -f clusterSecret.yaml`
+  * `argocd cluster list`   
+    * check that it returns: "clusterwithspecifiedversion" 
+    * Problems:
+      * Problem1: NO identifies the version, because it's NOT monitor by Controller, since it has NO Application 
+* `kubectl apply -f applicationSetWithClusterGenerator.yaml`
+* `argocd app list | grep previous-filtered`
+  * create Application | ALL
+* `kubectl apply -f applicationSetWithClusterGenerator.yaml`
+* `argocd app list | grep filtered`
+    * create 1! Application / filtered -- by -- k8s version

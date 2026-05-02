@@ -51,7 +51,7 @@ spec:
           env: staging
   template:
     metadata:
-      name: '{{.name}}-guestbook'
+      name: '{{.name}}-guestbook-selector-label'
     spec:
       project: default
       source:
@@ -84,7 +84,7 @@ spec:
              - staging
   template:
     metadata:
-      name: '{{.name}}-guestbook'
+      name: '{{.name}}-guestbook-selector-expression'
     spec:
       project: default
       source:
@@ -113,7 +113,7 @@ spec:
       # generator's template takes precedence over spec.template
       template:
         metadata:
-          name: 'prod-{{.name}}-guestbook'
+          name: 'prod-{{.name}}-guestbook-template-override'
         spec:
           project: default
           source:
@@ -138,7 +138,8 @@ spec:
 # Production clusters use v1.0.0 and deploy to "production" namespace
 # Other clusters would use HEAD and "default" namespace
 ---
-# .values: adds custom key/value pairs to the generated parameters
+# .values
+#   adds custom key/value pairs to the generated parameters
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -152,17 +153,209 @@ spec:
       values:
         revision: HEAD
         targetNamespace: guestbook
+        # use built-in parameter -- as -- value
+        clusterName: '{{.name}}'
   template:
     metadata:
-      name: '{{.name}}-guestbook'
+      name: '{{.name}}-guestbook-values'
     spec:
       project: default
       source:
         repoURL: https://github.com/argoproj/argocd-example-apps.git
+        # access to values parameters
         targetRevision: '{{.values.revision}}'
         path: guestbook
       destination:
-        server: '{{.server}}'
+        server: '{{.values.clusterName}}'
         namespace: '{{.values.targetNamespace}}'
-# values.revision and values.targetNamespace are custom parameters
-# available in the template as {{.values.revision}} and {{.values.targetNamespace}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook-clustergenerator-template-override
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters:
+        # list generator's template
+        #   overrides spec.template
+        template:
+          metadata:
+            name: 'clustergenerator-templateoverride-{{.name}}'
+          spec:
+            project: default
+            source:
+              repoURL: https://github.com/dancer1325/argocd-example-apps.git
+              targetRevision: HEAD
+              path: guestbook
+            destination:
+              server: https://kubernetes.default.svc
+              namespace: '{{.name}}'
+  # spec.template
+  # uses
+  #   fallback | generators WITHOUT their OWN template
+  template:
+    metadata:
+      name: 'default-{{.env}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/argoproj/argocd-example-apps.git
+        targetRevision: HEAD
+        path: guestbook
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{.env}}'
+---
+# built-in parameters
+#   name, server, project
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook-builtin-parameters-name-server-project
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            env: staging
+  template:
+    metadata:
+      name: '{{.name}}-guestbook-builtin-parameters-name-server-project'
+    spec:
+      project: '{{.project}}'
+      source:
+        repoURL: https://github.com/argoproj/argocd-example-apps/
+        targetRevision: HEAD
+        path: guestbook
+      destination:
+        server: '{{.server}}'
+        namespace: guestbook
+
+---
+# built-in parameters
+#   nameNormalized
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook-builtin-parameters-namenormalized
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            env: staging
+  template:
+    metadata:
+      name: '{{.nameNormalized}}-guestbook-builtin-parameters-namenormalized'
+    spec:
+      project: '{{.project}}'
+      source:
+        repoURL: https://github.com/argoproj/argocd-example-apps/
+        targetRevision: HEAD
+        path: guestbook
+      destination:
+        server: '{{.server}}'
+        namespace: guestbook
+
+---
+# built-in parameters
+#   metadata
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook-builtin-parameters-metadata
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=zero"]
+  generators:
+    - clusters:
+        # exclude the clusters
+        #   Reason: OTHERWISE, template fails looking for the labels OR annotations
+        selector:
+          matchExpressions:
+          - key: env
+            operator: Exists
+  template:
+    metadata:
+      name: 'clustergenerator-guestbook-builtin-metadata-{{.name}}'
+      annotations:
+        # built-in metadata parameters from cluster Secret's labels and annotations
+        #   .metadata.
+        #     Reason:🧠goTemplate:true🧠
+        cluster-env: '{{.metadata.labels.env}}'
+        cluster-team: '{{.metadata.annotations.team}}'
+        cluster-region: '{{.metadata.annotations.region}}'
+    spec:
+      project: '{{.project}}'
+      source:
+        repoURL: https://github.com/argoproj/argocd-example-apps/
+        targetRevision: HEAD
+        path: guestbook
+      destination:
+        server: '{{.server}}'
+        namespace: guestbook
+
+---
+# filter clusters -- based on -- their K8s version
+#   exist PREVIOUS Application | that cluster
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-previous-filtered-byk8sversion
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters: {}
+  template:
+    metadata:
+      name: '{{.name}}-guestbook-previous-filtered-byk8sversion'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/argoproj/argocd-example-apps.git
+        targetRevision: HEAD
+        path: guestbook
+      destination:
+        server: '{{.server}}'
+        namespace: default
+# Only generates Applications for clusters with label env=staging
+---
+# filter clusters -- based on -- their K8s version
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-filtered-byk8sversion
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            argocd.argoproj.io/kubernetes-version: v1.34.3
+  template:
+    metadata:
+      name: '{{.name}}-guestbook-filtered-byk8sversion'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/argoproj/argocd-example-apps.git
+        targetRevision: HEAD
+        path: guestbook
+      destination:
+        server: '{{.server}}'
+        namespace: default
+# Only generates Applications for clusters with label env=staging

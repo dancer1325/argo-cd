@@ -6,37 +6,33 @@
 * Cluster generator
   * [data structure](/manifests/crds/applicationset-crd.yaml)'s `spec.generators[*].cluster`
     * [`.flatList`](#flatlist)
-    * `.selector`
-      * -- by -- [label](#selectormatchlabels-)
+    * [`.selector`](#selector-)
     * `.template`
-      * TODO:
-    * `.value`
-      * TODO: 
+      * override default ApplicationSet `spec.template`
+    * [`.values`](#values)
   * generate parameters / EACH registered cluster | Argo CD
-    * == Cluster credential secrets
-
-* built-in parameters
-  * == 👀[cluster credential secrets](../declarative-setup.md#clusters) 👀
-    - `name`
-      - == `stringData.name`
-    - `nameNormalized`
-      - == `name` / ONLY contain
-        - lowercase alphanumeric characters
-        - '-'
-        - '.'
-      - uses
-        - your cluster name contains characters / NOT valid | k8s resources
-          - _Examples:_ `_`
-    - `server`
-      - == `stringData.server`
-    - `project`
-      - == `stringData.project`
-    - `metadata.labels.<key>` 
-      - / EACH Secret's label
-    - `metadata.annotations.<key>`
-      - / EACH Secret's annotation
-    - \| template it,
-      - they are decoded
+    * built-in parameters
+      * == 👀[cluster credential secrets](../declarative-setup.md#clusters) 👀
+        - `name`
+          - == `stringData.name`
+        - `nameNormalized`
+          - == `name` / ONLY contain
+            - lowercase alphanumeric characters
+            - '-'
+            - '.'
+          - uses
+            - your cluster name contains characters / NOT valid | k8s resources
+              - _Examples:_ `_`
+        - `server`
+          - == `stringData.server`
+        - `project`
+          - == `stringData.project`
+        - `metadata.labels.<key>` 
+          - / EACH Secret's label
+        - `metadata.annotations.<key>`
+          - / EACH Secret's annotation
+        - \| template it,
+          - they are decoded
 
 ### `.selector` 
 
@@ -53,6 +49,7 @@
 
 ### Deploy | local cluster
 
+TODO: 
 In Argo CD, the 'local cluster' is the cluster upon which Argo CD (and the ApplicationSet controller) 
 is installed
 This is to distinguish it from 'remote clusters', which are those that are added to Argo CD [declaratively](../declarative-setup.md#clusters) or
@@ -102,126 +99,29 @@ with label `argocd.argoproj.io/secret-type": "cluster"`
 You may also create a local [cluster secret declaratively](../declarative-setup.md#clusters), or 
 with the CLI using `argocd cluster add "(context name)" --in-cluster`, rather than through the Web UI.
 
-### Fetch clusters based on their K8s version
+### filter clusters -- based on -- their K8s version
 
-There is also the possibility to fetch clusters based upon their Kubernetes version
-* To do this, the label `argocd.argoproj.io/auto-label-cluster-info` needs to be set to `true` on the cluster secret. 
-Once that has been set, the controller will dynamically label the cluster secret with the Kubernetes version it is running on
-* To retrieve that value, you need to use the
-`argocd.argoproj.io/kubernetes-version`, as the example below demonstrates:
+* requirements
+  * | [Cluster credential](../declarative-setup.md#cluster-credentials), 
+    * set `labels.argocd.argoproj.io/auto-label-cluster-info: true`
+      * -> controller label the cluster secret -- with the -- Kubernetes version / it's running on
+  * exist PREVIOUS Application | that cluster
 
-```yaml
-spec:
-  goTemplate: true
-  generators:
-  - clusters:
-      selector:
-        matchLabels:
-          argocd.argoproj.io/kubernetes-version: 1.28
-        # matchExpressions are also supported.
-        #matchExpressions:
-        #  - key: argocd.argoproj.io/kubernetes-version
-        #    operator: In
-        #    values:
-        #      - "1.27"
-        #      - "1.28"
-```
+* how to use?
+  * | `spec.generators.clusters.selector.matchLabels` OR `spec.generators.clusters.selector.matchExpressions`
+    * `argocd.argoproj.io/kubernetes-version: <K8S_VERSION>`
 
-### Pass additional key-value pairs via `values` field
+### `values`
 
-You may pass additional, arbitrary string key-value pairs via the `values` field of the cluster generator
-* Values added via the `values` field are added as `values.(field)`
+* allow
+  * pass ADDITIONAL key/value pairs
+    * value
+      * 👀ALSO admit built-in parameters👀
 
-In this example, a `revision` parameter value is passed, based on matching labels on the cluster secret:
-```yaml
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-  - clusters:
-      selector:
-        matchLabels:
-          type: 'staging'
-      # A key-value map for arbitrary parameters
-      values:
-        revision: HEAD # staging clusters use HEAD branch
-  - clusters:
-      selector:
-        matchLabels:
-          type: 'production'
-      values:
-        # production uses a different revision value, for 'stable' branch
-        revision: stable
-  template:
-    metadata:
-      name: '{{.name}}-guestbook'
-    spec:
-      project: "my-project"
-      source:
-        repoURL: https://github.com/argoproj/argocd-example-apps/
-        # The cluster values field for each generator will be substituted here:
-        targetRevision: '{{.values.revision}}'
-        path: guestbook
-      destination:
-        server: '{{.server}}'
-        namespace: guestbook
-```
+* uses
+  * | template,
+    * `{{.values.<KEY>}}`
 
-In this example the `revision` value from the `generators.clusters` fields is passed into the template as `values.revision`, 
-containing either `HEAD` or `stable` (based on which generator generated the set of parameters).
-
-> [!NOTE]
-> The `values.` prefix is always prepended to values provided via `generators.clusters.values` field
-* Ensure you include this prefix in the parameter name within the `template` when using it.
-
-In `values` we can also interpolate the following parameter values
-(i.e. the same values as presented in the beginning of this page)
-
-- `name`
-- `nameNormalized` *('name' but normalized to contain only lowercase alphanumeric characters, '-' or '.')*
-- `server`
-- `metadata.labels.<key>` *(for each label in the Secret)*
-- `metadata.annotations.<key>` *(for each annotation in the Secret)*
-
-Extending the example above, we could do something like this:
-
-```yaml
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-  - clusters:
-      selector:
-        matchLabels:
-          type: 'staging'
-      # A key-value map for arbitrary parameters
-      values:
-        # If `my-custom-annotation` is in your cluster secret, `revision` will be substituted with it.
-        revision: '{{index .metadata.annotations "my-custom-annotation"}}' 
-        clusterName: '{{.name}}'
-  - clusters:
-      selector:
-        matchLabels:
-          type: 'production'
-      values:
-        # production uses a different revision value, for 'stable' branch
-        revision: stable
-        clusterName: '{{.name}}'
-  template:
-    metadata:
-      name: '{{.name}}-guestbook'
-    spec:
-      project: "my-project"
-      source:
-        repoURL: https://github.com/argoproj/argocd-example-apps/
-        # The cluster values field for each generator will be substituted here:
-        targetRevision: '{{.values.revision}}'
-        path: guestbook
-      destination:
-        # In this case this is equivalent to just using {{name}}
-        server: '{{.values.clusterName}}'
-        namespace: guestbook
-```
 ### `.flatList`
 
 * allows
