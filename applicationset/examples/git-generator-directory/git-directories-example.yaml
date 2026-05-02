@@ -8,17 +8,21 @@ spec:
   goTemplateOptions: ["missingkey=error"]
   generators:
   - git:
-      repoURL: https://github.com/argoproj/argo-cd.git
+      repoURL: https://github.com/dancer1325/argo-cd.git
       revision: HEAD
       directories:
       - path: applicationset/examples/git-generator-directory/cluster-addons/*
   template:
     metadata:
       name: '{{.path.basename}}'
+      labels:
+        pathpath: '{{.path.path}}'
+        pathbasename: '{{.path.basename}}'
+        pathbasenamenormalized: '{{.path.basenameNormalized}}'
     spec:
-      project: "my-project"
+      project: "default"
       source:
-        repoURL: https://github.com/argoproj/argo-cd.git
+        repoURL: https://github.com/dancer1325/argo-cd.git
         targetRevision: HEAD
         path: '{{.path.path}}'
       destination:
