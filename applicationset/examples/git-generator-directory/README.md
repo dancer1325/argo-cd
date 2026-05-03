@@ -5,6 +5,10 @@
 │   ├── argo-workflows
 │   │   └── kustomization.yaml
 │   └── prometheus-operator
+│   |   ├── Chart.yaml
+│   |   ├── requirements.yaml
+│   |   └── values.yaml
+│   └── cert-manager
 │       ├── Chart.yaml
 │       ├── requirements.yaml
 │       └── values.yaml
@@ -29,6 +33,8 @@
   * 1 directory / EACH workload -- to -- deploy
     * [Argo Workflow controller](cluster-addons/argo-workflows)
     * [Prometheus Operator Helm chart](cluster-addons/prometheus-operator)
+  * [cert-manager](cluster-addons/cert-manager/)
+    * added to test, ApplicationSet controller detection
 
 # requirements
 * download software / enable you to run local Kubernetes clusters
