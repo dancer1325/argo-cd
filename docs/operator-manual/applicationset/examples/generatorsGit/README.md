@@ -37,6 +37,8 @@ TODO:
 # Git Generator: Directories -- `.git.directories` --
 ## generates parameters -- based on -- specified repository's directory structure
 * [here](/applicationset/examples/git-generator-directory)
+### == 👀generate 1 Application / EACH specified repository's directory structure👀
+* [here](/applicationset/examples/git-generator-directory)
 ## built-in parameters
 ### `{{.path.path}}`
 * [here](/applicationset/examples/git-generator-directory)
@@ -110,9 +112,45 @@ TODO:
 # Git Generator: Files
 ## generates parameters -- based on -- specified repository's directory structure
 * [here](/applicationset/examples/git-generator-files-discovery)
-
-# TODO:
-TODO:
+### == 👀generate 1 Application / EACH JSON/YAML file | specified repository👀
+* [here](/applicationset/examples/git-generator-files-discovery)
+## built-in parameters
+### `{{.path.path}}`
+* [here](/applicationset/examples/git-generator-files-discovery)
+* `argocd app get engineering-dev-guestbook -o yaml`
+  * check labels 
+### `{{index .path.segments n}}`
+* [here](/applicationset/examples/git-generator-files-discovery)
+* `argocd app get engineering-dev-guestbook -o yaml`
+  * check `metadata.labels`
+### `{{.path.basename}}`
+* [here](/applicationset/examples/git-generator-files-discovery)
+* `argocd app get engineering-dev-guestbook -o yaml`
+  * check labels
+### `{{.path.basenameNormalized}}`
+* [here](/applicationset/examples/git-generator-files-discovery)
+* `argocd app get engineering-dev-guestbook -o yaml`
+  * check `metadata.labels`
+### `{{.path.filename}}`
+* [here](/applicationset/examples/git-generator-files-discovery)
+* `argocd app get engineering-dev-guestbook -o yaml`
+  * check `metadata.labels`
+## ⚠️if you specify `.git.pathParamPrefix` -> `<.git.pathParamPrefix_VALUE>.path.<path_parameter>`⚠️
+* [here](applicationSetGitFilesPathParamPrefix.yaml)
+* `kubectl apply -f applicationSetGitFilesPathParamPrefix.yaml`
+* `argocd app get engineering-dev-guestbook-pathparamprefix -o yaml`
+  * check labels
+## Exclude files
+* [here](/applicationset/examples/git-generator-files-discovery/excludes)
+* `argocd app list | grep files-discovery-exclude`
+  * return 1! Application
+## `values`
+### allows: passing ADDITIONAL string key-value pairs
+* `kubectl apply -f applicationSetGitGeneratorFile.yaml`
+* `argocd app get "engineering-dev-guestbook-gitgenerator-files" -o yaml`
+  * check annotations
+### how to use? `values.(DEFINED_VALUES_KEY)`
+* [here](applicationSetGitGeneratorDirectory.yaml)
 
 # Git Polling Interval
 ## ways to configure
@@ -146,6 +184,22 @@ TODO:
 ### ❌if Revision Cache Expiration > ApplicationSet Controller Polling Interval -> Git generator does NOT see NEW commits | files OR directories❌
 TODO:
 
+# `argocd.argoproj.io/application-set-refresh: true` annotation
+## triggers an ApplicationSet refresh
+TODO:
+## AFTER reconciliation, the ApplicationSet controller removes this annotation
+TODO:
 
 # TODO:
+TODO:
+
+# Repository credentials
+## if your ApplicationSets need credentials & the ApplicationSet project field is templated (`{{.}}`) -> you need to add the repository -- as a -- "non project scoped" repository
+TODO:
+### ways
+#### -- via -- UI, set this == **blank**
+TODO:
+#### -- via -- CLI, | `argocd repo add`, ❌NOT pass `--project`❌
+TODO:
+#### -- via -- declaratively, | repository's secrets' `.stringData`, ❌NOT define `project:`❌
 TODO:

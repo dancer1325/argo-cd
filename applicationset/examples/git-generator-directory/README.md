@@ -68,4 +68,3 @@
   * 1 Application / EACH folder | `generators[git].directories.path`
 ## ApplicationSet / WITH exclude
 * `kubectl apply -f excludes/git-directories-exclude-example.yaml`
-* 

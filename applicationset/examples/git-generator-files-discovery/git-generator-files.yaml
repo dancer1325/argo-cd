@@ -1,7 +1,8 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: guestbook
+  name: guestbook-git-generator-files
+  namespace: argocd
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
@@ -13,7 +14,23 @@ spec:
         - path: "applicationset/examples/git-generator-files-discovery/cluster-config/**/config.json"
   template:
     metadata:
-      name: '{{.cluster.name}}-guestbook'
+      name: '{{.cluster.name}}-guestbook-git-generator-files'
+      labels:
+        # ERROR: 's size > 63   == k8s' labels restriction
+        #pathpath: '{{.path.path}}'
+        pathbasename: '{{.path.basename}}'
+        pathbasenormalized: '{{.path.basenameNormalized}}'
+        pathfilename: '{{.path.filename}}'
+        pathfilenamenormalized: '{{.path.filenameNormalized}}'
+      annotations:
+        # path: applicationset/examples/git-generator-files-discovery/cluster-config/**/config.json"
+        path-segment-0: '{{index .path.segments 0}}'
+        path-segment-1: '{{index .path.segments 1}}'
+        path-segment-2: '{{index .path.segments 2}}'
+        path-segment-3: '{{index .path.segments 3}}'
+        path-segment-4: '{{index .path.segments 4}}'
+        path-segment-5: '{{index .path.segments 5}}'
+        path-segment-6: '{{index .path.segments 6}}'
     spec:
       project: default
       source:

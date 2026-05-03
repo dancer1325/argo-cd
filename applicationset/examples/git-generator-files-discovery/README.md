@@ -18,6 +18,9 @@
 ├── git-generator-files-fasttemplate.yaml
 └── git-generator-files.yaml
 ```
+  * ApplicationSet
+    * [WITHOUT excludes](git-generator-files.yaml)
+    * [WITH excludes](excludes)
   * [apps/guestbook](apps/guestbook)
     * == Kubernetes resources / simple guestbook application
   * [cluster-config](cluster-config)
@@ -32,4 +35,6 @@
 
 # how to run locally?
 * `kubectl apply -f git-generator-files.yaml`
-* 
+* `argocd app list | guestbook-git-generator-files`
+  * create 1 Application / EACH ".json" file / follow cluster-config/**/config.json
+    * == 2 Application

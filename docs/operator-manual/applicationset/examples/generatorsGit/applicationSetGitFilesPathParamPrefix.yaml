@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook-pathparamprefix
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/dancer1325/argo-cd.git
+        revision: HEAD
+        pathParamPrefix: mypathparamprefix
+        files:
+        - path: "applicationset/examples/git-generator-files-discovery/cluster-config/**/config.json"
+  template:
+    metadata:
+      name: '{{.cluster.name}}-guestbook-pathparamprefix'
+      labels:
+        # ERROR: 's size > 63   == k8s' labels restriction
+        #pathpath: '{{.path.path}}'
+        #pathbasename: '{{.path.basename}}'
+        pathbasename: '{{.mypathparamprefix.path.basename}}'
+        #pathbasenormalized: '{{.path.basenameNormalized}}'
+        pathbasenormalized: '{{.mypathparamprefix.path.basenameNormalized}}'
+        #pathfilename: '{{.path.filename}}'
+        pathfilename: '{{.mypathparamprefix.path.filename}}'
+        #pathfilenamenormalized: '{{.path.filenameNormalized}}'
+        pathfilenamenormalized: '{{.mypathparamprefix.path.filenameNormalized}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/argoproj/argo-cd.git
+        targetRevision: HEAD
+        path: "applicationset/examples/git-generator-files-discovery/apps/guestbook"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: guestbook-pathparamprefix

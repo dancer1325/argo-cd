@@ -1,13 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: guestbook
+  name: guestbook-files-discovery-exclude
+  namespace: argocd
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
     - git:
-        repoURL: https://github.com/argoproj/argo-cd.git
+        repoURL: https://github.com/dancer1325/argo-cd.git
         revision: HEAD
         files:
           - path: "applicationset/examples/git-generator-files-discovery/cluster-config/**/config.json"
@@ -15,13 +16,13 @@ spec:
             exclude: true
   template:
     metadata:
-      name: '{{.cluster.name}}-guestbook'
+      name: '{{.cluster.name}}-guestbook-files-discovery-exclude'
     spec:
       project: default
       source:
-        repoURL: https://github.com/argoproj/argo-cd.git
+        repoURL: https://github.com/dancer1325/argo-cd.git
         targetRevision: HEAD
         path: "applicationset/examples/git-generator-files-discovery/apps/guestbook"
       destination:
         server: https://kubernetes.default.svc
-        namespace: guestbook
+        namespace: guestbook-files-discovery-exclude

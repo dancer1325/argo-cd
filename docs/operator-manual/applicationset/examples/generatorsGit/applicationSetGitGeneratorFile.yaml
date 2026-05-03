@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: guestbook
+  name: guestbook-gitgenerator-files
   namespace: argocd
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
     - git:
-        repoURL: https://github.com/argoproj/argo-cd.git
+        repoURL: https://github.com/dancer1325/argo-cd.git
         revision: HEAD
         files:
           - path: "applicationset/examples/git-generator-files-discovery/cluster-config/**/config.json"
@@ -17,14 +17,17 @@ spec:
           base_dir: "{{index .path.segments 0}}/{{index .path.segments 1}}/{{index .path.segments 2}}"
   template:
     metadata:
-      name: '{{.cluster.name}}-guestbook'
+      name: '{{.cluster.name}}-guestbook-gitgenerator-files'
+      annotations:
+        valuesbasedir: '{{.values.base_dir}}'
     spec:
       project: default
       source:
-        repoURL: https://github.com/argoproj/argo-cd.git
+        repoURL: https://github.com/dancer1325/argo-cd.git
         targetRevision: HEAD
         # use values -- by -- `.values.` prefix
         path: "{{.values.base_dir}}/apps/guestbook"
       destination:
-        server: '{{.cluster.address}}'
-        namespace: guestbook
+        #server: '{{.cluster.address}}'
+        server: https://kubernetes.default.svc
+        namespace: guestbook-gitgenerator-files

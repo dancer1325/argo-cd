@@ -14,7 +14,8 @@
 
 ## Git Generator: Directories -- `.git.directories` --
 
-* generates parameters -- based on -- specified repository's directory structure
+* generates parameters -- based on -- 💡specified repository's directory structure💡
+  * == 👀generate 1 Application / EACH specified repository's directory structure👀
   * built-in parameters
     * `{{.path.path}}`
       * == directory path / match | Git repository
@@ -67,7 +68,9 @@
 
 ## Git Generator: Files
 
-* generates parameters -- based on -- contents of JSON/YAML files | specified repository
+* generates parameters -- based on -- 💡JSON/YAML file | specified repository💡
+  * == 👀generate 1 Application / EACH JSON/YAML file | specified repository👀
+    * [globbing](./Generators-Git-File-Globbing.md)
   * built-in parameters
     * `{{.path.path}}`
       * == path -- to the -- directory / contain matching configuration file | Git repository
@@ -91,60 +94,13 @@
     * `{{.path.filenameNormalized}}`
       * == matched filename / unsupported characters are replaced -- with -- `-`
 
+* ⚠️if you specify `.git.pathParamPrefix` -> `<.git.pathParamPrefix_VALUE>.path.<path_parameter>`⚠️
+  * ==
+    * `path.path` -> `<.git.pathParamPrefix_VALUE>.path.path`
+    * `path.basename` -> `<.git.pathParamPrefix_VALUE>.path.basename`
+    * `path.basenameNormalized` -> `<.git.pathParamPrefix_VALUE>.path.basenameNormalized`
 
-TODO: 
-> [!NOTE]
-> The right-most *directory* name always becomes `{{.path.basename}}`
-* For example, from `- path: /one/two/three/four/config.json`, `{{.path.basename}}` 
-> will be `four`. The filename can always be accessed using `{{.path.filename}}`. 
-
-> [!NOTE]
-> If the `pathParamPrefix` option is specified, all `path`-related parameter names above will be prefixed with the specified value and a dot separator. 
-> E.g., if `pathParamPrefix` is `myRepo`, then the generated parameter name would be `myRepo.path` instead of `path`
-> Using this option is necessary in a Matrix generator where both child generators are Git generators (to avoid conflicts when merging the child generators’ items).
-
-> [!NOTE]
-> The default behavior of the Git file generator is very greedy. 
-> Please see [Git File Generator Globbing](./Generators-Git-File-Globbing.md) for more information.
-
-### Exclude files
-
-The Git file generator also supports an `exclude` option in order to exclude files in the repository from being scanned by the ApplicationSet controller:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: guestbook
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-    - git:
-        repoURL: https://github.com/argoproj/argo-cd.git
-        revision: HEAD
-        files:
-          - path: "applicationset/examples/git-generator-files-discovery/cluster-config/**/config.json"
-          - path: "applicationset/examples/git-generator-files-discovery/cluster-config/*/dev/config.json"
-            exclude: true
-  template:
-    metadata:
-      name: '{{.cluster.name}}-guestbook'
-    spec:
-      project: default
-      source:
-        repoURL: https://github.com/argoproj/argo-cd.git
-        targetRevision: HEAD
-        path: "applicationset/examples/git-generator-files-discovery/apps/guestbook"
-      destination:
-        server: https://kubernetes.default.svc
-        #server: '{{.cluster.address}}'
-        namespace: guestbook
-```
-
-This example excludes the `config.json` file in the `dev` directory from the list of files scanned for this `ApplicationSet` resource.
-
-(*The [full example](https://github.com/argoproj/argo-cd/tree/master/applicationset/examples/git-generator-files-discovery/excludes).*)
+### Exclude files  -- `generators[git].files[].exclude:true` --
 
 ### `values`
 
@@ -174,17 +130,15 @@ This example excludes the `config.json` file in the `dev` directory from the lis
         * == `timeout.reconciliation` | ["argocd-cm.yaml"](../examples/argocd-cm.yaml)
     * ❌if Revision Cache Expiration > ApplicationSet Controller Polling Interval -> Git generator does NOT see NEW commits | files OR directories❌
 
-## The `argocd.argoproj.io/application-set-refresh` Annotation
+## `argocd.argoproj.io/application-set-refresh: true` annotation
 
-TODO: 
-Setting the `argocd.argoproj.io/application-set-refresh` annotation
-(to any value) triggers an ApplicationSet refresh. This annotation
-forces the Git provider to resolve Git references directly, bypassing
-the Revision Cache. The ApplicationSet controller removes this
-annotation after reconciliation.
+* triggers an ApplicationSet refresh
+  * == bypass the [Revision Cache](#git-polling-interval)
+  * AFTER reconciliation, the ApplicationSet controller removes this annotation 
 
 ## Webhook Configuration
 
+TODO: 
 To eliminate the polling delay, the ApplicationSet webhook
 server can be configured to receive webhook events. ApplicationSet
 supports Git webhook notifications from GitHub and GitLab. The
@@ -266,10 +220,12 @@ stringData:
 After saving, please restart the ApplicationSet pod for the changes to take effect.
 
 ## Repository credentials
-
-TODO: 
-If your [ApplicationSets](index.md) uses a repository where you need credentials to be able to access it _and_ if the
-ApplicationSet project field is templated (i.e. the `project` field of the ApplicationSet contains `{{ ... }}`), you need to add the repository as a "non project scoped" repository.  
-- When doing that through the UI, set this to a **blank** value in the dropdown menu.
-- When doing that through the CLI, make sure you **DO NOT** supply the parameter `--project` ([argocd repo add docs](../../user-guide/commands/argocd_repo_add.md))
-- When doing that declaratively, make sure you **DO NOT** have `project:` defined under `stringData:` ([complete yaml example](../examples/argocd-repositories.yaml))
+ 
+* if your ApplicationSets need credentials & the ApplicationSet project field is templated (`{{.}}`) -> you need to add the repository -- as a -- "non project scoped" repository
+  * ways
+    * -- via -- UI, 
+      * set this == **blank**
+    * -- via -- CLI,
+      * | [`argocd repo add`](../../user-guide/commands/argocd_repo_add.md), ❌NOT pass `--project` parameter❌ 
+    * -- via -- declaratively,
+      * | [repository's secrets](../examples/argocd-repositories.yaml)'s `.stringData`, ❌NOT define `project:`❌  
