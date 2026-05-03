@@ -29,3 +29,7 @@
 
 # requirements
 * clusters ALREADY defined | Argo CD
+
+# how to run locally?
+* `kubectl apply -f git-generator-files.yaml`
+* 

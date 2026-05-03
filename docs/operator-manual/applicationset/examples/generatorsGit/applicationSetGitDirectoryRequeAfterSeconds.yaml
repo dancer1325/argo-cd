@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: cluster-addons-exclude
+  name: git-directory-reque-afterseconds
   namespace: argocd
 spec:
   goTemplate: true
@@ -11,13 +11,11 @@ spec:
       repoURL: https://github.com/dancer1325/argo-cd.git
       revision: HEAD
       directories:
-      - path: applicationset/examples/git-generator-directory/excludes/cluster-addons/*
-        # exclude NOT specified -> take in consideration
-      - exclude: true
-        path: applicationset/examples/git-generator-directory/excludes/cluster-addons/exclude-helm-guestbook
+      - path: applicationset/examples/git-generator-directory/cluster-addons/*
+      requeueAfterSeconds: 45
   template:
     metadata:
-      name: '{{.path.basename}}-cluster-addons-exclude'
+      name: '{{.path.basename}}-reque-afterseconds'
     spec:
       project: "default"
       source:

@@ -42,133 +42,21 @@
   * detect this change
   * AUTOMATICALLY deploy the resulting manifests | NEW `Application` resources
 
-### Exclude directories
+* `generators[git].directories[].path`
+  * if you want to specify -> you can use [path.Match](https://golang.org/pkg/path/#Match)
 
-The Git directory generator will automatically exclude directories that begin with `.` (such as `.git`).
+### Exclude directories -- `generators[git].directories[].exclude:true` --
+ 
+* by default, exclude directories / begin with `.`
 
-The Git directory generator also supports an `exclude` option in order to exclude directories in the repository
-from being scanned by the ApplicationSet controller:
+* 's priority > include rules
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: cluster-addons
-  namespace: argocd
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-  - git:
-      repoURL: https://github.com/argoproj/argo-cd.git
-      revision: HEAD
-      directories:
-      - path: applicationset/examples/git-generator-directory/excludes/cluster-addons/*
-      - path: applicationset/examples/git-generator-directory/excludes/cluster-addons/exclude-helm-guestbook
-        exclude: true
-  template:
-    metadata:
-      name: '{{.path.basename}}'
-    spec:
-      project: "my-project"
-      source:
-        repoURL: https://github.com/argoproj/argo-cd.git
-        targetRevision: HEAD
-        path: '{{.path.path}}'
-      destination:
-        server: https://kubernetes.default.svc
-        namespace: '{{.path.basename}}'
-```
-(*The [full example](https://github.com/argoproj/argo-cd/tree/master/applicationset/examples/git-generator-directory/excludes).*)
+* order |  `generators[git].directories[]`
+  * ❌NOT matter❌
 
-This example excludes the `exclude-helm-guestbook` directory from the list of directories scanned for 
-this `ApplicationSet` resource.
+### Root Of Git Repo 
 
-> [!NOTE]
-> **Exclude rules have higher priority than include rules**
->
-> If a directory matches at least one `exclude` pattern, it will be excluded. Or, said another way,
-> *exclude rules take precedence over include rules.*
->
-> As a corollary, which directories are included/excluded is not affected by the order of `path`s in the `directories`
-> field list (because, as above, exclude rules always take precedence over include rules). 
-
-For example, with these directories:
-
-```
-.
-└── d
-    ├── e
-    ├── f
-    └── g
-```
-Say you want to include `/d/e`, but exclude `/d/f` and `/d/g`
-* This will *not* work:
-
-```yaml
-- path: /d/e
-  exclude: false
-- path: /d/*
-  exclude: true
-```
-Why? Because the exclude `/d/*` exclude rule will take precedence over the `/d/e` include rule
-* When the `/d/e` path in the Git repository is processed by the ApplicationSet controller, 
-the controller detects that at least one exclude rule is matched, and thus that directory should not be scanned.
-
-You would instead need to do:
-
-```yaml
-- path: /d/*
-- path: /d/f
-  exclude: true
-- path: /d/g
-  exclude: true
-```
-
-Or, a shorter way (using [path.Match](https://golang.org/pkg/path/#Match) syntax) would be:
-
-```yaml
-- path: /d/*
-- path: /d/[fg]
-  exclude: true
-```
-
-### Root Of Git Repo
-
-The Git directory generator can be configured to deploy from the root of the git repository by providing `'*'` as the `path`.
-
-To exclude directories, you only need to put the name/[path.Match](https://golang.org/pkg/path/#Match) of the directory you do not want to deploy.
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: cluster-addons
-  namespace: argocd
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-  - git:
-      repoURL: https://github.com/example/example-repo.git
-      revision: HEAD
-      directories:
-      - path: '*'
-      - path: donotdeploy
-        exclude: true
-  template:
-    metadata:
-      name: '{{.path.basename}}'
-    spec:
-      project: "my-project"
-      source:
-        repoURL: https://github.com/example/example-repo.git
-        targetRevision: HEAD
-        path: '{{.path.path}}'
-      destination:
-        server: https://kubernetes.default.svc
-        namespace: '{{.path.basename}}'
-```
+* `spec.generators[git].directories[*].path: '*'`
 
 ### `values`
 
@@ -179,32 +67,30 @@ spec:
 
 ## Git Generator: Files
 
-* built-in parameters
-  * `{{.path.path}}`
-    * == path -- to the -- directory / contain matching configuration file | Git repository
-      * _Example:_ if the config file == `/clusters/clusterA/config.json` -> `/clusters/clusterA` 
-  * `{{index .path.segments n}}`
-    * == path -- to the -- matching configuration file | Git repositor / split | array elements
-      * _Example:_ 
-        * `index .path.segments 0: clusters`
-        * `index .path.segments 1: clusterA`
-  * `{{.path.basename}}`
-    * == basename of the path to the directory / contain the configuration file
-      * _Example:_ `clusterA`
-  * `{{.path.basenameNormalized}}`
-    * == `.path.basename` / unsupported characters are replaced -- with -- `-`
-      * _Example:_ 
-        * if `path` == `/directory/directory_2` -> would produce `directory-2`
-        * if `.path.basename` == `directory_2` -> would produce `directory-2`
-  * `{{.path.filename}}`
-    * == matched filename
-      * _Example:_ `config.json`
-  * `{{.path.filenameNormalized}}`
-    * == matched filename / unsupported characters are replaced -- with -- `-`
-
 * generates parameters -- based on -- contents of JSON/YAML files | specified repository
+  * built-in parameters
+    * `{{.path.path}}`
+      * == path -- to the -- directory / contain matching configuration file | Git repository
+        * _Example:_ if the config file == `/clusters/clusterA/config.json` -> `/clusters/clusterA` 
+    * `{{index .path.segments n}}`
+      * == path -- to the -- matching configuration file | Git repositor / split | array elements
+        * _Example:_ 
+          * `index .path.segments 0: clusters`
+          * `index .path.segments 1: clusterA`
+    * `{{.path.basename}}`
+      * == basename of the path to the directory / contain the configuration file
+        * _Example:_ `clusterA`
+    * `{{.path.basenameNormalized}}`
+      * == `.path.basename` / unsupported characters are replaced -- with -- `-`
+        * _Example:_ 
+          * if `path` == `/directory/directory_2` -> would produce `directory-2`
+          * if `.path.basename` == `directory_2` -> would produce `directory-2`
+    * `{{.path.filename}}`
+      * == matched filename
+        * _Example:_ `config.json`
+    * `{{.path.filenameNormalized}}`
+      * == matched filename / unsupported characters are replaced -- with -- `-`
 
-* _Example:_ [here](/applicationset/examples/git-generator-files-discovery)
 
 TODO: 
 > [!NOTE]
@@ -269,25 +155,28 @@ This example excludes the `config.json` file in the `dev` directory from the lis
 
 ## Git Polling Interval
 
-When using a Git generator, the ApplicationSet controller polls Git
-repositories, by default, every 3 minutes to detect changes, unless
-different default value is set by the
-`ARGOCD_APPLICATIONSET_CONTROLLER_REQUEUE_AFTER` environment variable.
-You can customize this interval per ApplicationSet using
-`requeueAfterSeconds`.
+* polling interval -- by -- ApplicationSet Controller
+  * == 💡poll generators💡
+    * ❌!= [poll Applications](/docs/faq.md#how-often-does-argo-cd-check-for-changes--git-or-helm-repository-)❌
+  * ways to configure
+    * `ARGOCD_APPLICATIONSET_CONTROLLER_REQUEUE_AFTER` environment variable
+      * [source code](/manifests/base/applicationset-controller/argocd-applicationset-controller-deployment.yaml)
+      * -> ALL ApplicationSet
+      * got -- from -- `applicationsetcontroller.requeue.after` | "argocd-cmd-params-cm" ConfigMap
+    * `spec.generators[git].requeueAfterSeconds` / EACH ApplicationSet
+      * 's priority > `ARGOCD_APPLICATIONSET_CONTROLLER_REQUEUE_AFTER`'s priority
 
-> [!NOTE]
-> The Git generator uses the ArgoCD Repo Server to retrieve file
-> and directory lists from Git. Therefore, the Git generator is
-> affected by the Repo Server's Revision Cache Expiration setting
-> (see the description of the `timeout.reconciliation` parameter in
-> [argocd-cm.yaml](../examples/argocd-cm.yaml/#:~:text=timeout.reconciliation%3A)).
-> If this value exceeds the configured Git Polling Interval, the
-> Git generator might not see files or directories from new commits
-> until the previous cache entry expires.
-> 
+* Git generator
+  * ⚠️depends on the ArgoCD Repo Server's Revision Cache Expiration setting⚠️
+    * [`--revision-cache-expiration` flag](/reposerver/cache/cache.go)
+      * got it -- from -- `ARGOCD_RECONCILIATION_TIMEOUT` environment variable
+        * by default, 3m
+        * == `timeout.reconciliation` | ["argocd-cm.yaml"](../examples/argocd-cm.yaml)
+    * ❌if Revision Cache Expiration > ApplicationSet Controller Polling Interval -> Git generator does NOT see NEW commits | files OR directories❌
+
 ## The `argocd.argoproj.io/application-set-refresh` Annotation
 
+TODO: 
 Setting the `argocd.argoproj.io/application-set-refresh` annotation
 (to any value) triggers an ApplicationSet refresh. This annotation
 forces the Git provider to resolve Git references directly, bypassing

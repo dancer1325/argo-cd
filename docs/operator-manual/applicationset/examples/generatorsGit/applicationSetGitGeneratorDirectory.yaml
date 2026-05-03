@@ -1,27 +1,29 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: cluster-addons
+  name: cluster-addons-general
   namespace: argocd
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
     - git:
-        repoURL: https://github.com/example/example-repo.git
+        repoURL: https://github.com/dancer1325/argo-cd.git
         revision: HEAD
         directories:
-          - path: '*'
+          - path: applicationset/examples/git-generator-directory/cluster-addons/*
         # ADDITIONAL parameters
         values:
           cluster: '{{.path.basename}}'
   template:
     metadata:
-      name: '{{.path.basename}}'
+      name: 'cluster-addons-general-{{.path.basename}}'
+      labels:
+        values.cluster: '{{.values.cluster}}'
     spec:
-      project: "my-project"
+      project: "default"
       source:
-        repoURL: https://github.com/example/example-repo.git
+        repoURL: https://github.com/dancer1325/argo-cd.git
         targetRevision: HEAD
         path: '{{.path.path}}'
       destination:
