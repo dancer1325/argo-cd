@@ -1,0 +1,4 @@
+apiVersion: v2
+name: applicationset-helm-string-literal
+description: Demonstrates Helm raw string literals to deploy an ApplicationSet
+version: 0.1.0

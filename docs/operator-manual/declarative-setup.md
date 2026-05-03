@@ -61,7 +61,6 @@
     * `metadata.finalizers`
       * perform [app deletion](../user-guide/app_deletion.md#deletion-finalizer)
 
-
 * ways to deploy
   * -- via -- kubectl
     * `kubectl apply -n namespaceWhereLivesArgoCD -f pathToApplicationFile.yaml`

@@ -130,86 +130,16 @@ By activating Go Templating, `{{ .metadata }}` becomes an object.
 
 ### Git Generators
 
-By activating Go Templating, `{{ .path }}` becomes an object
-* Therefore, some changes must be made to the Git 
-generators' templating:
+* built-in parameters 
 
-- `{{ path }}` becomes `{{ .path.path }}`
-- `{{ path.basename }}` becomes `{{ .path.basename }}`
-- `{{ path.basenameNormalized }}` becomes `{{ .path.basenameNormalized }}`
-- `{{ path.filename }}` becomes `{{ .path.filename }}`
-- `{{ path.filenameNormalized }}` becomes `{{ .path.filenameNormalized }}`
-- `{{ path[n] }}` becomes `{{ index .path.segments n }}`
-- `{{ values }}` if being used in the file generator becomes `{{ .values }}`
-
-Here is an example:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: cluster-addons
-spec:
-  generators:
-  - git:
-      repoURL: https://github.com/argoproj/argo-cd.git
-      revision: HEAD
-      directories:
-      - path: applicationset/examples/git-generator-directory/cluster-addons/*
-  template:
-    metadata:
-      name: '{{path.basename}}'
-    spec:
-      project: default
-      source:
-        repoURL: https://github.com/argoproj/argo-cd.git
-        targetRevision: HEAD
-        path: '{{path}}'
-      destination:
-        server: https://kubernetes.default.svc
-        namespace: '{{path.basename}}'
-```
-
-becomes
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: cluster-addons
-spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
-  generators:
-  - git:
-      repoURL: https://github.com/argoproj/argo-cd.git
-      revision: HEAD
-      directories:
-      - path: applicationset/examples/git-generator-directory/cluster-addons/*
-  template:
-    metadata:
-      name: '{{.path.basename}}'
-    spec:
-      project: default
-      source:
-        repoURL: https://github.com/argoproj/argo-cd.git
-        targetRevision: HEAD
-        path: '{{.path.path}}'
-      destination:
-        server: https://kubernetes.default.svc
-        namespace: '{{.path.basename}}'
-```
-
-It is also possible to use Sprig functions to construct the path variables manually:
-
-| with `goTemplate: false` | with `goTemplate: true` | with `goTemplate: true` + Sprig |
-| ------------ | ----------- | --------------------- |
-| `{{path}}` | `{{.path.path}}` | `{{.path.path}}` |
-| `{{path.basename}}` | `{{.path.basename}}` | `{{base .path.path}}` |
-| `{{path.filename}}` | `{{.path.filename}}` | `{{.path.filename}}` |
-| `{{path.basenameNormalized}}` | `{{.path.basenameNormalized}}` | `{{normalize .path.path}}` |
-| `{{path.filenameNormalized}}` | `{{.path.filenameNormalized}}` | `{{normalize .path.filename}}` |
-| `{{path[N]}}` | `-` | `{{index .path.segments N}}` |
+| with `goTemplate: false`      | with `goTemplate: true`        | with `goTemplate: true` + Sprig |
+|-------------------------------|--------------------------------|---------------------------------|
+| `{{path}}`                    | `{{.path.path}}`               | `{{.path.path}}`                |
+| `{{path.basename}}`           | `{{.path.basename}}`           | `{{base .path.path}}`           |
+| `{{path.filename}}`           | `{{.path.filename}}`           | `{{.path.filename}}`            |
+| `{{path.basenameNormalized}}` | `{{.path.basenameNormalized}}` | `{{normalize .path.path}}`      |
+| `{{path.filenameNormalized}}` | `{{.path.filenameNormalized}}` | `{{normalize .path.filename}}`  |
+| `{{path[N]}}`                 | `-`                            | `{{index .path.segments N}}`    |
 
 ## Available template functions
 

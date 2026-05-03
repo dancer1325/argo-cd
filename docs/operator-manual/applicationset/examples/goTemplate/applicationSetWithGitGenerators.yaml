@@ -1,0 +1,58 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-addons-fasttemplate
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        repoURL: https://github.com/dancer1325/argo-cd.git
+        revision: HEAD
+        directories:
+          - path: applicationset/examples/git-generator-directory/cluster-addons/*
+  template:
+    metadata:
+      # WITHOUT '.'
+      name: '{{path.basename}}-fasttemplate'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/dancer1325/argo-cd.git
+        targetRevision: HEAD
+        # WITHOUT '.'
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        # WITHOUT '.'
+        namespace: '{{path.basename}}'
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-addons-gotemplate
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/dancer1325/argo-cd.git
+        revision: HEAD
+        directories:
+          - path: applicationset/examples/git-generator-directory/cluster-addons/*
+  template:
+    metadata:
+      # WITH '.'
+      name: '{{.path.basename}}-gotemplate'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/dancer1325/argo-cd.git
+        targetRevision: HEAD
+        # WITH '.'
+        path: '{{.path.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        # WITH '.'
+        namespace: '{{.path.basename}}'

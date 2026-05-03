@@ -1,0 +1,29 @@
+{{- /* Helm processes .Release.Name and .Release.Namespace */ -}}
+{{- /* Helm leaves raw string literals untouched for the ApplicationSet controller */ -}}
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: {{ .Release.Name }}-guestbook-parth-of-helm
+  namespace: {{ .Release.Namespace }}
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - list:
+      elements:
+      - cluster: engineering-dev
+        url: https://kubernetes.default.svc
+      - cluster: engineering-prod
+        url: https://kubernetes.default.svc
+  template:
+    metadata:
+      name: '{{`{{ .cluster | normalize }}`}}-guestbook-parth-of-helm'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/argoproj/argo-cd.git
+        targetRevision: HEAD
+        path: '{{`{{ .cluster }}`}}/guestbook'
+      destination:
+        server: '{{`{{ .url }}`}}'
+        namespace: guestbook
