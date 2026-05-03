@@ -30,6 +30,9 @@
 ├── git-directories-example-fasttemplate.yaml
 └── git-directories-example.yaml
 ```
+  * 👀ArgoCD ApplicationSet👀
+    * [WITHOUT exclude](git-directories-example.yaml)
+    * [WITH exclude](excludes/git-directories-exclude-example.yaml)
   * 1 directory / EACH workload -- to -- deploy
     * [Argo Workflow controller](cluster-addons/argo-workflows)
     * [Prometheus Operator Helm chart](cluster-addons/prometheus-operator)
@@ -59,6 +62,10 @@
 * [install Argo CD](../../installation.md)
 
 # how to run locally?
+## ApplicationSet / WITHOUT exclude
 * `kubectl apply -f git-directories-example.yaml`
 * `argocd app list`
   * 1 Application / EACH folder | `generators[git].directories.path`
+## ApplicationSet / WITH exclude
+* `kubectl apply -f excludes/git-directories-exclude-example.yaml`
+* 

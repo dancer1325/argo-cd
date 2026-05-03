@@ -12,6 +12,7 @@ spec:
       revision: HEAD
       directories:
       - path: applicationset/examples/git-generator-directory/excludes/cluster-addons/*
+        # exclude NOT specified -> take in consideration
       - exclude: true
         path: applicationset/examples/git-generator-directory/excludes/cluster-addons/exclude-helm-guestbook
   template:
