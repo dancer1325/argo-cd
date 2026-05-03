@@ -16,9 +16,17 @@ spec:
     metadata:
       name: '{{.path.basename}}'
       labels:
-        pathpath: '{{.path.path}}'
+        # ERROR: 's size > 63   == k8s' labels restriction
+        #pathpath: '{{.path.path}}'
         pathbasename: '{{.path.basename}}'
         pathbasenamenormalized: '{{.path.basenameNormalized}}'
+      annotations:
+        # path: applicationset/examples/git-generator-directory/cluster-addons/<name>
+        path-segment-0: '{{index .path.segments 0}}'
+        path-segment-1: '{{index .path.segments 1}}'
+        path-segment-2: '{{index .path.segments 2}}'
+        path-segment-3: '{{index .path.segments 3}}'
+        path-segment-4: '{{index .path.segments 4}}'
     spec:
       project: "default"
       source:
