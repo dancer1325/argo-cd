@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: git-directory-pathparamprefix
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - git:
+      repoURL: https://github.com/dancer1325/argo-cd.git
+      revision: HEAD
+      pathParamPrefix: mypathparamprefix
+      directories:
+      - path: applicationset/examples/git-generator-directory/cluster-addons/*
+  template:
+    metadata:
+      name: '{{.mypathparamprefix.path.basename}}-pathparamprefix'
+      labels:
+        # ERROR: 's size > 63   == k8s' labels restriction
+        #pathpath: '{{.mypathparamprefix.path.path}}'
+        pathbasename: '{{.mypathparamprefix.path.basename}}'
+        pathbasenamenormalized: '{{.mypathparamprefix.path.basenameNormalized}}'
+    spec:
+      project: "default"
+      source:
+        repoURL: https://github.com/dancer1325/argo-cd.git
+        targetRevision: HEAD
+        path: '{{.mypathparamprefix.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{.mypathparamprefix.path.basename}}'
+      syncPolicy:
+        syncOptions:
+        - CreateNamespace=true

@@ -20,6 +20,7 @@
 * POSSIBLE risk
   * ApplicationSet / uses a [git generator](./Generators-Git.md)
     * malicious user pushes | source git repository -> generate HIGH number of Applications
+      * SOLUTION: PRs require admin approval
 
 ![](/docs/assets/applicationset/security/restrictWhoPushesOnApplicationSetSourceOfTruth.png)
 

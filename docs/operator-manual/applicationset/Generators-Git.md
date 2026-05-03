@@ -3,51 +3,44 @@
 * [data structure](/manifests/crds/applicationset-crd.yaml)'s `spec.generators[*].git`
 
 * 👀's subtypes👀
-  * [Git generator: directory](#git-generator-directories)
+  * [Git generator: directory](#git-generator-directories----gitdirectories---)
   * [Git generator: file](#git-generator-files)
 
 * the MOST flexible/powerful of the generators
 
-TODO: 
-> [!WARNING]
-> If the `project` field in your ApplicationSet is templated, developers may be able to create Applications under Projects with excessive permissions.
-> For ApplicationSets with a templated `project` field, [the source of truth _must_ be controlled by admins](./Security.md#templated-project-field)
-> - in the case of git generators, PRs must require admin approval.
-> - Git generator does not support Signature Verification For ApplicationSets with a templated `project` field.
-> - You must only use "non-scoped" repositories for ApplicationSets with a templated `project` field (see ["Repository Credentials for Applicationsets" below](#repository-credentials-for-applicationsets)).
+* Git generator / `spec.template.spec.project` specified
+  * ❌does NOT support [Signature Verification](../../user-guide/gpg-verification.md)❌
+  * use ["non-scoped" repositories](#repository-credentials)
 
-## Git Generator: Directories
+## Git Generator: Directories -- `.git.directories` --
 
 * generates parameters -- based on -- specified repository's directory structure
+  * built-in parameters
+    * `{{.path.path}}`
+      * == directory path / match | Git repository
+    * `{{index .path.segments n}}`
+      * == directory path | Git repository / split | array elements
+    * `{{.path.basename}}`
+      * == `path`'s right-most path
+        * _Example:_ if `.path` == /one/two/three/four ->  `.path.basename` == four
+    * `{{.path.basenameNormalized}}`
+      * == `.path.basename` / unsupported characters are replaced -- with -- `-`
+        * _Example:_
+          * if `path` == `/directory/directory_2` -> would produce `directory-2`
+          * if `.path.basename` == `directory_2` -> would produce `directory-2`
 
-* _Example:_ [here](/applicationset/examples/git-generator-directory)
+* ⚠️if you specify `.git.pathParamPrefix` -> `<.git.pathParamPrefix_VALUE>.path.<path_parameter>`⚠️
+  * == 
+    * `path.path` -> `<.git.pathParamPrefix_VALUE>.path.path`
+    * `path.basename` -> `<.git.pathParamPrefix_VALUE>.path.basename`
+    * `path.basenameNormalized` -> `<.git.pathParamPrefix_VALUE>.path.basenameNormalized`
+  * uses
+    * | Matrix generator
+      * Reason:🧠BOTH child generators are Git generators -> | merge child generators’ items, you can avoid conflicts🧠 
 
-* built-in parameters
-  * `{{.path.path}}`
-    * == directory path / match | Git repository
-      * _Example:_ cluster-addons/argo-workflows, cluster-addons/prometheus-operator 
-  * `{{index .path.segments n}}`
-    * == directory path | Git repository / split | array elements
-  * `{{.path.basename}}`
-    * == TODO: For any directory path within the Git repository that matches the `path` wildcard,
-    * == `path`'s right-most path
-      * _Example:_ if `.path` == /one/two/three/four ->  `.path.basename` == four
-  * `{{.path.basenameNormalized}}`
-    * == `.path.basename` / unsupported characters are replaced -- with -- `-`
-      * _Example:_
-        * if `path` == `/directory/directory_2` -> would produce `directory-2`
-        * if `.path.basename` == `directory_2` -> would produce `directory-2`
-
-
-> [!NOTE]
-> If the `pathParamPrefix` option is specified, all `path`-related parameter names above will be prefixed with the specified value and a dot separator. 
-> E.g., if `pathParamPrefix` is `myRepo`, then the generated parameter name would be `.myRepo.path` instead of `.path`. Using this option is necessary 
-> in a Matrix generator where both child generators are Git generators (to avoid conflicts when merging the child generators’ items).
-
-Whenever a new Helm chart/Kustomize YAML/Application/plain subdirectory is added to the Git repository, 
-the ApplicationSet controller will detect this change and automatically deploy the resulting manifests within new `Application` resources.
-
-As with other generators, clusters *must* already be defined within Argo CD, in order to generate Applications for them.
+* | add a NEW Helm chart/Kustomize YAML/Application/plain subdirectory | Git repository, ApplicationSet controller 
+  * detect this change
+  * AUTOMATICALLY deploy the resulting manifests | NEW `Application` resources
 
 ### Exclude directories
 
@@ -88,7 +81,8 @@ spec:
 ```
 (*The [full example](https://github.com/argoproj/argo-cd/tree/master/applicationset/examples/git-generator-directory/excludes).*)
 
-This example excludes the `exclude-helm-guestbook` directory from the list of directories scanned for this `ApplicationSet` resource.
+This example excludes the `exclude-helm-guestbook` directory from the list of directories scanned for 
+this `ApplicationSet` resource.
 
 > [!NOTE]
 > **Exclude rules have higher priority than include rules**
@@ -118,7 +112,8 @@ Say you want to include `/d/e`, but exclude `/d/f` and `/d/g`
   exclude: true
 ```
 Why? Because the exclude `/d/*` exclude rule will take precedence over the `/d/e` include rule
-* When the `/d/e` path in the Git repository is processed by the ApplicationSet controller, the controller detects that at least one exclude rule is matched, and thus that directory should not be scanned.
+* When the `/d/e` path in the Git repository is processed by the ApplicationSet controller, 
+the controller detects that at least one exclude rule is matched, and thus that directory should not be scanned.
 
 You would instead need to do:
 
@@ -381,7 +376,9 @@ stringData:
 
 After saving, please restart the ApplicationSet pod for the changes to take effect.
 
-## Repository credentials for ApplicationSets
+## Repository credentials
+
+TODO: 
 If your [ApplicationSets](index.md) uses a repository where you need credentials to be able to access it _and_ if the
 ApplicationSet project field is templated (i.e. the `project` field of the ApplicationSet contains `{{ ... }}`), you need to add the repository as a "non project scoped" repository.  
 - When doing that through the UI, set this to a **blank** value in the dropdown menu.
