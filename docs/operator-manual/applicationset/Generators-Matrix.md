@@ -1,22 +1,13 @@
 # Matrix Generator
 
-* 💡combines 2 child generators' parameters -- by -- iterating through EVERY generator's generated parameters combination 💡
+* 💡combines ALL POSSIBLE 2 child generators' parameters💡
+  * == / EACH 1@ child generator's parameters, run the 2@ child generator
   * -> 👀gain BOTH generators' intrinsic properties 👀
   * ⚠️if matrix generator use 2 child Git generators -> 1 OR BOTH MUST use the `pathParamPrefix` option⚠️
     * Reason: 🧠
       * | merge the child generators’ items, avoid conflicts 
         * BOTH produce `path`-related parameters
-        * OTHERWISE, the matrix generator fails🧠 
-  * _Example:_
-    - *SCM Provider Generator + Cluster Generator*
-      - scan the GitHub organization's repositories
-      - target those resources -- to -- ALL AVAILABLE clusters
-    - *Git File Generator + List Generator*
-      - list of applications -- ,via configuration files / optional configuration options, to -- deploy 
-      - deploy the applications | fixed list of clusters
-    - *Git Directory Generator + Cluster Decision Resource Generator*
-      - locate application resources | Git repository's folders
-      - deploy application resources | list of clusters / provided -- via an -- EXTERNAL custom resource
+        * OTHERWISE, the matrix generator fails🧠
 
 * child generator's parameters can be used | POST child generatorS
   * _Example:_ [here](/applicationset/examples/matrix/cluster-and-gitfile.yaml)

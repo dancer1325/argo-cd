@@ -9,8 +9,8 @@
     * `production` cluster | `https://2.4.6.8`
 
 * ApplicationSet
-  * [normal](cluster-and-git.yaml)
-  * [fastTemplate](cluster-and-git-fasttemplate.yaml)
+  * with [goTemplate](cluster-and-git.yaml)
+  * with [fastTemplate](cluster-and-git-fasttemplate.yaml)
 
 # Git File generator + Cluster generator
 
@@ -46,5 +46,20 @@
 
 * [Applicationset](git-and-git.yaml)
 
-# TODO:
-TODO:
+# Git generator + List generator
+
+* ApplicationSet
+  * with [goTemplate](list-and-git.yaml)
+  * with [fastTemplate](list-and-git-fasttemplate.yaml)
+
+# List generator + List generator
+
+* ApplicationSet
+  * with [goTemplate](list-and-list.yaml)
+  * with [fastTemplate](list-and-list-fasttemplate.yaml)
+
+# Union generator + Matrix generator
+
+* ApplicationSet
+  * with [goTemplate](matrix-and-union-in-matrix.yaml)
+  * with [fastTemplate](matrix-and-union-in-matrix-fasttemplate.yaml)
