@@ -20,7 +20,7 @@
         * check Kubectl points to a context
 * [install Argo CD](../../installation.md)
 * recommendations
-    * `kind create cluster` & `kind create cluster --name kind2` 
+  * `kind create cluster` & `kind create cluster --name kind2` 
 * `KIND2_IP=$(docker inspect kind2-control-plane --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')`
 * `CA_DATA=$(kubectl config view --raw -o jsonpath='{.clusters[?(@.name=="kind-kind2")].cluster.certificate-authority-data}')`
 * `CERT_DATA=$(kubectl config view --raw -o jsonpath='{.users[?(@.name=="kind-kind2")].user.client-certificate-data}')`

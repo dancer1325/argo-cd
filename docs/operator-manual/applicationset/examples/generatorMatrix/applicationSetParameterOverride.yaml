@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: matrix-parameter-override
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          - git:
+              repoURL: https://github.com/dancer1325/argocd-example-apps.git
+              revision: HEAD
+              files:
+                - path: "helm-guestbook/values.yaml"
+          - git:
+              repoURL: https://github.com/dancer1325/argocd-example-apps.git
+              revision: HEAD
+              files:
+                # global values
+                #   == ALL stages
+                - path: "helm-guestbook/values-production.yaml"
+  goTemplate: true
+  template:
+    metadata:
+      name: matrix-parameter-override
+      annotations:
+        servicetype: '{{.service.type}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/dancer1325/argocd-example-apps.git
+        targetRevision: HEAD
+        path: helm-guestbook
+        helm:
+#         1. -- via -- fastTemplate
+#          values: |
+#            {{ `{{ . | mustToPrettyJson }}` }}
+#         2. -- via -- goTemplate
+          values: |
+            {{ . | mustToPrettyJson }}
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: default

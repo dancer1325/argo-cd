@@ -29,7 +29,19 @@
 * [here](/applicationset/examples/matrix/list-and-list.yaml)
   * | `spec.template`, check it's using generator parameters coming -- from -- BOTH child generatorS
 ## ⚠️if matrix generator use 2 child Git generators -> 1 OR BOTH MUST use the `pathParamPrefix` option⚠️
+* [here](/applicationset/examples/matrix/git-and-git.yaml)
+  * see `path` parameters using to distinguish them
+    * `app.path`
+    * `target.path`
+
+# child generator's parameters
+## can be used | POST child generatorS
+* [here](/applicationset/examples/matrix/README.md#git-file-generator--cluster-generator)
+## / ⚠️SAME name, FIRST child generator take priority⚠️
+* `kubectl apply -f applicationSetParameterOverride.yaml`
+  * if you want to check what failed -> `kubectl logs -n argocd deployment/argocd-applicationset-controller --tail=200 | grep -i "matrix-parameter\|error\|err"`
+* `argocd app get matrix-parameter-override -o yaml`
+  * check `metadata.annotations.servicetype: ClusterIP`
+
+# Restrictions 
 TODO:
-
-
-# 

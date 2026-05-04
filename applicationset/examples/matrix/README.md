@@ -5,12 +5,23 @@
 
 * requirements
   * 2 clusters
-    * `staging` cluster | `https://1.2.3.4`
-    * `production` cluster | `https://2.4.6.8`
 
 * ApplicationSet
   * with [goTemplate](cluster-and-git.yaml)
   * with [fastTemplate](cluster-and-git-fasttemplate.yaml)
+
+## how to run locally?
+* recommendations
+  * `kind create cluster` & `kind create cluster --name kind2`
+* `KIND2_IP=$(docker inspect kind2-control-plane --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')`
+* `CA_DATA=$(kubectl config view --raw -o jsonpath='{.clusters[?(@.name=="kind-kind2")].cluster.certificate-authority-data}')`
+* `CERT_DATA=$(kubectl config view --raw -o jsonpath='{.users[?(@.name=="kind-kind2")].user.client-certificate-data}')`
+* `KEY_DATA=$(kubectl config view --raw -o jsonpath='{.users[?(@.name=="kind-kind2")].user.client-key-data }')`
+* `kubectl apply -f clusterSecret.yaml`
+* `kubectl apply -f cluster-and-gitfile.yaml`
+* `argocd app list | grep cluster-git`
+  * ONLY returns 1! -- prod one
+    * Reason: `selector.matchLabels`
 
 # Git File generator + Cluster generator
 

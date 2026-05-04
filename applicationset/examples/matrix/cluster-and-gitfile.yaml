@@ -2,6 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: cluster-git
+  namespace: argocd
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
@@ -26,7 +27,9 @@ spec:
                   kubernetes.io/environment: '{{.path.basename}}'
   template:
     metadata:
-      name: '{{.name}}-guestbook'
+      name: 'cluster-git-{{.name}}-guestbook'
+      annotations:
+        gitpathbasename: '{{.path.basename}}'
     spec:
       project: default
       source:
@@ -34,5 +37,9 @@ spec:
         targetRevision: HEAD
         path: "applicationset/examples/git-generator-files-discovery/apps/guestbook"
       destination:
-        server: '{{.server}}'
-        namespace: guestbook
+        #server: '{{.server}}'
+        server: https://kubernetes.default.svc
+        namespace: '{{.cluster.name}}-guestbook'
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true

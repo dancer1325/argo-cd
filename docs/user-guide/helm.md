@@ -59,6 +59,7 @@
     * `argocd app set <ARGO_CD_APPLICATION_NAME> -p <PARAMETER_KEY>=<PARAMETER_VALUE>`
 
 ## Helm Value Precedence
+
 Values injections have the following order of precedence
  `parameters > valuesObject > values > valueFiles > helm repository values.yaml`
  Or rather
@@ -270,6 +271,7 @@ But sometimes you want to use a custom plugin. Perhaps you would like to use Goo
 There are two ways to install custom plugins; you can modify the ArgoCD container image, or you can use a Kubernetes `initContainer`.
 
 ### Modifying the ArgoCD container image
+
 One way to use this plugin is to prepare your own ArgoCD image where it is included.
 
 Example `Dockerfile`:
@@ -299,6 +301,7 @@ The `HELM_PLUGINS` environment property required for ArgoCD to locate plugins co
 Once built, use the custom image for ArgoCD installation.
 
 ### Using `initContainers`
+
 Another option is to install Helm plugins via Kubernetes `initContainers`.
 Some users find this pattern preferable to maintaining their own version of the ArgoCD container image.
 

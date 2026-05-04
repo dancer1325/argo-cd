@@ -4,6 +4,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: cluster-git
+  namespace: argocd
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
@@ -59,7 +60,7 @@ spec:
     #       server: <CLUSTER_SERVER_Y>
   template:
     metadata:
-      name: '{{.path.basename}}-{{.name}}'
+      name: 'cluster-git-{{.path.basename}}-{{.name}}'
     spec:
       project: '{{.metadata.labels.environment}}'
       source:

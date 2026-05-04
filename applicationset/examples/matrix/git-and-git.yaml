@@ -2,6 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: two-gits-with-path-param-prefix
+  namespace: argocd
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
@@ -27,7 +28,24 @@ spec:
               # ⚠️if matrix generator use 2 child Git generators -> 1 OR BOTH MUST use the `pathParamPrefix` option⚠️
               #   Reason: 🧠| merge the child generators’ items, avoid conflicts🧠
               pathParamPrefix: target
-  template: {} # ...
+  template:
+    metadata:
+      name: 'git-git-{{.appName}}-{{.clusterName}}'
+      annotations:
+        # pathParamPrefix verification: both prefixed paths are accessible without collision
+        app-config-path: '{{index . "app.path"}}'
+        app-config-file: '{{index . "app.path.filename"}}'
+        target-config-path: '{{index . "target.path"}}'
+        target-config-file: '{{index . "target.path.filename"}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/dancer1325/argo-cd.git
+        targetRevision: HEAD
+        path: applicationset/examples/matrix/cluster-addons
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{.appName}}-{{.region}}'
 
 # matrix generator output parameters
 # 1. app-one.json + east-cluster-one.json
