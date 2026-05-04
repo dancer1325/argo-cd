@@ -263,8 +263,7 @@ For logs related to an Application, Argo CD will log the following standard fiel
 
 ## ApplicationSets
 
-Argo CD's ApplicationSets feature has its own [security considerations](./applicationset/Security.md). Be aware of those
-issues before using ApplicationSets.
+* [security considerations](./applicationset/Security.md)
 
 ## Limiting Directory App Memory Usage
 
