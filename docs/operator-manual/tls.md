@@ -44,13 +44,13 @@ TODO:
 
 ### Inter-Component TLS
 
-| Connection | Strict TLS Parameter | Plain Text Parameter | Default Behavior |
-|------------|---------------------|---------------------|------------------|
-| `argocd-server` → `argocd-repo-server` | `--repo-server-strict-tls` | `--repo-server-plaintext` | Non-validating TLS |
-| `argocd-server` → `argocd-dex-server` | `--dex-server-strict-tls` | `--dex-server-plaintext` | Non-validating TLS |
-| `argocd-application-controller` → `argocd-repo-server` | `--repo-server-strict-tls` | `--repo-server-plaintext` | Non-validating TLS |
-| `argocd-applicationset-controller` → `argocd-repo-server` | `--repo-server-strict-tls` | `--repo-server-plaintext` | Non-validating TLS |
-| `argocd-notifications-controller` → `argocd-repo-server` | `--argocd-repo-server-strict-tls` | `--argocd-repo-server-plaintext` | Non-validating TLS |
+| Connection                                                | Strict TLS Parameter              | Plain Text Parameter             | Default Behavior   |
+|-----------------------------------------------------------|-----------------------------------|----------------------------------|--------------------|
+| `argocd-server` → `argocd-repo-server`                    | `--repo-server-strict-tls`        | `--repo-server-plaintext`        | Non-validating TLS |
+| `argocd-server` → `argocd-dex-server`                     | `--dex-server-strict-tls`         | `--dex-server-plaintext`         | Non-validating TLS |
+| `argocd-application-controller` → `argocd-repo-server`    | `--repo-server-strict-tls`        | `--repo-server-plaintext`        | Non-validating TLS |
+| `argocd-applicationset-controller` → `argocd-repo-server` | `--repo-server-strict-tls`        | `--repo-server-plaintext`        | Non-validating TLS |
+| `argocd-notifications-controller` → `argocd-repo-server`  | `--argocd-repo-server-strict-tls` | `--argocd-repo-server-plaintext` | Non-validating TLS |
 
 ### Certificate Priority (argocd-server only)
 
@@ -58,19 +58,19 @@ TODO:
 2. `argocd-secret` secret (deprecated) 
 3. Auto-generated self-signed certificate
 
-## Configuring TLS for argocd-server
+## Configure TLS -- for -- Argocd-server
 
 ### Inbound TLS options for argocd-server
 
 You can configure certain TLS options for the `argocd-server` workload by
 setting command line parameters. The following parameters are available:
 
-|Parameter|Default|Description|
-|---------|-------|-----------|
-|`--insecure`|`false`|Disables TLS completely|
-|`--tlsminversion`|`1.2`|The minimum TLS version to be offered to clients|
-|`--tlsmaxversion`|`1.3`|The maximum TLS version to be offered to clients|
-|`--tlsciphers`|`TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_RSA_WITH_AES_256_GCM_SHA384`|A colon separated list of TLS cipher suites to be offered to clients|
+| Parameter         | Default                                                                 | Description                                                          |
+|-------------------|-------------------------------------------------------------------------|----------------------------------------------------------------------|
+| `--insecure`      | `false`                                                                 | Disables TLS completely                                              |
+| `--tlsminversion` | `1.2`                                                                   | The minimum TLS version to be offered to clients                     |
+| `--tlsmaxversion` | `1.3`                                                                   | The maximum TLS version to be offered to clients                     |
+| `--tlsciphers`    | `TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_RSA_WITH_AES_256_GCM_SHA384` | A colon separated list of TLS cipher suites to be offered to clients |
 
 ### TLS certificates used by argocd-server
 
@@ -155,7 +155,7 @@ for the `argocd-repo-server`, containing at least the entries for
 `DNS:argocd-repo-server` and `DNS:argocd-repo-server.argo-cd.svc` depending
 on how your workloads connect to the repository server.
 
-## Configuring inbound TLS for argocd-dex-server
+## Configure inbound TLS for argocd-dex-server
 
 ### Inbound TLS options for argocd-dex-server
 
@@ -194,7 +194,7 @@ for the `argocd-dex-server`, containing at least the entries for
 `DNS:argocd-dex-server` and `DNS:argocd-dex-server.argo-cd.svc` depending
 on how your workloads connect to the repository server.
 
-## Configuring TLS between Argo CD components
+## Configure TLS between Argo CD components
 
 ### Configuring TLS to argocd-repo-server
 

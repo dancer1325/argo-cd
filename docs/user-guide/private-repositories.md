@@ -521,5 +521,5 @@ Submodules are supported and will be picked up automatically. If the submodule r
 
 ## Declarative Configuration
 
-See [declarative setup](../operator-manual/declarative-setup.md#repositories)
+* [here](../operator-manual/declarative-setup.md#repositories)
 

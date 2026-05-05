@@ -1,5 +1,8 @@
 # `argocd-server` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd-server/commands/argocd_server.md)'s `func NewCommand() *cobra.Command {`👀
+
 ## argocd-server
 
 Run the ArgoCD API server

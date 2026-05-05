@@ -1,0 +1,13 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tool-detection-application
+  namespace: argocd
+spec:
+  ...
+  source:
+    ...
+    # Tool -> plain directory
+    directory:
+      recurse: true
+...

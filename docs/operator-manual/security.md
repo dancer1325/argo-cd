@@ -24,110 +24,98 @@
            * [CVE-2021-26921](https://github.com/argoproj/argo-cd/security/advisories/GHSA-9h6w-j7w4-jr52)
        * if the admin password is updated -> ALL existing admin JWT tokens are IMMEDIATELY revoked
        * password is stored -- as a -- bcrypt hash | [`argocd-secret`](/manifests/base/config/argocd-secret.yaml) Secret
-    2. | Single Sign-On users, the user completes | OAuth2 login flow -- to the -- configured OIDC identity provider
+    2. | [Single Sign-On](user-management/index.md) users, the user completes | OAuth2 login flow -- to the -- configured OIDC identity provider
        * delegated -- through the --
          * bundled Dex provider, OR
+           * lifetime == 24 hours
          * DIRECTLY -- to a -- self-managed OIDC provider
        * JWT is handled -- by the -- provider 
          * handled == signed + issued + expiration + revocation
-         * AFTER 24 hours, Dex tokens expire 
-    3. TODO: Automation tokens are generated for a project using the `/api/v1/projects/{project}/roles/{role}/token`
-       endpoint, and are signed & issued by Argo CD
-       * These tokens are limited in scope and privilege,
-          and can only be used to manage application resources in the project which it belongs to
-       * Project
-          JWTs have a configurable expiration and can be immediately revoked by deleting the JWT reference
-          ID from the project role.
-  * [MORE](../developer-guide/api-docs.md)
+    3. Automation tokens -- via -- `/api/v1/projects/{project}/roles/{role}/token`
+       * project-scope
+       * privilege-limited
+         * Reason:🧠role-related🧠
+       * signed & issued -- by -- Argo CD
+       * configurable expiration
+       * if you want to revoke IMMEDIATELY -> delete the JWT reference ID | project role
 
 ## Authorization
 
-* how does it work?
-  * iterate | user's JWT groups claims' list of group membership
-  * compare EACH group vs [RBAC](./rbac.md) policy's roles/rules
-    * if a rule matches -> permits access -- to the -- API request
+* [RBAC](./rbac.md)
 
 ## TLS
 
-TODO: 
-All network communication is performed over TLS including service-to-service communication between
-the three components (argocd-server, argocd-repo-server, argocd-application-controller)
-The Argo CD
-API server can enforce the use of TLS 1.2 using the flag: `--tlsminversion 1.2`
-Communication with Redis is performed over plain HTTP by default
-TLS can be setup with command line arguments.
+* [TLS](tls.md)
+
+* plain HTTP
+  * uses
+    * communication with Redis
+      * [if you want to use TLS -> setup -- via -- CL arguments](server-commands)
 
 ## Git & Helm Repositories
 
-Git and helm repositories are managed by a stand-alone service, called the repo-server. The
-repo-server does not carry any Kubernetes privileges and does not store credentials to any services
-(including git). The repo-server is responsible for cloning repositories which have been permitted
-and trusted by Argo CD operators, and generating Kubernetes manifests at a given path in the
-repository. For performance and bandwidth efficiency, the repo-server maintains local clones of
-these repositories so that subsequent commits to the repository are efficiently downloaded.
+* [managed -- by -- the repo-server](architecture.md#repository-server) /
+  * ❌does NOT
+    * have Kubernetes privileges
+    * store service's credentials❌
 
-There are security considerations when configuring git repositories that Argo CD is permitted to
-deploy from. In short, gaining unauthorized write access to a git repository trusted by Argo CD
-will have serious security implications outlined below.
+* POSSIBLE attacks
+  * Reason:🧠somebody get write access | git repository🧠
+  * [unauthorized deployments](#unauthorized-deployments)
+  * [tool command invocation](#tool-command-invocation)
+  * [remote bases & helm chart dependencies](#remote-bases--helm-chart-dependencies)
 
 ### Unauthorized Deployments
 
-Since Argo CD deploys the Kubernetes resources defined in git, an attacker with access to a trusted
-git repo would be able to affect the Kubernetes resources which are deployed. For example, an
-attacker could update the deployment manifest deploy malicious container images to the environment,
-or delete resources in git causing them to be pruned in the live environment.
+* if an attacker gets access to a trusted git repo & made changes -> modify -- , being deployed by Argo CD, -- Kubernetes resources | live k8s cluster
 
 ### Tool command invocation
 
-In addition to raw YAML, Argo CD natively supports two popular Kubernetes config management tools,
-helm and kustomize. When rendering manifests, Argo CD executes these config management tools
-(i.e. `helm template`, `kustomize build`) to generate the manifests. It is possible that an attacker
-with write access to a trusted git repository may construct malicious helm charts or kustomizations
-that attempt to read files out-of-tree. This includes adjacent git repos, as well as files on the
-repo-server itself. Whether or not this is a risk to your organization depends on if the contents
-in the git repos are sensitive in nature. By default, the repo-server itself does not contain
-sensitive information, but might be configured with Config Management Plugins which do
-(e.g. decryption keys). If such plugins are used, extreme care must be taken to ensure the
-repository contents can be trusted at all times.
+* if an attacker / write access | trusted git repository, construct malicious helm charts or kustomizations -> take care
+  * | render manifests, could intercept it
+  * repo-server / configured -- with -- [Config Management Plugins](config-management-plugins.md)
+    * [Tool Detection](../user-guide/tool_detection.md)
 
-Optionally the built-in config management tools might be individually disabled.
-If you know that your users will not need a certain config management tool, it's advisable
-to disable that tool.
-See [Tool Detection](../user-guide/tool_detection.md) for more information.
+### Remote bases & helm chart dependencies
 
-### Remote bases and helm chart dependencies
-
-Argo CD's repository allow-list only restricts the initial repository which is cloned. However, both
-kustomize and helm contain features to reference and follow *additional* repositories
-(e.g. kustomize remote bases, helm chart dependencies), of which might not be in the repository
-allow-list. Argo CD operators must understand that users with write access to trusted git
-repositories could reference other remote git repositories containing Kubernetes resources not
-easily searchable or auditable in the configured git repositories.
+* Argo CD's repository 
+  * allow-list
+    * ONLY restricts the initial repository
+  * ⚠️could reference OTHER REMOTE git repositories / contain OTHER Kubernetes resources⚠️
+    * Reason:🧠due to kustomize & helm
+      * reference & follow ADDITIONAL repositories
+        * _Examples:_ `kustomize remote bases`, `helm chart dependencies`🧠
 
 ## Sensitive Information
 
+* _Examples:_
+  * cluster credentials
+  * Git credentials
+  * OAuth2 client secrets
+  * Kubernetes Secret values
+
 ### Secrets
 
-Argo CD never returns sensitive data from its API, and redacts all sensitive data in API payloads
-and logs. This includes:
-
-* cluster credentials
-* Git credentials
-* OAuth2 client secrets
-* Kubernetes Secret values
+* Argo CD
+  * 👀NEVER returns sensitive data -- from -- its API👀
+  * sanitize/hide ALL sensitive data | API payloads & logs
 
 ### External Cluster Credentials
 
+TODO: 
 To manage external clusters, Argo CD stores the credentials of the external cluster as a Kubernetes
-Secret in the argocd namespace. This secret contains the K8s API bearer token associated with the
+Secret in the argocd namespace
+* This secret contains the K8s API bearer token associated with the
 `argocd-manager` ServiceAccount created during `argocd cluster add`, along with connection options
 to that API server (TLS configuration/certs, AWS role-arn, etc...).
 The information is used to reconstruct a REST config and kubeconfig to the cluster used by Argo CD
 services.
 
 To rotate the bearer token used by Argo CD, the token can be deleted (e.g. using kubectl) which
-causes Kubernetes to generate a new secret with a new bearer token. The new token can be re-inputted
-to Argo CD by re-running `argocd cluster add`. Run the following commands against the *_managed_*
+causes Kubernetes to generate a new secret with a new bearer token
+* The new token can be re-inputted
+to Argo CD by re-running `argocd cluster add`
+* Run the following commands against the *_managed_*
 cluster:
 
 ```bash
@@ -139,7 +127,8 @@ argocd cluster add CONTEXTNAME
 > [!NOTE]
 > Kubernetes 1.24 [stopped automatically creating tokens for Service Accounts](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.24.md#no-really-you-must-read-this-before-you-upgrade).
 > [Starting in Argo CD 2.4](https://github.com/argoproj/argo-cd/pull/9546), `argocd cluster add` creates a 
-> ServiceAccount _and_ a non-expiring Service Account token Secret when adding 1.24 clusters. In the future, Argo CD 
+> ServiceAccount _and_ a non-expiring Service Account token Secret when adding 1.24 clusters
+* In the future, Argo CD 
 > will [add support for the Kubernetes TokenRequest API](https://github.com/argoproj/argo-cd/issues/9610) to avoid 
 > using long-lived tokens.
 

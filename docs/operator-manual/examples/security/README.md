@@ -59,8 +59,96 @@
 ##### password is stored -- as a -- bcrypt hash | "argocd-secret" Secret
 * `kubectl get secret argocd-secret -n argocd -o jsonpath='{.data.admin\.password}' | base64 -d`
   * 's return SOMETHING / `$2` sounds to bcrypt hash
-##### | Single Sign-On users, the user completes | OAuth2 login flow -- to the -- configured OIDC identity provider
+#### | Single Sign-On users, the user completes | OAuth2 login flow -- to the -- configured OIDC identity provider
+##### delegated -- through the -- 
+###### bundled Dex provider, OR
 TODO:
+####### lifetime == 24 hours
+TODO:
+###### self-managed OIDC provider
+TODO:
+#### Automation tokens -- via -- `/api/v1/projects/{project}/roles/{role}/token`
+##### project-scope
+* `kubectl apply -f appProjectWithroles.yaml`
+  * `argocd proj role list sample-test-project`
+    * check EXISTING roles | "sample-test-project" project
+* hit [sample.http](sample.http)
+  * 2.3.1
+  * 2.3.2
+* `argocd proj role get sample-test-project sample-test-project-role`
+  * check NEW JWT is created
+##### privilege-limited (== role-related)
+* hit [sample.http](sample.http)
+  * 2.3.3
+##### signed & issued -- by -- Argo CD
+* | https://www.jwt.io/
+  * paste the PREVIOUS got it token > check Decoded Payload's `iss`
+##### configurable expiration
+* hit [sample.http](sample.http)
+  * 2.3.4
+* `argocd proj role get sample-test-project sample-test-project-role`
+  * check 1 JWT expires soon
+##### if you want to revoke IMMEDIATELY -> delete the JWT reference ID | project role 
+* `argocd proj role get sample-test-project sample-test-project-role`
+  * check 1 JWT & pick ID (== iat)
+* hit [sample.http](sample.http)
+  * 2.3.5
+* `argocd proj role get sample-test-project sample-test-project-role`
+  * check that JWT does NOT appear linked to the role ANYMORE
+
 ### TODO:
+
+# Authorization
+* [here](../rbac)
+
+# plain HTTP
+## uses
+### communication with Redis
+* `kubectl get configmap argocd-cmd-params-cm -n argocd -o yaml | grep redis`
+  * return: NOTHING == default == plain HTTP
+* `REDIS_PASS=$(kubectl get secret argocd-redis -n argocd -o jsonpath='{.data.auth}' | base64 -d)`
+* `kubectl exec -n argocd deploy/argocd-redis -- redis-cli -a "$REDIS_PASS" PING`
+  * you do NOT specify tls & respond PONG == plain HTTP
+
+# Git & Helm Repositories
+## managed -- by -- the repo-server
+### ❌does NOT have Kubernetes privileges❌
+* `kubectl get serviceaccount argocd-repo-server -n argocd -o yaml`
+* `kubectl auth can-i --list --as=system:serviceaccount:argocd:argocd-repo-server -n argocd`
+### ❌does NOT store service's credentials❌
+* `kubectl auth can-i get secrets --as=system:serviceaccount:argocd:argocd-repo-server -n argocd`
+  * NOT rights to get
+* `kubectl exec -n argocd deploy/argocd-repo-server -- ls -la /tmp/reposerver-ask-pass.sock`
+  * 's return: "srwxr-xr-x 1 argocd argocd 0 May  5 15:49 /tmp/reposerver-ask-pass.sock"
+    * == store in-memory
+## POSSIBLE attacks
+### Unauthorized Deployments
+TODO:
+### Tool command invocation
+TODO:
+### Remote bases & helm chart dependencies
+TODO:
+
+# Sensitive Information
+## Secrets
+### Argo CD
+#### NEVER returns sensitive data -- from -- its API
+* _Example:_ repo's credentials
+  * [source code](/server/repocreds/repocreds.go)'s
+    ```go
+    items = append(items, appsv1.RepoCreds{
+                        URL:      url,
+                        Username: repo.Username,
+                    })
+    ```
+* TODO: create repository credential
+* hit [sample.http](sample.http)
+  * 3.1
+#### sanitize/hide ALL sensitive data | API payloads & logs
+* hit [sample.http](sample.http)
+  * 3.2
+    * check NO BearerToken is displayed
+## External Cluster Credentials
+TODO: 
 
 # TODO:
