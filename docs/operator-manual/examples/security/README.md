@@ -152,6 +152,16 @@ TODO:
 TODO: 
 
 # Cluster RBAC
+## Argo CD
+### requires: cluster-wide **_read_** privileges -- to -- resources | managed cluster
+TODO:
+### NOT require: FULL **_write_** privileges -- to the -- cluster
+TODO:
+## if you want to fine-tune
+### EXTERNALLY managed clusters' privileges
 TODO: 
+### Argo CD own cluster's privileges ->
+TODO:
+
 
 # TODO:

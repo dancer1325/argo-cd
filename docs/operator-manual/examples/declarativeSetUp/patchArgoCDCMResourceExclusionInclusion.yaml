@@ -1,0 +1,15 @@
+data:
+  resource.exclusions: |
+    - apiGroups:
+      - "*"
+      kinds:
+      - "*"
+      clusters:
+      - https://192.168.0.20
+  resource.inclusions: |
+    - apiGroups:
+      - "*"
+      kinds:
+      - Deployment
+      clusters:
+      - https://192.168.0.20

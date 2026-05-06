@@ -79,6 +79,29 @@ TODO:
 * `argocd app get test-kind2`
   TODO: 
 
+# Resource Exclusion/Inclusion
+## -- from -- discovery & sync
+TODO:
+## those / ALWAYS excluded
+* [source code](/util/settings/filtered_resource.go)'s `coreExcludedResources`
+* TODO: | running Argo CD
+## use cases
+### resources / impacts Argo CD's performance
+TODO:
+## steps
+* `kubectl patch configmap argocd-cm -n argocd --type merge --patch-file patchArgoCDCMResourceExclusionInclusion.yaml`
+* TODO: 
+## final list of resources == group/kinds / specified | `resource.inclusions` - group/kinds / specified | `resource.exclusions`
+* TODO:
+## if you add a inclusion / matches EXISTING resources -> these resources appear as `OutOfSync`
+* TODO:
+## recommendations
+### | your YAML, if you use `SOME_GLOB` -> wrap it ('') == `'SOME_GLOB'`
+* TODO:
+### if you add a exclusion | ALREADY EXISTING resource -> restart the controller
+* TODO:
+
+
 # TODO:
 
 * TODO:

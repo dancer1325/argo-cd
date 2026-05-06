@@ -1005,75 +1005,40 @@ stringData:
 
 ## Resource Exclusion/Inclusion
 
-Resources can be excluded from discovery and sync so that Argo CD is unaware of them
-* For example, the apiGroup/kind `events.k8s.io/*`, `metrics.k8s.io/*` and 
-`coordination.k8s.io/Lease` are always excluded
-* Use cases:
+* resource exclusion 
+  * -- from -- discovery & sync
+  * those / ALWAYS excluded
+    * `events.k8s.io/*`
+    * `metrics.k8s.io/*`
+    * `coordination.k8s.io/Lease`
 
-* You have temporal issues and you want to exclude problematic resources.
-* There are many of a kind of resources that impacts Argo CD's performance.
-* Restrict Argo CD's access to certain kinds of resources, e.g. secrets
-* See [security.md#cluster-rbac](security.md#cluster-rbac).
+* use cases
+  * resources / impacts Argo CD's performance
+    * Reason: 🧠TODO:🧠
 
-To configure this, edit the `argocd-cm` config map:
+* steps
+  * | "argocd-cm" configMap, 
+    * specify `data.resource.exclusions`
+      * == [`FilteredResource`](/util/settings/filtered_resource.go)
+    * specify `data.resource.inclusions`
+      * == [`FilteredResource`](/util/settings/filtered_resource.go)
 
-```shell
-kubectl edit configmap argocd-cm -n argocd
-```
+* final list of resources 
+  * == group/kinds / specified | `resource.inclusions` - group/kinds / specified | `resource.exclusions`
 
-Add `resource.exclusions`, e.g.:
+* if you add a inclusion / matches EXISTING resources -> these resources appear as `OutOfSync`
 
-```yaml
-apiVersion: v1
-data:
-  resource.exclusions: |
-    - apiGroups:
-      - "*"
-      kinds:
-      - "*"
-      clusters:
-      - https://192.168.0.20
-kind: ConfigMap
-```
-
-The `resource.exclusions` node is a list of objects
-* Each object can have:
-
-* `apiGroups` A list of globs to match the API group.
-* `kinds` A list of kinds to match. Can be `"*"` to match all.
-* `clusters` A list of globs to match the cluster URL.
-
-If all three match, then the resource is ignored.
-
-In addition to exclusions, you might configure the list of included resources using the `resource.inclusions` setting.
-By default, all resource group/kinds are included. The `resource.inclusions` setting allows customizing the list of included group/kinds:
-
-```yaml
-apiVersion: v1
-data:
-  resource.inclusions: |
-    - apiGroups:
-      - "*"
-      kinds:
-      - Deployment
-      clusters:
-      - https://192.168.0.20
-kind: ConfigMap
-```
-
-The `resource.inclusions` and `resource.exclusions` might be used together. The final list of resources includes group/kinds specified in `resource.inclusions` minus group/kinds
-specified in `resource.exclusions` setting.
-
-Notes:
-
-* Quote globs in your YAML to avoid parsing errors.
-* Invalid globs result in the whole rule being ignored.
-* If you add a rule that matches existing resources, these will appear in the interface as `OutOfSync`.
-* Some excluded objects may already be in the controller cache. A restart of the controller will be necessary to remove them from the Application View.
+* recommendations
+  *  | your YAML,
+    * if you use `SOME_GLOB` -> wrap it ('') == `'SOME_GLOB'`
+      * Reason:🧠avoid parsing errors🧠
+  * if you add a exclusion | ALREADY EXISTING resource -> restart the controller
+    * Reason: 🧠excluded objects may ALREADY be | controller cache🧠
 
 ## Mask sensitive Annotations on Secrets
 
-An optional comma-separated list of `metadata.annotations` keys can be configured with `resource.sensitive.mask.annotations` to mask their values in UI/CLI on Secrets.
+An optional comma-separated list of `metadata.annotations` keys 
+can be configured with `resource.sensitive.mask.annotations` to mask their values in UI/CLI on Secrets.
 
 ```yaml
   resource.sensitive.mask.annotations: openshift.io/token-secret.value, api-key
@@ -1081,7 +1046,8 @@ An optional comma-separated list of `metadata.annotations` keys can be configure
 
 ## Auto respect RBAC for controller
 
-Argo CD controller can be restricted from discovering/syncing specific resources using just controller RBAC, without having to manually configure resource exclusions.
+Argo CD controller can be restricted from discovering/syncing specific resources using just controller RBAC, 
+without having to manually configure resource exclusions.
 This feature can be enabled by setting `resource.respectRBAC` key in argocd cm, once it is set the controller will automatically stop watching for resources 
 that it does not have the permission to list/access. Possible values for `resource.respectRBAC` are:
     - `strict` : This setting checks whether the list call made by controller is forbidden/unauthorized and if it is, it will cross-check the permission by making a `SelfSubjectAccessReview` call for the resource.
