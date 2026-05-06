@@ -38,15 +38,40 @@
     * check the AVAILABLE one -- via -- `kubectl config get-contexts`
 
 * what does Argo CD under the hood?
-  1. | target cluster,
-    * creates
-      * SA "argocd-manager"  / FULL cluster RBAC
-      * secret -- with -- bearer token
+  1. | target cluster, 
+     * | Kubernetes v1.24-, NOTHING
+       * Reason:🧠managed by Kubernetes itself🧠
+     * | Kubernetes v1.24+, creates
+       * SA "argocd-manager"  / FULL cluster RBAC
+       * secret -- with -- bearer token
   2. | source cluster's "argocd" namespace, stores -- as a -- Secret / label `argocd.argoproj.io/secret-type: cluster`
-    * token
-    * server URL
-    * TLS
-  4. | sync an `Application` / `destination.server: https://...`, Application Controller connect -- , via that Secret, to -- that cluster
+     * token
+     * server URL
+     * TLS
+  3. | sync an `Application` / `destination.server: https://...`, Application Controller connect -- , via that Secret, to -- that cluster
+
+```mermaid
+graph TD
+    subgraph "Main Cluster"
+        subgraph "argocd Namespace"
+            A[Application Controller]
+            B[Cluster Secret<br/>type: cluster]
+        end
+    end
+
+    subgraph "Target Cluster"
+        C[kube-apiserver]
+        D[ServiceAccount: argocd-manager]
+        E[Secret: Bearer Token]
+    end
+
+    B -->|contains server URL + token| A
+    A -->|authenticates with bearer token| C
+    D -->|owns| E
+```
+
+* FUTURE enhancements
+  * [Kubernetes TokenRequest API](https://github.com/argoproj/argo-cd/issues/9610)
 
 ## how to skip cluster reconciliation?
 

@@ -101,53 +101,46 @@
   * sanitize/hide ALL sensitive data | API payloads & logs
 
 ### External Cluster Credentials
+ 
+* requirements
+  * add external cluster -- via -- [`argocd cluster add contextName`](cluster-management.md)
+    * != ❌[declaratively](declarative-setup.md#cluster-credentials)❌
 
-TODO: 
-To manage external clusters, Argo CD stores the credentials of the external cluster as a Kubernetes
-Secret in the argocd namespace
-* This secret contains the K8s API bearer token associated with the
-`argocd-manager` ServiceAccount created during `argocd cluster add`, along with connection options
-to that API server (TLS configuration/certs, AWS role-arn, etc...).
-The information is used to reconstruct a REST config and kubeconfig to the cluster used by Argo CD
-services.
+* ⚠️risk⚠️
+  * Bearer Token
+    * static
+    * endless lifetime
 
-To rotate the bearer token used by Argo CD, the token can be deleted (e.g. using kubectl) which
-causes Kubernetes to generate a new secret with a new bearer token
-* The new token can be re-inputted
-to Argo CD by re-running `argocd cluster add`
-* Run the following commands against the *_managed_*
-cluster:
+* recommendations
+  * rotate the bearer token / used by Argo CD -> 
 
-```bash
-# run using a kubeconfig for the externally managed cluster
-kubectl delete secret argocd-manager-token-XXXXXX -n kube-system
-argocd cluster add CONTEXTNAME
-```
+    ```bash
+    # | EXTERNAL managed cluster
+    kubectl delete secret argocd-manager-token-XXXXXX -n kube-system
+    
+    argocd cluster add CONTEXTNAME
+    ```
+    * | AWS EKS clusters, ❌NOT needed❌
+      * Reason:🧠handled AUTOMATICALLY through [get-token](https://docs.aws.amazon.com/cli/latest/reference/eks/get-token.html)🧠
 
-> [!NOTE]
-> Kubernetes 1.24 [stopped automatically creating tokens for Service Accounts](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.24.md#no-really-you-must-read-this-before-you-upgrade).
-> [Starting in Argo CD 2.4](https://github.com/argoproj/argo-cd/pull/9546), `argocd cluster add` creates a 
-> ServiceAccount _and_ a non-expiring Service Account token Secret when adding 1.24 clusters
-* In the future, Argo CD 
-> will [add support for the Kubernetes TokenRequest API](https://github.com/argoproj/argo-cd/issues/9610) to avoid 
-> using long-lived tokens.
+* if you want to remove FULLY ALL Argo CD's access to a managed cluster ->
 
-To revoke Argo CD's access to a managed cluster, delete the RBAC artifacts against the *_managed_*
-cluster, and remove the cluster entry from Argo CD:
+  ```bash
+  # | EXTERNAL managed cluster
+  #   delete RBAC artifacts / managed | cluster
+  kubectl delete sa argocd-manager -n kube-system
+  kubectl delete clusterrole argocd-manager-role
+  kubectl delete clusterrolebinding argocd-manager-role-binding
+  
+  argocd cluster rm https://your-kubernetes-cluster-addr
+  ```
 
-```bash
-# run using a kubeconfig for the externally managed cluster
-kubectl delete sa argocd-manager -n kube-system
-kubectl delete clusterrole argocd-manager-role
-kubectl delete clusterrolebinding argocd-manager-role-binding
-argocd cluster rm https://your-kubernetes-cluster-addr
-```
-
-> [!NOTE]
-> For AWS EKS clusters, the [get-token](https://docs.aws.amazon.com/cli/latest/reference/eks/get-token.html) command is used to authenticate to the external cluster, which uses IAM roles in lieu of locally stored tokens, so token rotation is not needed, and revocation is handled through IAM.
+  * | AWS EKS clusters, handled -- through -- IAM
+    * Reason:🧠it uses IAM roles🧠
 
 ## Cluster RBAC
 
+TODO: 
 By default, Argo CD uses a [clusteradmin level role](https://github.com/argoproj/argo-cd/blob/master/manifests/base/application-controller-roles/argocd-application-controller-role.yaml)
 in order to:
 
@@ -160,14 +153,16 @@ ClusterRole used by argocd-server and argocd-application-controller can be modif
 that write privileges are limited to only the namespaces and resources that you wish Argo CD to
 manage.
 
-To fine-tune privileges of externally managed clusters, edit the ClusterRole of the `argocd-manager-role`
+To fine-tune privileges of externally managed clusters, 
+edit the ClusterRole of the `argocd-manager-role`
 
 ```bash
 # run using a kubeconfig for the externally managed cluster
 kubectl edit clusterrole argocd-manager-role
 ```
 
-To fine-tune privileges which Argo CD has against its own cluster (i.e. `https://kubernetes.default.svc`),
+To fine-tune privileges which Argo CD has against its own cluster
+(i.e. `https://kubernetes.default.svc`),
 edit the following cluster roles where Argo CD is running in:
 
 ```bash
@@ -177,7 +172,8 @@ kubectl edit clusterrole argocd-application-controller
 ```
 
 > [!TIP]
-> If you want to deny Argo CD access to a kind of resource then add it as an [excluded resource](declarative-setup.md#resource-exclusioninclusion).
+> If you want to deny Argo CD access to a kind of resource then add it 
+> as an [excluded resource](declarative-setup.md#resource-exclusioninclusion).
 
 ## Auditing
 
