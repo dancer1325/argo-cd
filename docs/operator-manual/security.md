@@ -140,40 +140,30 @@
 
 ## Cluster RBAC
 
-TODO: 
-By default, Argo CD uses a [clusteradmin level role](https://github.com/argoproj/argo-cd/blob/master/manifests/base/application-controller-roles/argocd-application-controller-role.yaml)
-in order to:
+* Argo CD
+  * [application controller role](/manifests/base/application-controller-roles/argocd-application-controller-role.yaml) 
+  * ⚠️requires⚠️
+    * cluster-wide **_read_** privileges -- to -- resources | managed cluster
+  * ❌NOT require❌
+    * FULL **_write_** privileges -- to the -- cluster
 
-1. watch & operate on cluster state
-2. deploy resources to the cluster
+* if you want to 
+  * fine-tune
+    * [EXTERNALLY managed clusters' privileges](#external-cluster-credentials)  -> 
 
-Although Argo CD requires cluster-wide **_read_** privileges to resources in the managed cluster to
-function properly, it does not necessarily need full **_write_** privileges to the cluster. The
-ClusterRole used by argocd-server and argocd-application-controller can be modified such
-that write privileges are limited to only the namespaces and resources that you wish Argo CD to
-manage.
+      ```bash
+      # | EXTERNAL managed cluster
+      kubectl edit clusterrole argocd-manager-role
+      ```
 
-To fine-tune privileges of externally managed clusters, 
-edit the ClusterRole of the `argocd-manager-role`
+    * Argo CD own cluster's privileges -> 
 
-```bash
-# run using a kubeconfig for the externally managed cluster
-kubectl edit clusterrole argocd-manager-role
-```
-
-To fine-tune privileges which Argo CD has against its own cluster
-(i.e. `https://kubernetes.default.svc`),
-edit the following cluster roles where Argo CD is running in:
-
-```bash
-# run using a kubeconfig to the cluster Argo CD is running in
-kubectl edit clusterrole argocd-server
-kubectl edit clusterrole argocd-application-controller
-```
-
-> [!TIP]
-> If you want to deny Argo CD access to a kind of resource then add it 
-> as an [excluded resource](declarative-setup.md#resource-exclusioninclusion).
+      ```bash
+      # | Argo CD own cluster
+      kubectl edit clusterrole argocd-server
+      kubectl edit clusterrole argocd-application-controller
+      ```
+  * deny Argo CD access -- to a -- kind of resource -> [exclude the resource](declarative-setup.md#resource-exclusioninclusion)
 
 ## Auditing
 
