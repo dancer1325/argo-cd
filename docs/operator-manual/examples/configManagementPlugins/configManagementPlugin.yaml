@@ -1,0 +1,150 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ConfigManagementPlugin
+metadata:
+  # name
+  #   requirements
+  #     | given Argo CD instance, MUST be UNIQUE
+  name: my-plugin
+spec:
+  # your plugin version
+  #   OPTIONAL
+  #   if you specify it -> Application's `spec.source.plugin.name` (MUST) == <plugin_name>-<plugin_version>
+  version: v1.0
+
+  # runs
+  #   | Application source directory
+  #   | ⚠️beginning of EACH manifest generation⚠️
+  # output
+  #   can be anything
+  #     ❌NOT used -- as -- k8s manifest❌
+  #   if !=0  == manifest generation failed
+  # uses
+  #   download chart dependencies
+  init:
+    command: [sh]
+    args: [-c, 'echo "Initializing..."']
+
+  # runs
+  #   | Application source directory
+  #   | generate manifests
+  # output
+  #   ONLY valid Kubernetes Objects -- as -- YAML or JSON
+  #   if !=0  == manifest generation failed
+  #   if you want to write command's log messages -> write them | stderr
+  #   error output
+  #     is sent -- to the -- UI
+  #       Reason:🧠avoid printing sensitive information🧠
+  generate:
+    command: [sh, -c]
+    # 0. NOT follow recommendation
+    #   -> POSSIBLE risk
+    args:
+      - |
+        echo "{\"kind\": \"ConfigMap\", \"apiVersion\": \"v1\", \"metadata\": { \"name\": \"$ARGOCD_APP_NAME\", \"namespace\": \"$ARGOCD_APP_NAMESPACE\", \"annotations\": {\"Foo\": \"$ARGOCD_ENV_FOO\", \"KubeVersion\": \"$KUBE_VERSION\", \"KubeApiVersion\": \"$KUBE_API_VERSIONS\",\"Bar\": \"baz\"}}}"
+
+    # 1. sanitize via `jq` (recommended) -- generates valid JSON / auto-escapes special characters
+    #   command: [sh, -c]
+    #   args:
+    #     - |
+    #       jq -n \
+    #         --arg name "$ARGOCD_APP_NAME" \
+    #         --arg ns "$ARGOCD_APP_NAMESPACE" \
+    #         --arg foo "$ARGOCD_ENV_FOO" \
+    #         --arg kv "$KUBE_VERSION" \
+    #         --arg kapi "$KUBE_API_VERSIONS" \
+    #         '{kind: "ConfigMap", apiVersion: "v1", metadata: {name: $name, namespace: $ns, annotations: {Foo: $foo, KubeVersion: $kv, KubeApiVersion: $kapi, Bar: "baz"}}}'
+
+    # 2. sanitize via input validation -- reject values / contain dangerous characters
+    #   command: [sh, -c]
+    #   args:
+    #     - |
+    #       if echo "$ARGOCD_ENV_FOO" | grep -qE '[";$`\\]'; then
+    #         echo "Invalid characters in ARGOCD_ENV_FOO" >&2
+    #         exit 1
+    #       fi
+    #       echo "{\"kind\": \"ConfigMap\", \"apiVersion\": \"v1\", \"metadata\": { \"name\": \"$ARGOCD_APP_NAME\", \"namespace\": \"$ARGOCD_APP_NAMESPACE\", \"annotations\": {\"Foo\": \"$ARGOCD_ENV_FOO\", \"KubeVersion\": \"$KUBE_VERSION\", \"KubeApiVersion\": \"$KUBE_API_VERSIONS\",\"Bar\": \"baz\"}}}"
+
+
+  # applied | a repository
+  # uses
+  #   generate manifests -- , using the repository, for -- Applications
+  #     requirements: EVERY configured discovery tool matches
+  # OPTIONAL
+  #   if it's omitted -> the plugin
+  #     will NOT match any application
+  #     can STILL be -- , by specifying the plugin name | app spec, -- invoked EXPLICITLY
+  # requirements
+  #   ONLY specify 1 of: fileName, find.glob, find.command
+  #     if you specify MULTIPLE -> ONLY fileName is evaluated
+  discover:
+    # fileName
+    #   == glob pattern (https://pkg.go.dev/path/filepath#Glob) /
+    #     applied | Application's source directory
+    #     if there is a match -> this plugin may be used -- for the -- Application
+    fileName: "./subdir/s*.yaml"
+    find:
+      # 's functionality
+      #   == fileName's functionality
+      # supports
+      #   ** (==nested directory) glob patterns
+      glob: "**/Chart.yaml"
+      # runs | repository's root directory
+      # requirements to match
+      #   exit / status code = 0
+      #   produce NON-empty output | standard out
+      command: [sh, -c, find . -name env.yaml]
+
+  # == parameters / UI SHOULD display -- for an -- Application
+  #   ❌!= Application's parameters❌
+  #     ⚠️if you want to specify it -> | Application manifest,
+  #       set `spec.source.plugin.parameters`⚠️
+  #   == ⚠️ONLY INFORMATIVE⚠️
+  parameters:
+    # == static parameter /
+    #   sent -- to the -- UI
+    #   for ALL Applications / handled -- by -- this plugin
+    static:
+      - name: string-param
+        title: Description of the string param
+        tooltip: Tooltip shown when the user hovers the
+        required: false
+        # TODO: itemType tells the UI how to present the parameter's value (or, for arrays and maps, values). Default is
+        # "string". Examples of other types which may be supported in the future are "boolean" or "number".
+        # Even if the itemType is not "string", the parameter value from the Application spec will be sent to the plugin
+        # as a string. It's up to the plugin to do the appropriate conversion.
+        itemType: ""
+        # collectionType describes what type of value this parameter accepts (string, array, or map) and allows the UI
+        # to present a form to match that type. Default is "string". This field must be present for non-string types.
+        # It will not be inferred from the presence of an `array` or `map` field.
+        collectionType: ""
+        # This field communicates the parameter's default value to the UI. Setting this field is optional.
+        string: default-string-value
+      # All the fields above besides "string" apply to both the array and map type parameter announcements.
+      - name: array-param
+        # This field communicates the parameter's default value to the UI. Setting this field is optional.
+        array: [default, items]
+        collectionType: array
+      - name: map-param
+        # This field communicates the parameter's default value to the UI. Setting this field is optional.
+        map:
+          some: value
+        collectionType: map
+
+    # == dynamic parameter announcements /
+    #   Application-specific
+    dynamic:
+      # run | Application's source directory
+      # output
+      #   == JSON / match the (static parameter announcements list)'s schema
+      command: [echo, '[{"name": "example-param", "string": "default-string-value"}]']
+
+  # if `true` -> plugin receives repository files / original file mode
+  # recommendations
+  #   ⚠️ONLY set `true` if you trust the CMP plugin authors⚠️
+  #     Reason:🧠repository MIGHT have executable files🧠
+  preserveFileMode: false
+
+  # if `true` -> plugin can retrieve -- , from the reposerver, | generate, -- git credentials
+  # recommendations
+  #   plugin authors SHOULD ensure these credentials are PROPERLY protected | execution
+  provideGitCreds: false

@@ -34,7 +34,7 @@
 
 * ways to address
   * -- via -- [Config Management Plugin](config-management-plugins.md)
-* _Example:_ [argocd-vault-plugin](https://github.com/argoproj-labs/argocd-vault-plugin)
+    * _Example:_ [argocd-vault-plugin](https://github.com/argoproj-labs/argocd-vault-plugin)
 
 * ❌NOT recommended❌
   * Argo CD does NOT prioritize NEW features OR improvements / solely support this approach

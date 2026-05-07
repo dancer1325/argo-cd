@@ -5,6 +5,9 @@ metadata:
 spec:
   version: v1.0
   generate:
+    # command: [sh, <path>]
+    #   <path>
+    #     adjust -- based on -- where you mount the scripts | sidecar
     command: [sh, /var/run/argocd/helm-plugin/generate.sh]
   discover:
     fileName: "./values.yaml"
@@ -14,4 +17,7 @@ spec:
         title: VALUES FILES
         collectionType: array
     dynamic:
+      # command: [sh, <path>]
+      #   <path>
+      #     adjust -- based on -- where you mount the scripts | sidecar
       command: [sh, /var/run/argocd/helm-plugin/get-parameters.sh]

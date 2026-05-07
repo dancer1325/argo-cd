@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+spec:
+  source:
+    plugin:
+      env:
+        - name: FOO
+          value: bar
+        - name: REV
+          value: test-$ARGOCD_APP_REVISION
+      parameters:
+        - name: values-files
+          array: [ values-dev.yaml ]
+        - name: helm-parameters
+          map:
+            image.tag: v1.2.3
+        # PREVIOUS parameters
+        #   AVAILABLE
+        #     | `ARGOCD_APP_PARAMETERS` environment variable, -- as -- JSON
+        #       [{"name": "values-files", "array": ["values-dev.yaml"]}, {"name": "helm-parameters", "map": {"image.tag": "v1.2.3"}}]
+        #     as individual environment variable
+        #       PARAM_VALUES_FILES_0=values-dev.yaml
+        #       PARAM_HELM_PARAMETERS_IMAGE_TAG=v1.2.3
