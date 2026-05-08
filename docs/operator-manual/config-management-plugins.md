@@ -27,6 +27,15 @@
 
 ## how to install a config management plugin?
 
+* ways
+  * [-- as -- sidecar plugin to repo-server](#---as----sidecar-plugin-to-repo-server)
+  * -- by -- modifiying "argocd-cm" ConfigMap
+    * | ArgoCD v2.4,
+      * deprecated
+    * ⚠️| ArgoCD v2.8,
+      * removed ⚠️
+    * [how to migrate plugins / configured as "argocd-cm" -- to -- sidecar plugins?](#how-to-migrate-argocd-cm-plugins----to----sidecar-plugins)
+
 ### -- as -- sidecar plugin to repo-server
 
 * steps 
@@ -44,8 +53,8 @@
 
 #### place the plugin configuration file | sidecar
 
-* place | sidecar's 
-  * "/home/argocd/cmp-server/config/plugin.yaml" 
+* | "argocd-repo-server" deployment's sidecar container 
+  * set `spec.template.spec.containers[0].volumeMounts[*].mountPath: /home/argocd/cmp-server/config/plugin.yaml` 
 
 * if you use a 
   * custom image for the sidecar -> add the file directly | that image
@@ -53,13 +62,16 @@
 
 #### register the plugin sidecar | argocd-repo-server
 
+* | "argocd-repo-server" deployment's sidecar container
+  * set `spec.template.spec.containers[0].command: [/var/run/argocd/argocd-cmp-server]`
+
 * argocd-cmp-server
   * == GRPC service
     * lightweight
     * allows
       * Argo CD can interact -- with the -- plugin
 
-### -- as -- environment variables | your plugin
+## AVAILABLE environment variables | your plugin
 
 * Plugin commands
   * have access to
@@ -84,69 +96,51 @@
     * sanitize/escape user input
       * Reason:🧠prevent malicious input can cause unwanted behavior🧠
 
-## how to use a config management plugin + Application?
+## how to use a config management plugin | Application?
 
-TODO:
-You may leave the `name` field
-empty in the `plugin` section for the plugin to be automatically matched with the Application based on its discovery rules
-If you do mention the name make sure 
-it is either `<metadata.name>-<spec.version>` if version is mentioned in the `ConfigManagementPlugin` spec or else just `<metadata.name>`
-When name is explicitly 
-specified only that particular plugin will be used if its discovery pattern/command matches the provided application repo.
+* ⚠️ONLY 1! POSSIBLE CMP / EACH Application⚠️
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: guestbook
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: https://github.com/argoproj/argocd-example-apps.git
-    targetRevision: HEAD
-    path: guestbook
-    plugin:
-      env:
-        - name: FOO
-          value: bar
-```
+* | Application,
+  * `spec.source.plugin.name`
+    * OPTIONAL
+      * if you do NOT specify -> use the plugin / match with, | ConfigManagementPlugin,
+        * `spec.discover.fileName`
+        * `spec.discover.find.glob`
+        * `spec.discover.find.command`
+    * allows
+      * specify DIRECTLY the plugin / Application use 
+    * == `<APPLICATION_metadata.name>-<APPLICATION_spec.version>`
+      * `<APPLICATION_spec.version>`
+        * ONLY if it's specified | `ConfigManagementPlugin`
 
-If you don't need to set any environment variables, you can set an empty plugin section.
+* Problems:
+  * Problem1: CMP command takes too long -> command will be killed & display an error | UI
+    * Reason:🧠CMP server respects the timeouts / set | "argocd-cmd-params-cm"
+      * `server.repo.server.timeout.seconds`
+      * `controller.repo.server.timeout.seconds`🧠
+    * SOLUTION: 
+      * | "argocd-cmd-params-cm", increase
+        * `server.repo.server.timeout.seconds:60`
+        * `controller.repo.server.timeout.seconds:60`
+      * | [`ARGOCD_EXEC_TIMEOUT`](high_availability.md),
+        * adjust it -- SIMILAR to -- PREVIOUS ones
+  * Problem2: if a CMP renders blank manifests & `prune=true` -> Argo CD AUTOMATICALLY remove resources
+    * SOLUTION: CMP plugin authors should ensure errors == part of the exit code
+      * _Example:_ output ANY error | pipe
+  
+        ```shell
+        # pipe / does NOT pass error
+        kustomize build | cat
+      
+        # pipe / pass error
+        set -o pipefail
+        kustomize build | cat 
+        ```
 
-```yaml
-    plugin: {}
-```
-
-> [!IMPORTANT]
-> If your CMP command runs too long, the command will be killed, and the UI will show an error
-> The CMP server
-> respects the timeouts set by the `server.repo.server.timeout.seconds` and `controller.repo.server.timeout.seconds` 
-> items in `argocd-cmd-params-cm`
-> Increase their values from the default of 60s.
->
-> Each CMP command will also independently timeout on the `ARGOCD_EXEC_TIMEOUT` set for the CMP sidecar
-> The default
-> is 90s
-> So if you increase the repo server timeout greater than 90s, be sure to set `ARGOCD_EXEC_TIMEOUT` on the
-> sidecar.
-    
+TODO: 
 > [!NOTE]
-> Each Application can only have one config management plugin configured at a time
-> If you're converting an existing
-> plugin configured through the `argocd-cm` ConfigMap to a sidecar, make sure to update the plugin name to either `<metadata.name>-<spec.version>` 
-> if version was mentioned in the `ConfigManagementPlugin` spec or else just use `<metadata.name>`
-> You can also remove the name altogether 
-> and let the automatic discovery to identify the plugin.
-
-> [!NOTE]
-> If a CMP renders blank manifests, and `prune` is set to `true`, Argo CD will automatically remove resources
-> CMP plugin authors should ensure errors are part of the exit code
-> Commonly something like `kustomize build 
-> | cat` won't pass errors because of the pipe. Consider setting `set -o pipefail` so anything piped will pass errors on failure.
-
-> [!NOTE]
-> If a CMP command fails to gracefully exit on `ARGOCD_EXEC_TIMEOUT`, it will be forcefully killed after an additional timeout of `ARGOCD_EXEC_FATAL_TIMEOUT`.
+> If a CMP command fails to gracefully exit on `ARGOCD_EXEC_TIMEOUT`, 
+> it will be forcefully killed after an additional timeout of `ARGOCD_EXEC_FATAL_TIMEOUT`.
 
 ## how to debug a CMP?
 
@@ -163,10 +157,10 @@ If you are actively developing a sidecar-installed CMP, keep a few things in min
 5. Write log message to stderr and set the `--loglevel=info` flag in the sidecar. This will print everything written to stderr, even on successful command execution.
 
 
-### Other Common Errors
-| Error Message | Cause |
-| -- | -- |
-| `no matches for kind "ConfigManagementPlugin" in version "argoproj.io/v1alpha1"` | The `ConfigManagementPlugin` CRD was deprecated in Argo CD 2.4 and removed in 2.8. This error means you've tried to put the configuration for your plugin directly into Kubernetes as a CRD. Refer to this [section of documentation](#write-the-plugin-configuration-file) for how to write the plugin configuration file and place it properly in the sidecar. |
+### Common Errors
+#### "no matches for kind "ConfigManagementPlugin" in version "argoproj.io/v1alpha1"" 
+* Reason: 🧠you are using ["argocd-cm" ConfigMap approach](#how-to-install-a-config-management-plugin)🧠
+* Solution: use ["repo-server"'s sidecar](#---as----sidecar-plugin-to-repo-server)
 
 ## Plugin tar stream exclusions
 
@@ -193,10 +187,9 @@ You can set it one of three ways:
 2. The `reposerver.plugin.use.manifest.generate.paths` key if you are using `argocd-cmd-params-cm`
 3. Directly setting `ARGOCD_REPO_SERVER_PLUGIN_USE_MANIFEST_GENERATE_PATHS` environment variable on the repo server to `true`.
 
-## Migrating from argocd-cm plugins
+## how to migrate argocd-cm plugins -- to -- sidecar plugins?
 
-Installing plugins by modifying the argocd-cm ConfigMap is deprecated as of v2.4 and has been completely removed starting in v2.8.
-
+TODO: 
 CMP plugins work by adding a sidecar to `argocd-repo-server` along with a configuration in that sidecar located at `/home/argocd/cmp-server/config/plugin.yaml`. A argocd-cm plugin can be easily converted with the following steps.
 
 ### Convert the ConfigMap entry into a config file

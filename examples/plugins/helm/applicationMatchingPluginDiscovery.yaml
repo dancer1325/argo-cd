@@ -1,0 +1,48 @@
+# valueFiles
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: helm-guestbook-match-plugin-discovery
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps
+    targetRevision: HEAD
+    path: helm-guestbook
+    # NOT specified -> find -- based on -- plugin `spec.discover`
+    # plugin:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helm-guestbook-match-plugin-discovery
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+---
+# with parameters
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: helm-guestbook-with-params
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps
+    targetRevision: HEAD
+    path: helm-guestbook
+    plugin:
+      name: simple-helm-cmp-v1.0
+      parameters:
+        - name: helm-parameters
+          map:
+            # NEXT image tag does NOT exist
+            #   ONLY exist v5   -- https://console.cloud.google.com/artifacts/docker/google-samples/us/gcr.io/gb-frontend --
+            image.tag: v6
+            replicaCount: "3"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helm-guestbook-with-params
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

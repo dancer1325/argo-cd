@@ -3,29 +3,25 @@
 * goal
   * how to write plugins -- for -- `argocd` CLI tool
 
-* Plugins
+* Plugins or ArgoCD plugins
+  * [original proposal](../proposals/argocd-cli-pluin.md) 
+  * == standalone executable file /
+    * 's name: "argocd-"
   * allow
     * ⭐️extend `argocd` CLI -- with -- NEW sub-commands⭐️
       * == add custom features / NOT included by `argocd`
-
-If you would like to take a look at the original proposal, head over to this [enhancement proposal](../proposals/argocd-cli-pluin.md).
-It covers how the plugin mechanism works, its benefits, motivations, and the goals it aims to achieve.
-
-## Prerequisites
-
-You need to have a working `argocd` binary installed locally. You can follow
-the [cli installation documentation](https://argo-cd.readthedocs.io/en/stable/cli_installation/) to install the binary.
-
-## Create `argocd` plugins
-
-A plugin is a standalone executable file whose name begins with argocd-.
-To install a plugin, move its executable file to any directory included in your PATH.
-Ensure that the PATH configuration specifies the full absolute path to the executable,
-not a relative path. `argocd` allows plugins to add custom commands such as
-`argocd my-plugin arg1 arg2 --flag1` by executing a `argocd-my-plugin` binary in the PATH.
+  * how to install?
+    * move its executable file | ANY directory / included | your PATH
+      * ⚠️include it as absolute path⚠️
+        * _Example:_
+          * (right) `export PATH="/usr/local/bin:/home/user/bin:$PATH"`
+          * (wrong) `export PATH="./bin:../tools:$PATH"`
+  * how does it work?
+    * if you use `argocd my-plugin arg1 arg2 --flag1` -> Argo CD looks for "argocd-my-plugin" executable | your PATH
 
 ## Limitations
 
+TODO:
 1. It is currently not possible to create plugins that overwrite existing
 `argocd` commands. For example, creating a plugin such as `argocd-version`
 will cause the plugin to never get executed, as the existing `argocd version`
@@ -195,8 +191,10 @@ and managing versioning to provide a seamless experience for your users.
 
 ### Source code
 
-You can publish the source code of your plugin, for example,
-in a Git repository. This allows users to access and inspect
-the code directly. Users who want to install the plugin will need
-to fetch the code, set up a suitable build environment (if the plugin requires compiling),
-and manually deploy it.
+* recommendation
+  * publish the source code of your plugin | Git repository
+
+* steps to use it by rest
+  * fetch the code,
+  * if the plugin requires compiling -> set up a suitable build environment
+  * manually deploy it

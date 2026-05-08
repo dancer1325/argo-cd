@@ -7,14 +7,25 @@ spec:
     spec:
       initContainers:
         - name: helm-plugin-setup
-          image: busybox
+          # image: busybox    Problems -- due to -- lack of getting right jq
+          image: alpine:3.19
+          # command:
+          #   1. | AMD architecture
+#          command:
+#            - sh
+#            - -c
+#            - |
+#              wget https://get.helm.sh/helm-v3.10.3-linux-amd64.tar.gz -O - | tar xz && mv linux-amd64/helm /tools/helm && chmod +x /tools/helm
+#              wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -O /tools/jq && chmod +x /tools/jq
+#              wget https://github.com/mikefarah/yq/releases/download/v4.30.6/yq_linux_amd64 -O /tools/yq && chmod +x /tools/yq
+          #   2. | ARM architecture
           command:
             - sh
             - -c
             - |
-              wget https://get.helm.sh/helm-v3.10.3-linux-amd64.tar.gz -O - | tar xz && mv linux-amd64/helm /tools/helm && chmod +x /tools/helm
-              wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -O /tools/jq && chmod +x /tools/jq
-              wget https://github.com/mikefarah/yq/releases/download/v4.30.6/yq_linux_amd64 -O /tools/yq && chmod +x /tools/yq
+              wget https://get.helm.sh/helm-v3.10.3-linux-arm64.tar.gz -O - | tar xz && mv linux-arm64/helm /tools/helm && chmod +x /tools/helm
+              wget https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-arm64 -O /tools/jq && chmod +x /tools/jq
+              wget https://github.com/mikefarah/yq/releases/download/v4.30.6/yq_linux_arm64 -O /tools/yq && chmod +x /tools/yq
           volumeMounts:
             - mountPath: /tools
               name: helm-plugin-tools
@@ -22,7 +33,8 @@ spec:
         - name: helm-plugin
           command: [/var/run/argocd/argocd-cmp-server]
           args: [--loglevel, debug]
-          image: busybox
+          # image: busybox    Problems -- due to -- lfstack.push runtime
+          image: ubuntu:22.04
           securityContext:
             runAsNonRoot: true
             runAsUser: 999

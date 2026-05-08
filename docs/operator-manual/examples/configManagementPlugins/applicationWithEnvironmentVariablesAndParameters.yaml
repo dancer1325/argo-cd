@@ -1,7 +1,18 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
+metadata:
+  name: guestbook
+  namespace: argocd
 spec:
+  project: default
   source:
+    repoURL: https://github.com/argoproj/argocd-example-apps.git
+    targetRevision: HEAD
+    path: guestbook
+    # plugin
+    #   1. NO need to set environment variables
+    # plugin: {}
+    #   2. set environment variables
     plugin:
       env:
         - name: FOO
@@ -21,3 +32,6 @@ spec:
         #     as individual environment variable
         #       PARAM_VALUES_FILES_0=values-dev.yaml
         #       PARAM_HELM_PARAMETERS_IMAGE_TAG=v1.2.3
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: guestbook-with-plugin

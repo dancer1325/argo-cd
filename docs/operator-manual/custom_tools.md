@@ -1,7 +1,7 @@
 # Custom Tooling
 
 * goal
-  * customize Kubernetes manifest templating tools
+  * customize [Kubernetes manifest templating tools](../user-guide/application_sources.md)
 
 * Argo CD
   * Argo CD repo-server

@@ -8,6 +8,7 @@ spec:
       containers:
         - name: my-plugin
           command: [/var/run/argocd/argocd-cmp-server]
+          # stock image
           image: ubuntu
           securityContext:
             runAsNonRoot: true

@@ -62,10 +62,12 @@ the appropriate tool.
   * Use `--repo-cache-expiration duration`, and we'd suggest in low volume environments you try `1h`.
           Bear in mind that this will negate the benefits of caching if set too low.
 
-* `argocd-repo-server` executes config management tools such as `helm` or `kustomize` and enforces a 90 second timeout.
-  This timeout can be changed by using the `ARGOCD_EXEC_TIMEOUT` env variable
-  * The value should be in the Go time
-    duration string format, for example, `2m30s`.
+* `argocd-repo-server` 
+  * executes config management tools (_Example:_ `helm` or `kustomize`) / timeout set -- by -- `ARGOCD_EXEC_TIMEOUT` env variable
+    * `ARGOCD_EXEC_TIMEOUT`
+      * by default, 90 second
+      * Go time duration string format
+        * _Example:_ `2m30s`
 
 * `argocd-repo-server` will issue a `SIGTERM` signal to a command that has elapsed the `ARGOCD_EXEC_TIMEOUT`. In most
   cases, well-behaved commands will exit immediately when receiving the signal. However, if this does not happen,
