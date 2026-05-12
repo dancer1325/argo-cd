@@ -28,13 +28,21 @@
 ## how to install a config management plugin?
 
 * ways
+  * [-- by -- modifying "argocd-cm" ConfigMap](#---by----modifying-argocd-cm-configmap)
   * [-- as -- sidecar plugin to repo-server](#---as----sidecar-plugin-to-repo-server)
-  * -- by -- modifiying "argocd-cm" ConfigMap
-    * | ArgoCD v2.4,
-      * deprecated
-    * ⚠️| ArgoCD v2.8,
-      * removed ⚠️
-    * [how to migrate plugins / configured as "argocd-cm" -- to -- sidecar plugins?](#how-to-migrate-argocd-cm-plugins----to----sidecar-plugins)
+
+### -- by -- modifying "argocd-cm" ConfigMap
+
+* | ArgoCD v2.4,
+  * deprecated
+* ⚠️| ArgoCD v2.8,
+  * removed ⚠️
+
+* steps
+  * download the plugin
+  * mount it -- as a -- volume
+
+* [how to migrate plugins / configured as "argocd-cm" -- to -- sidecar plugins?](#how-to-migrate-argocd-cm-plugins----to----sidecar-plugins)
 
 ### -- as -- sidecar plugin to repo-server
 
@@ -58,7 +66,7 @@
 
 * if you use a 
   * custom image for the sidecar -> add the file directly | that image
-  * stock image for the sidecar OR rather maintain the plugin configuration | ConfigMap -> NEST the plugin config file | `plugin.yaml` key
+  * stock image for the sidecar OR rather maintain the plugin configuration | ConfigMap -> NEST the plugin config file | ConfigMap's `plugin.yaml` key
 
 #### register the plugin sidecar | argocd-repo-server
 
@@ -189,47 +197,16 @@ You can set it one of three ways:
 
 ## how to migrate argocd-cm plugins -- to -- sidecar plugins?
 
-TODO: 
-CMP plugins work by adding a sidecar to `argocd-repo-server` along with a configuration in that sidecar located at `/home/argocd/cmp-server/config/plugin.yaml`. A argocd-cm plugin can be easily converted with the following steps.
+### convert the "argocd-cm" ConfigMap entry `data.configManagementPlugins` -- into a -- `ConfigManagementPlugin` manifest
 
-### Convert the ConfigMap entry into a config file
-
-First, copy the plugin's configuration into its own YAML file. Take for example the following ConfigMap entry:
-
-```yaml
-data:
-  configManagementPlugins: |
-    - name: pluginName
-      init:                          # Optional command to initialize application source directory
-        command: ["sample command"]
-        args: ["sample args"]
-      generate:                      # Command to generate Kubernetes Objects in either YAML or JSON
-        command: ["sample command"]
-        args: ["sample args"]
-      lockRepo: true                 # Defaults to false. See below.
-```
-
-The `pluginName` item would be converted to a config file like this:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ConfigManagementPlugin
-metadata:
-  name: pluginName
-spec:
-  init:                          # Optional command to initialize application source directory
-    command: ["sample command"]
-    args: ["sample args"]
-  generate:                      # Command to generate Kubernetes Objects in either YAML or JSON
-    command: ["sample command"]
-    args: ["sample args"]
-```
+TODO:
 
 > [!NOTE]
 > The `lockRepo` key is not relevant for sidecar plugins, because sidecar plugins do not share a single source repo
 > directory when generating manifests.
 
-Next, we need to decide how this yaml is going to be added to the sidecar. We can either bake the yaml directly into the image, or we can mount it from a ConfigMap. 
+Next, we need to decide how this yaml is going to be added to the sidecar
+We can either bake the yaml directly into the image, or we can mount it from a ConfigMap. 
 
 If using a ConfigMap, our example would look like this:
 
@@ -258,7 +235,8 @@ Then this would be mounted in our plugin sidecar.
 
 ### Write discovery rules for your plugin
 
-Sidecar plugins can use either discovery rules or a plugin name to match Applications to plugins. If the discovery rule is omitted 
+Sidecar plugins can use either discovery rules or a plugin name to match Applications to plugins
+* If the discovery rule is omitted 
 then you have to explicitly specify the plugin by name in the app spec or else that particular plugin will not match any app.
 
 If you want to use discovery instead of the plugin name to match applications to your plugin, write rules applicable to 
@@ -266,7 +244,8 @@ your plugin [using the instructions above](#write-discovery-rules-for-your-plugi
 file.
 
 To use the name instead of discovery, update the name in your application manifest to `<metadata.name>-<spec.version>` 
-if version was mentioned in the `ConfigManagementPlugin` spec or else just use `<metadata.name>`. For example:
+if version was mentioned in the `ConfigManagementPlugin` spec or else just use `<metadata.name>`
+* For example:
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -281,11 +260,13 @@ spec:
 
 ### Make sure the plugin has access to the tools it needs
 
-Plugins configured with argocd-cm ran on the Argo CD image. This gave it access to all the tools installed on that
+Plugins configured with argocd-cm ran on the Argo CD image
+* This gave it access to all the tools installed on that
 image by default (see the [Dockerfile](https://github.com/argoproj/argo-cd/blob/master/Dockerfile) for base image and
 installed tools).
 
-You can either use a stock image (like ubuntu, busybox, or alpine/k8s) or design your own base image with the tools your plugin needs. For
+You can either use a stock image (like ubuntu, busybox, or alpine/k8s) or design your own base image with the tools your plugin needs
+* For
 security, avoid using images with more binaries installed than what your plugin actually needs.
 
 ### Test the plugin
@@ -299,8 +280,10 @@ Once tests have checked out, remove the plugin entry from your argocd-cm ConfigM
 
 #### Preserve repository files mode
 
-By default, config management plugin receives source repository files with reset file mode. This is done for security
-reasons. If you want to preserve original file mode, you can set `preserveFileMode` to `true` in the plugin spec:
+By default, config management plugin receives source repository files with reset file mode
+* This is done for security
+reasons
+* If you want to preserve original file mode, you can set `preserveFileMode` to `true` in the plugin spec:
 
 > [!WARNING]
 > Make sure you trust the plugin you are using. If you set `preserveFileMode` to `true` then the plugin might receive

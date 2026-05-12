@@ -25,7 +25,12 @@
 # TODO:
 
 # Repositories
-TODO:
+## 💡globally registered💡
+* `argocd repo --help`
+  * that's why it exists INDEPENDENTLY an Application
+## | SOME Git hosters, | Application, set `spec.source.repoUrl: ...git`
+TODO: check GitLab & on-premise GitLab instances
+## TODO:
 
 # Clusters
 ## Cluster credentials

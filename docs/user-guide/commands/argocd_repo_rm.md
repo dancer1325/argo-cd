@@ -1,5 +1,8 @@
 # `argocd repo rm` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/repo.md)'s `func NewRepoRemoveCommand(`👀
+
 ## argocd repo rm
 
 Remove configured repositories

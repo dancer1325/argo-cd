@@ -104,7 +104,7 @@ argocd repo rm https://github.com/yourusername/your-repo.git --project myproject
 argocd repo rm git@github.com:yourusername/your-repo.git
 ```
 
-## func NewRepoListCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {
+## `func NewRepoListCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {`
 * `argocd repo list [FLAG]`
   * List configured repositories
   * `FLAG`

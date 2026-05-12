@@ -1,6 +1,7 @@
 # goal
 #   custom image for the sidecar
+FROM ubuntu:22.04
 
-# add DIRECTLY the plugin configuration file | custom image
 WORKDIR /home/argocd/cmp-server/config/
-COPY plugin.yaml ./
+# add DIRECTLY the plugin configuration file | custom image
+COPY configManagementPlugin.yaml ./plugin.yaml

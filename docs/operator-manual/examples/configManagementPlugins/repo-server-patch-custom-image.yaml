@@ -1,0 +1,28 @@
+# uses custom image / plugin.yaml is baked-in
+#   -> NO need for ConfigMap volumeMount
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-repo-server
+spec:
+  template:
+    spec:
+      containers:
+        - name: my-plugin
+          command: [/var/run/argocd/argocd-cmp-server]
+          # custom image -- built from -- Dockerfile
+          image: my-cmp-plugin:v1.0
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+          volumeMounts:
+            - mountPath: /var/run/argocd
+              name: var-files
+            - mountPath: /home/argocd/cmp-server/plugins
+              name: plugins
+            # NO volumeMount for plugin.yaml -- already in the image
+            - mountPath: /tmp
+              name: cmp-tmp
+      volumes:
+        - emptyDir: {}
+          name: cmp-tmp

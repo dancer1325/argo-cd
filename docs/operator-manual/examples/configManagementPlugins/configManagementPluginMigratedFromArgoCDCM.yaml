@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ConfigManagementPlugin
+metadata:
+  name: pluginName
+spec:
+  # Optional command to initialize application source directory
+  init:
+    command: ["sample command"]
+    args: ["sample args"]
+
+  # Command to generate Kubernetes Objects in either YAML or JSON
+  generate:
+    command: ["sample command"]
+    args: ["sample args"]
