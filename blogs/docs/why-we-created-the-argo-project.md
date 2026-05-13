@@ -53,7 +53,7 @@ Hong Wang
           * ❌NOT possible to 
             * version
             * reproduce❌
-          * DIFFICULT to: scalate
+          * DIFFICULT to: scale
   * | 2017,
     * Kubernetes 
       * released CRD
