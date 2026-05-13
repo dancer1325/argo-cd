@@ -77,26 +77,26 @@ source: https://akuity.io/blog/why-ci-and-cd-need-to-go-their-separate-ways/
   * Reason:🧠reduce -- , filtering in ONLY qualified artifacts, through the pipeline, -- the risk of faulty deployments🧠
 
 * Deployment Flexibility
-  * TODO: Supports progressive rollouts and phased releases across multiple environments.
+  * Reason:🧠supports | MULTIPLE environments, 
+    * progressive rollouts
+    * phased releases🧠 
 
 * Reduces CI Pipeline Complexity
-  * Reduces the burden on CI pipelines, which are often overloaded with deployment tasks
-  they weren't designed to handle
-  * This separation of concerns allows more focused and efficient CI processes, while CD can concentrate on deployment and 
-  management of applications.
+  * Reason:🧠CI pipelines are overloaded -- with -- deployment tasks🧠
 
 * Automates Decision-Making
-  * Incorporates predefined rules for approvals and compliance checks, minimizing manual intervention.
-
-Overall, continuous promotion aligns better with the dynamic nature of modern cloud native environments, 
-facilitating smoother and more reliable application rollouts.
+  * Reason:🧠predefined rules -- for -- approvals & compliance checks🧠
 
 ## Kargo: Bringing Continuous Promotion to Life
 
-Kargo is an open source tool designed to implement the concept of continuous promotion within CI/CD pipelines
-* It addresses the complexities associated with deploying applications in a Kubernetes and GitOps environment
-by providing a structured mechanism for promoting changes.
-
+* Kargo
+  * == tool / 
+    * 💡implement [continuous promotion](#continuous-promotion)💡
+    * open source 
+  * use cases
+    * deploy applications | Kubernetes + GitOps environment
+    
+TODO: 
 Kargo operates by monitoring changes to artifacts, such as application images or configuration files, and
 applying predefined promotion rules to determine if these artifacts should progress to the next stage of deployment
 * This tool effectively bridges the gap between CI and CD by introducing a declarative framework for managing promotions,
