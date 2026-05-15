@@ -77,7 +77,6 @@ TODO:
 TODO:
 ##### declaratively
 * [here](httpsRepoCredentials.yaml)
-* `kubectl apply -f httpsUsernamePassword.yaml`
 
 ## TODO: 
 

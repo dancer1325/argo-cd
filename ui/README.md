@@ -1,7 +1,5 @@
 # Argo CD Web UI
 
-<img src="https://github.com/argoproj/argo-cd/blob/master/ui/src/assets/images/argo.png?raw=true" alt="Argo Image" width="600" />
-
 ## Getting started
 ### requirements
 * install [NodeJS](https://nodejs.org/en/download/) and [Yarn](https://yarnpkg.com)

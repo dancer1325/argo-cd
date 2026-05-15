@@ -79,9 +79,43 @@
 ## application's state | cluster
 * [here](https://github.com/dancer1325/argocd-example-apps/tree/master/guestbook#applications-state--cluster)
 
+# Refresh
+## compare the desired state vs live state
+* `kubectl apply -f argoCDCMDParamsCMPatch.yaml`
+  * Reason: 🧠see controller debug level logs🧠
+* `kubectl -n argocd rollout restart statefulset argocd-application-controller`
+* `kubectl apply -f application.yaml`
+* [steps to trigger refresh](https://github.com/dancer1325/argocd-example-apps/tree/master/guestbook#refresh)
+* `kubectl logs -n argocd argocd-application-controller-0 | grep "example.guestbook"`
+  * look for "refresh" & latest log about that time and you can see
+    * "Comparing app state"
+    * "Ignoring change of object because none of the watched resource fields have changed"
+### desired state, FIRSTLY, checked | repo-server
+* `kubectl logs -n argocd argocd-application-controller-0 | grep "example.guestbook"`
+  * look for "refresh" & latest log about that time and you can see
+    * NO message about fetching Git
+* `kubectl logs -n argocd deployment/argocd-repo-server | grep "git "`
+  * there are NO recent logs
+
+# Hard Refresh
+## invalidate EXISTING desired state | repo-server
+* `kubectl apply -f argoCDCMDParamsCMPatch.yaml`
+  * Reason: 🧠see controller debug level logs🧠
+* `kubectl -n argocd rollout restart statefulset argocd-application-controller`
+* [steps to trigger hard refresh](https://github.com/dancer1325/argocd-example-apps/tree/master/guestbook#hard-refresh)
+* `kubectl logs -n argocd argocd-application-controller-0 | grep "example.guestbook"`
+  * look for "refresh" & latest log about that time and you can see
+    * "noCache is true"
+    * "useDiffCache":"false"
+## fetch Git
+* `kubectl logs -n argocd deployment/argocd-repo-server | grep "git "`
+  * look for latest ones and you can see
+    * "git checkout --force"
+
 # Sync
 ## == process / application is moved -- to -- its target state
-* TODO: 
+* PREVIOUS application's sync status: outOfSync
+* [here](https://github.com/dancer1325/argocd-example-apps/blob/master/guestbook/README.md#sync-status--sync-live-state-vs-target-state)
 
 # Sync Status
 ## | sync, live state vs target state
@@ -90,10 +124,6 @@
 # Sync Operation Status
 ## ALLOWED values: syncing, sync ok, sync error, sync failed, unknown 
 * [here](https://github.com/dancer1325/argocd-example-apps/tree/master/guestbook#sync-operation-status-allowed-values-syncing-sync-ok-sync-error-sync-failed-unknown)
-
-# Refresh
-## compare the latest code | Git vs live state
-* TODO:
 
 # Health
 ## == application's health

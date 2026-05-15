@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: example.guestbook-nosync
+  namespace: argocd
+spec:
+  destination:
+    namespace: guestbook-nosync
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: guestbook
+    repoURL: https://github.com/dancer1325/argocd-example-apps
+    targetRevision: master
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

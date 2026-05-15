@@ -23,6 +23,13 @@
 * **Live state**
   * application's live state
   * application's state | cluster
+* **Refresh**
+  * compare the desired state vs live state
+    * desired state, FIRSTLY, checked | repo-server
+* **Hard Refresh**
+  * compare the desired state vs live state
+    * invalidate EXISTING desired state | repo-server
+    * fetch Git
 * **Sync**
   * == process / application is moved -- to -- its target state
 * **Sync status**
@@ -39,8 +46,6 @@
     * sync error
     * sync failed
     * unknown
-* **Refresh**
-  * compare the latest code | Git vs live state
 * **Health** 
   * == application's health
     * is it running correctly?

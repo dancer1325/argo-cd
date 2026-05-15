@@ -449,11 +449,13 @@ spec:
 
 ## how do I fix `Manifest generation error (cached)`?
 
-`Manifest generation error (cached)` means that there was an error when generating manifests and that the error message has been cached to avoid runaway retries.
+* == | generate the manifest, there was an error & error message has been cached
+  * Reason to cache it:🧠avoid runaway retries🧠
 
-Doing a hard refresh (ignoring the cached error) can overcome transient issues. But if there's an ongoing reason manifest generation is failing, a hard refresh will not help.
-
-Instead, try searching the repo-server logs for the app name in order to identify the error that is causing manifest generation to fail.
+* ATTEMPT1: 💡hard refresh💡
+  * (ignoring the cached error) can overcome transient issues
+  * Reason why it's ONLY ATTEMPT:🧠if there's an ongoing reason manifest generation is failing -> hard refresh is NOT enough🧠
+* ATTEMPT2: check argocd-repo-server logs
 
 ## How do I fix `field not declared in schema`?
 
