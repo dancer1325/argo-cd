@@ -39,6 +39,9 @@
     * synced
     * outOfSync
     * unknown
+  * per
+    * Application
+    * Application's resource
 * **Sync operation status**
   * ALLOWED values
     * syncing
@@ -47,7 +50,7 @@
     * sync failed
     * unknown
 * **Health** 
-  * == application's health
+  * == about resources / are deployed 
     * is it running correctly?
     * Can it serve requests?
   * ALLOWED values
@@ -57,6 +60,9 @@
     * degraded
     * missing
     * unknown
+  * per
+    * Application
+    * Application's resource
 * **Tool** 
   * == tool /
     * FROM a directory of files, create manifests

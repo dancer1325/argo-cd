@@ -54,8 +54,8 @@ providers:
   * initial password is AVAILABLE | `argocd-initial-admin-secret` secret
 
 * ways
-  * APPROACH1: 
-    * steps to change the password
+  * APPROACH1: change the password
+    * steps
       * `argocd account bcrypt --password <YOUR-PASSWORD-HERE>`
         * generate a bcrypt hash -- for -- the admin password
       * edit the `argocd-secret` secret and update the `admin.password` field with a new bcrypt hash.
@@ -69,7 +69,7 @@ providers:
           }}'
         ```
 
-  * APPROACH2: 
+  * APPROACH2:  
     * | "argocd-secret", delete
       * `admin.password` key
       * `admin.passwordMtime` key
@@ -133,9 +133,10 @@ Now you can manually verify that cluster is accessible from the Argo CD pod.
 
 ## How Can I Terminate A Sync?
 
-To terminate the sync, click on the "synchronization" then "terminate":
+* | ArgoCD UI,
+  * choose your Application > Sync > click "terminate"
 
-![Synchronization](assets/synchronization-button.png) ![Terminate](assets/terminate-button.png)
+    ![Synchronization](assets/synchronization-button.png) ![Terminate](assets/terminate-button.png)
 
 ## Why Is My App `Out Of Sync` Even After Syncing?
 
@@ -150,65 +151,6 @@ the `application.instanceLabelKey` value in the `argocd-cm`. We recommend that y
 > When you make this change your applications will become out of sync and will need re-syncing.
 
 See [#1482](https://github.com/argoproj/argo-cd/issues/1482).
-
-## How often does Argo CD check for changes | Git OR Helm repository ?
-
-* frequency / Argo CD poll changes -- from -- Git OR helm repository
-  * == `data.timeout.reconciliation` + `data.timeout.reconciliation.jitter`
-    * by default, EACH 3' 
-    * _Example:_ [here](/docs/operator-manual/examples/argocd-cm.yaml)
-  * specified | "argocd-cm" ConfigMap,
-    * `data.timeout.reconciliation`
-      * ⚠️if you set 0 -> disables AUTOMATIC polling⚠️
-        * requirements    
-          * configure `ARGOCD_DEFAULT_CACHE_EXPIRATION`
-        * -> use ANOTHER approachways / Argo CD detect changes
-          * trigger -- through -- webhooks TODO:
-          * manual refresh
-        * ❌NOT recommended❌
-          * Reason: 🧠 
-            * failure of webhooks -- due to -- network issues
-            * misconfiguration🧠
-    * `data.timeout.reconciliation.jitter`
-
-* ⭐️ways to trigger reconcile process ⭐️
-  * Argo CD poll configuration
-  * [webhooks](operator-manual/webhook.md)
-  * MANUAL refresh
-    * -- via -- CLI
-      * `--refresh` 
-        * `argocd app get APPNAME --refresh`
-    * -- via -- Argo CD UI
-
-* recommendations
-  * if you set Argo CD poll + Git webhook -> set `timeout.reconciliation` = low (_Example:_ `15m`, `1h`)
-    * Reason:🧠improve Argo CD performance / resource consumption🧠
-
-```mermaid
-flowchart TB
-    subgraph Triggers["Ways to trigger a Git refresh in ArgoCD"]
-        direction TB
-        Poll["🕐 Polling<br/>timeout.reconciliation<br/>(default: 3m)"]
-        Webhook["🔔 Git Webhook<br/>Push event from<br/>GitHub / GitLab / Bitbucket"]
-        Manual["👤 Manual Refresh<br/>argocd app get APPNAME --refresh<br/>OR via UI"]
-    end
-
-    GitRepo["📁 Git / Helm Repository"]
-    ArgoCD["⚙️ ArgoCD<br/>Git Refresh"]
-
-    GitRepo -->|change detected via| Poll
-    GitRepo -->|notifies| Webhook
-    Manual -->|triggers| ArgoCD
-    Poll -->|triggers| ArgoCD
-    Webhook -->|triggers| ArgoCD
-
-    style Triggers fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    style Poll fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
-    style Webhook fill:#fce4ec,stroke:#c62828,stroke-width:2px
-    style Manual fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    style GitRepo fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
-    style ArgoCD fill:#ffe0b2,stroke:#f57c00,stroke-width:2px
-```
 
 ## Why is my ArgoCD application `Out Of Sync` when there are no actual changes to the resource limits (or other fields with unit values)?
 
@@ -522,6 +464,7 @@ Kubernetes environment variables must be valid UTF-8 strings. In affected cluste
 ASCII-only values.
 
 #### How do I fix the issue?
+
 Inspect the decoded Redis password
 ```bash
 kubectl get -n argocd secret argocd-redis -o json \
