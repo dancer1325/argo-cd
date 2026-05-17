@@ -46,7 +46,7 @@
 ## ⭐️ways to trigger it ⭐️
 
 * [live state changes](#live-state-changes-)
-* [Argo CD poll configuration](#polling----timeoutreconciliation---)
+* [Argo CD poll configuration](#polling)
 * [webhooks](#git-webhook)
 * [MANUAL refresh](#manual-refresh-cli--ui)
   * -- via -- CLI

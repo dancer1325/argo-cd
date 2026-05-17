@@ -4,26 +4,22 @@
   * how to configure Application Git webhook | some git provider
     * ❌!= [how to configure ApplicationSet Git webhook](applicationset/Generators-Git.md#webhook-configuration)❌
 
-* Argo CD 
-  * supports
-    * 💡Git webhook notifications💡
-      * requirements
-        * configure API server / receive webhook events
-      * ⚠️vs Argo CD polls Git repositories⚠️
-        * NO delay
-          * Reason:🧠poll is in intervals🧠
-      * -- from -- 
-        * GitHub
-        * GitLab
-        * Bitbucket
-        * Bitbucket Server
-        * Azure DevOps
-        * Gogs
+* ⚠️vs [Argo CD polling Git repositories](reconcile.md#polling)⚠️
+  * ❌NO delay❌
+    * Reason:🧠poll is in intervals🧠
+* ALLOWED Git providers 
+  * GitHub
+  * GitLab
+  * Bitbucket
+  * Bitbucket Server
+  * Azure DevOps
+  * Gogs
 
 * webhook handler 
-  * ❌if branch name == tag name -> NOT differentiate branch event -- & -- tag event ❌
-
-* TODO: A hook event for a push to branch `x` will trigger a refresh for an app pointing at the same repo with `targetRevision: refs/tags/x`
+  * limitation
+    * ❌NO differentiate branchName == tagName❌
+      * == SAME refreshed trigger if
+        * hook event / push | branch `x` -- & -- hook event / push |`targetRevision: refs/tags/x`
 
 ## steps
 
@@ -33,6 +29,8 @@
   * settings > webhooks
     * set 
       * payload URL == your Argo CD instance's "/api/webhook" endpoint
+        * requirements
+          * ⚠️MUST be reached -- through -- internet⚠️
         * _Example:_ https://argocd.example.com/api/webhook
       * secret
         * 👀OPTIONAL👀
@@ -40,7 +38,7 @@
             * == NOT take in account webhook payload🧠
           * ⚠️if Argo CD is publicly accessible -> recommended to configure a webhook secret⚠️
             * Reason:🧠prevent a DDoS attack🧠
-        * if you specify -> you need to configure [step 2](#2-configure-the-webhook-secret--argo-cd-optional)
+        * ⚠️if you specify -> you need to configure [step 2](#2-configure-the-webhook-secret--argo-cd-optional)⚠️
 
 * | "argocd-cm" ConfigMap,
   * specify `data.webhook.maxPayloadSizeMB` -- based on -- your use case
@@ -69,10 +67,10 @@
 
 ![Add Webhook](../assets/azure-devops-webhook-config.png "Add Webhook")
 
-### 2. Configure the WebHook secret | Argo CD (OPTIONAL)
+### 2. Configure the WebHook secret | Argo CD
 
-* 👀OPTIONAL👀
-* depend -- on -- you configured | [step 1](#1-create-the-webhook--git-provider)
+* ⚠️OPTIONAL⚠️
+  * if you specified a secret | [step 1](#1-create-the-webhook--git-provider) -> MANDATORY
 
 * steps
   * | "argocd-secret" Kubernetes secret's `stringData`
@@ -91,7 +89,7 @@
 | Azure DevOps    | `webhook.azuredevops.username`   | specified \| step1 |
 |                 | `webhook.azuredevops.password`   | specified \| step1 |
 
-## Special handling for BitBucket Cloud
+## | BitBucket Cloud
 
 TODO: 
 BitBucket does not include the list of changed files in the webhook request body.

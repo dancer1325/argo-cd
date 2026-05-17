@@ -370,46 +370,6 @@ Syntax: `$<k8s_secret_name>:<a_key_in_that_k8s_secret>`
 > [!NOTE]
 > Secret must have label `app.kubernetes.io/part-of: argocd`
 
-###### Example
-
-`another-secret`:
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: another-secret
-  namespace: argocd
-  labels:
-    app.kubernetes.io/part-of: argocd
-type: Opaque
-data:
-  ...
-  # Store client secret like below.
-  # Ensure the secret is base64 encoded
-  oidc.auth0.clientSecret: <client-secret-base64-encoded>
-  ...
-```
-
-`argocd-cm`:
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: argocd-cm
-  namespace: argocd
-  labels:
-    app.kubernetes.io/name: argocd-cm
-    app.kubernetes.io/part-of: argocd
-data:
-  ...
-  oidc.config: |
-    name: Auth0
-    clientID: aabbccddeeff00112233
-    # Reference key in another-secret (and not argocd-secret)
-    clientSecret: $another-secret:oidc.auth0.clientSecret  # Mind the ':'
-  ...
-```
-
 ### Skipping certificate verification on OIDC provider connections
 
 By default, all connections made by the API server to OIDC providers (either external providers or the bundled Dex

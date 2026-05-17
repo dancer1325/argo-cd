@@ -38,6 +38,8 @@
   * Reason: 🧠see controller debug level logs🧠
 * `kubectl logs -n argocd argocd-application-controller-0 | grep "example.guestbook"`
   * look for "Ignoring change of object because none of the watched resource fields have changed"
+  * you can identify by `(1)` 
+    * [source code](/controller/appcontroller.go)'s `CompareWithRecent CompareWith = 1` 
 ### untracked resources
 * [example.guestbook](https://github.com/dancer1325/argocd-example-apps/tree/master/guestbook)
 #### == resources / NOT exist | Git & exist | cluster
@@ -140,6 +142,8 @@ TODO:
 #### == frequency / Argo CD poll changes -- from -- Git OR helm repository
 * [example.guestbook](https://github.com/dancer1325/argocd-example-apps/tree/master/guestbook)
 * `kubectl logs -n argocd argocd-application-controller-0 | grep '"application":"example.guestbook"' | grep "comparison expired"`
+  * you can identify by `(2)`
+    * [source code](/controller/appcontroller.go)'s `CompareWithLatest CompareWith = 2`
 ##### ❌NOT ALWAYS SAME❌
 * `kubectl logs -n argocd argocd-application-controller-0 | grep '"application":"example.guestbook"' | grep "comparison expired"`
   * time BETWEEN logs vary
