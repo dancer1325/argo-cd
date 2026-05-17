@@ -81,7 +81,7 @@
 
 # Refresh
 ## compare the desired state vs live state
-* `kubectl apply -f argoCDCMDParamsCMPatch.yaml`
+* `kubectl patch configmap argocd-cmd-params-cm -n argocd --type merge --patch-file argoCDCMDParamsCMPatch.yaml`
   * Reason: 🧠see controller debug level logs🧠
 * `kubectl -n argocd rollout restart statefulset argocd-application-controller`
 * `kubectl apply -f application.yaml`
@@ -99,7 +99,7 @@
 
 # Hard Refresh
 ## invalidate EXISTING desired state | repo-server
-* `kubectl apply -f argoCDCMDParamsCMPatch.yaml`
+* `kubectl patch configmap argocd-cmd-params-cm -n argocd --type merge --patch-file argoCDCMDParamsCMPatch.yaml`
   * Reason: 🧠see controller debug level logs🧠
 * `kubectl -n argocd rollout restart statefulset argocd-application-controller`
 * [steps to trigger hard refresh](https://github.com/dancer1325/argocd-example-apps/tree/master/guestbook#hard-refresh)
@@ -120,6 +120,23 @@
 # Sync Status
 ## | sync, live state vs target state
 * [here](https://github.com/dancer1325/argocd-example-apps/blob/master/guestbook/README.md#sync-status--sync-live-state-vs-target-state)
+## per
+### ALL ApplicationS
+* ways to check
+  * | ArgoCD UI
+    * https://localhost:8080/applications > see left panel
+  * -- via -- `argocd`
+    * `argocd app list`
+      * check "Status" column
+### resource
+* ways to check
+  * | ArgoCD UI
+    * https://localhost:8080/applications/argocd/example.guestbook?view=tree&resource= > see left panel, OR
+    * https://localhost:8080/applications/argocd/example.guestbook?podSortOrder=asc&podSortMode=topLevelResource&view=list&resource=
+      * ==    view=list
+  * -- via -- `argocd`
+    * `argocd app get example.guestbook`
+      * check "Sync Status:        Synced to master"
 
 # Sync Operation Status
 ## ALLOWED values: syncing, sync ok, sync error, sync failed, unknown 
@@ -128,6 +145,23 @@
 # Health
 ## == application's health
 * [here](https://github.com/dancer1325/argocd-example-apps/tree/master/guestbook#health--applications-health)
+## per
+### whole Application
+* ways to check
+  * | ArgoCD UI
+    * https://localhost:8080/applications > see left panel
+  * -- via -- `argocd`
+    * `argocd app list`
+      * check "Status" column
+### resource
+* ways to check
+  * | ArgoCD UI
+    * https://localhost:8080/applications/argocd/example.guestbook?view=tree&resource= > see left panel, OR
+    * https://localhost:8080/applications/argocd/example.guestbook?podSortOrder=asc&podSortMode=topLevelResource&view=list&resource=
+      * ==    view=list
+  * -- via -- `argocd`
+    * `argocd app get example.guestbook`
+      * check "Sync Status:        Synced to master"
 
 # Tool
 * [here](#application-source-type)

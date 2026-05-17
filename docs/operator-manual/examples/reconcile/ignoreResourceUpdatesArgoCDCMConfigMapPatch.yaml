@@ -1,0 +1,13 @@
+# | "argocd-cm"
+data:
+  # ALL k8s resources EXCEPT to deployment, /status changes do NOT trigger refresh
+  resource.customizations.ignoreResourceUpdates.all: |
+    jsonPointers:
+    - /status
+
+  # deployment /status changes WILL trigger refresh
+  #   == NOT ignored
+  #   Reason:🧠ONLY this rule applies🧠
+  resource.customizations.ignoreResourceUpdates.apps_Deployment: |
+    jsonPointers:
+    - /metadata/annotations

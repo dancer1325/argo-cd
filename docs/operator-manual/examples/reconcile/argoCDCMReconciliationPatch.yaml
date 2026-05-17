@@ -1,0 +1,6 @@
+data:
+  #timeout.reconciliation: 20s
+  # disable AUTOMATIC polling
+  timeout.reconciliation: 0s
+  timeout.reconciliation.jitter: 20s
+

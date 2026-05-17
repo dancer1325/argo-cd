@@ -1,0 +1,7 @@
+status:
+  conditions:
+    - type: Test
+      status: "True"
+      lastTransitionTime: "2026-01-01T00:00:00Z"
+      reason: Testing
+      message: test

@@ -1,0 +1,8 @@
+# | "argocd-cm"
+data:
+  #resource.ignoreResourceUpdatesEnabled: 'true'
+  resource.customizations.ignoreResourceUpdates.all: |
+    jsonPointers:
+    - /status
+    jqPathExpressions:
+    - .spec.replicas

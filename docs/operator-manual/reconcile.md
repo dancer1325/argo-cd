@@ -2,102 +2,143 @@
 
 * reconcile
   * == process / 
-    * desired state == cluster state
-    * 💡when it's triggered💡
-      * if resource changes & 
-        * NOT ignored -> ALWAYS reconcile 
-        * ignored & resource's [health status](./health.md) changes -> reconcile
+    * 💡desired state == cluster state💡
 
 ```
-┌─────────────────────────────────────────────────────────────────-┐
-│                    Kubernetes Cluster                            │
-│                                                                  │
-│  Resource changes (Pod restart, HPA scaling, etc.)               │
-└────────────────────────────┬─────────────────────────────────────┘
+╔═════════════════════════════════════════════════════════════════╗
+║                 RECONCILE PROCESS                               ║
+╠═════════════════════════════════════════════════════════════════╣
+║           ┌──────────────────────────────────┐                  ║
+║           │  Refresh                         │                  ║
+║           │  ┌────────────────────────────┐  │                  ║
+║           │  │ • Get desired state:       │  │                  ║
+║           │  │   - From cache OR          │  │                  ║
+║           │  │   - Fetch from Git         │  │                  ║
+║           │  │   (== hard refresh)        │  │                  ║
+║           │  │                            │  │                  ║
+║           │  │ • Get live state           │  │                  ║
+║           │  │   (via Kube API)           │  │                  ║
+║           │  │                            │  │                  ║
+║           │  │ • Diffing (==              │  │                  ║
+║           │  │   Compare both with        │  │                  ║
+║           │  │   ignoreDifferences):      │  │                  ║
+║           │  │   - System-level           │  │                  ║
+║           │  │   - Per-app config         │  │                  ║
+║           │  └────────────────────────────┘  │                  ║
+║           └──────────────┬───────────────────┘                  ║
+║                          ↓                                      ║
+║           ┌──────────────────────────────────┐                  ║
+║           │  Update Sync Status              │                  ║
+║           │  (based on comparison)           │                  ║
+║           └──────────┬─────────┬─────────────┘                  ║
+║                      │         │                                ║
+║               Synced │         │ OutOfSync                      ║
+║                      ↓         ↓                                ║
+║            ┌────────┐   ┌──────────────────────┐                ║
+║            │  END   │   │ Auto-Sync OR         │                ║
+║            └────────┘   │    MANUAL sync       │                ║
+║                         └──────────────────────┘                ║
+║                                   ↓                             ║
+║                                 END                             ║
+╚═════════════════════════════════════════════════════════════════╝
+```
+
+## ⭐️ways to trigger it ⭐️
+
+* [live state changes](#live-state-changes-)
+* [Argo CD poll configuration](#polling----timeoutreconciliation---)
+* [webhooks](#git-webhook)
+* [MANUAL refresh](#manual-refresh-cli--ui)
+  * -- via -- CLI
+    * `--refresh`
+      * `argocd app get APPNAME --refresh`
+  * -- via -- Argo CD UI
+
+### live state changes 
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Kubernetes Cluster                           │
+│  Resource changes (Pod restart, HPA scaling, etc.)              │
+└────────────────────────────┬────────────────────────────────────┘
                              ↓
-╔══════════════════════════════════════════════════════════════════╗
-║              Application Controller (watches & processes)        ║
-╠══════════════════════════════════════════════════════════════════╣
-║                    ┌────────────────────┐                        ║
-║                    │  1. Watch Resources │                       ║
-║                    │  (Kubernetes API)   │                       ║
-║                    └────────┬────────────┘                       ║
-║                             ↓                                    ║
-║                    ┌────────────────────┐                        ║
-║                    │  2. Detect Change  │                        ║
-║                    │  (Watch event)      │                       ║
-║                    └────────┬────────────┘                       ║
-║                             ↓                                    ║
-║              ┌──────────────────────────────┐                    ║
-║              │  3. ignoreResourceUpdates?   │                    ║
-║              │  • System-level config       │                    ║
-║              │  • Resource annotation       │                    ║
-║              └──────┬───────────────┬───────┘                    ║
-║                     │               │                            ║
-║                 YES │               │ NO                         ║
-║                     ↓               ↓                            ║
-║              ┌──────────┐   ┌─────────────────────────┐          ║
-║              │   STOP   │   │ 4. Enqueue Application  │          ║
-║              │          |   │    (== added to queue)  │          ║
-║              └──────────┘   └────────┬────────────────┘          ║
-║                                      ↓                           ║
-║                             ⏱️  Wait until:                      ║
-║                             • timeout.reconciliation (default 3m)║
-║                             • Manual refresh                     ║
-║                             • Webhook event                      ║
-║                                      ↓                           ║
-║                 ╔═══════════════════════════════╗                ║
-║                 ║  RECONCILE PROCESS (5-7)      ║                ║
-║                 ╚═══════════════════════════════╝                ║
-║                                      ↓                           ║
-║                    ┌──────────────────────────────┐              ║
-║                    │  5. Refresh                  │              ║
-║                    │  ┌────────────────────────┐  │              ║
-║                    │  │ • Get desired state:   │  │              ║
-║                    │  │   - From cache OR      │  │              ║
-║                    │  │   - Fetch from Git     │  │              ║
-║                    │  │   (via Repo Server)    │  │              ║
-║                    │  │                        │  │              ║
-║                    │  │ • Get live state       │  │              ║
-║                    │  │   (via Kube API)       │  │              ║
-║                    │  │                        │  │              ║
-║                    │  │ • Diffing (==          │  │              ║
-║                    |  |   Compare both with    │  │              ║
-║                    │  │   ignoreDifferences):  │  │              ║
-║                    │  │   - System-level       │  │              ║
-║                    │  │   - Per-app config     │  │              ║
-║                    │  └────────────────────────┘  │              ║
-║                    └──────────┬───────────────────┘              ║
-║                               ↓                                  ║
-║                    ┌──────────────────────────────┐              ║
-║                    │  6. Update Sync Status       │              ║
-║                    │  (based on comparison)       │              ║
-║                    └──────┬─────────┬─────────────┘              ║
-║                           │         │                            ║
-║                    Synced │         │ OutOfSync                  ║
-║                           ↓         ↓                            ║
-║                      ┌────────┐  ┌──────────────────────┐        ║
-║                      │  END   │  │ 7. Auto-Sync OR      │        ║
-║                      └────────┘  │    MANUAL sync       │        ║
-║                                  └──────────────────────┘        ║
-║                                            ↓                     ║
-║                                          END                     ║
-╚══════════════════════════════════════════════════════════════════╝
+╔═════════════════════════════════════════════════════════════════╗
+║           Application Controller                                ║
+╠═════════════════════════════════════════════════════════════════╣
+║           ┌─────────────────────┐                               ║
+║           │  Watch  Resources   │                               ║
+║           │(tracked & untracked)│                               ║
+║           │  (Kubernetes API)   │                               ║
+║           └────────┬────────────┘                               ║
+║                    ↓                                            ║
+║           ┌────────────────────┐                                ║
+║           │  Detect Change     │                                ║
+║           │  (Watch event)     │                                ║
+║           └────────┬───────────┘                                ║
+║                    ↓                                            ║
+║       ┌──────────────────────────────┐                          ║
+║       │  ignoreResourceUpdates?      │                          ║
+║       │  • System-level config       │                          ║
+║       │  • Resource annotation       │                          ║
+║       └──────┬───────────────┬───────┘                          ║
+║              │               │                                  ║
+║          YES │               │ NO                               ║
+║              ↓               │                                  ║
+║  ┌─────────────────────┐    │                                   ║
+║  │ Health status       │    │                                   ║
+║  │     changed?        │    │                                   ║
+║  └───┬──────────┬──────┘    │                                   ║
+║      │          │           │                                   ║
+║   NO │       YES│           │                                   ║
+║      ↓          │           │                                   ║
+║ ┌────────┐      │           │                                   ║
+║ │  STOP  │      │           │                                   ║
+║ └────────┘      ↓           ↓                                   ║
+║       ┌─────────────────────────────┐                           ║
+║       │    Enqueue Application      │                           ║
+║       └────────────┬────────────────┘                           ║
+║                    ↓                                            ║
+║                     RECONCILE                                   ║
+╚═════════════════════════════════════════════════════════════════╝
 ```
 
-* Argo CD Application
-  * if a resource (tracked OR untracked) changes -> it's refreshed
-    * COMMON PROBLEMS: ⚠️HIGH CPU usage | "argocd-application-controller"⚠️
-      * Reason: 🧠Kubernetes controllers OFTEN update the resources / they watch periodically -> CONTINUOUSLY reconcile🧠
-      * SOLUTION: 👀ignore resource updates | specific fields👀
-        * -- for -- [tracked resources](../user-guide/resource_tracking.md)
-        * -- for -- [untracked resources](#ignoring-updates-for-untracked-resources)
+* 👀| specific fields, ignore resource updates 👀
+  * -- for -- [tracked resources](../user-guide/resource_tracking.md)
+  * -- for -- [untracked resources](#-untracked-resources-how-to-ignore-updates)
 
-## System-Level Configuration
+#### how to check that resource updates are ignored?
+
+* steps
+  * configure the application-controller's log level == `debug`
+  * look for | application-controller's logs: "Ignoring change of object because none of the watched resource fields have changed"
+
+#### untracked resources
+
+* untracked resources
+  * == resources / NOT exist | Git & exist | cluster
+    * types 
+      * tracked resources' dependant
+        * _Example:_ `Deployment` | Git,
+          * creates DEPENDENT `ReplicaSet` & `Pod` | Cluster
+          * DEPENDENT `ReplicaSet` & `Pod` do NOT exist | Git
+      * MANUALLY created
+  * Argo CD
+    * ❌do NOT reconcile them ❌
+      * Reason:🧠it does NOT exist | Git🧠
+    * 💡monitors them💡
+      * _Example:_ if DEPENDENT `ReplicaSet` & `Pod` | Cluster change -> trigger a reconcile of whole Application
+
+#### how to ignore resource updates?
+
+* ways
+  * | "argocd-cm" ConfigMap
+  * | OWN resources, annotate with `argocd.argoproj.io/ignore-resource-updates=true`
+
+##### | "argocd-cm" ConfigMap
 
 * | "argocd-cm" ConfigMap,
   * `resource.ignoreResourceUpdatesEnabled`
-    * enable OR disable
+    * 👀enable OR disable👀
       * Argo CD can ignore resource updates
     * by default, `true`
       * -> reduce unnecessary reconcile operations
@@ -131,6 +172,109 @@
       ```
     * [JSON pointers](https://tools.ietf.org/html/rfc6902)
     * [JQ path expressions](https://stedolan.github.io/jq/manual/#path(path_expression))
+
+##### | OWN resources, annotate with `argocd.argoproj.io/ignore-resource-updates=true`
+
+* requirements  
+  * | "argocd-cm" ConfigMap,
+  * `resource.ignoreResourceUpdatesEnabled: 'true'`
+
+* `argocd.argoproj.io/ignore-resource-updates` annotations
+  * ⚠️ONLY apply | k8s resource ⚠️
+  * |
+    * tracked resources,
+      * ❌does NOT apply | tracked DEPENDENT resources❌
+        * _Example:_ `Deployment` | GIT -> `Deployment`'s DEPENDENT `ReplicaSet` & `Pod` are NOT ignored
+    * untracked resources,
+      * you MUST MANUALLY add
+
+### Polling
+
+```
+╔═════════════════════════════════════════════════════════════════╗
+║           Application Controller                                ║
+╠═════════════════════════════════════════════════════════════════╣
+║           ┌────────────────────────────────┐                    ║
+║           │  ⏱️ timeout.reconciliation     │                    ║ 
+║           │             +                  │                    ║
+║           │     timeout.reconciliation     │                    ║
+║           │        (default 3m) expires    │                    ║
+║           └────────────┬───────────────────┘                    ║
+║                        ↓                                        ║
+║           ┌─────────────────────────────┐                       ║
+║           │ Enqueue Application         │                       ║
+║           └────────────┬────────────────┘                       ║
+║                        ↓                                        ║
+║                     RECONCILE                                   ║
+╚═════════════════════════════════════════════════════════════════╝
+```
+
+* [`data.timeout.reconciliation`, `data.timeout.reconciliation` + `data.timeout.reconciliation.jitter`]
+  * == frequency / Argo CD poll changes -- from -- Git OR helm repository
+    * ❌NOT ALWAYS SAME❌
+      * Reason:🧠`data.timeout.reconciliation.jitter` is arbitrary🧠
+  * by default, EACH 3' (== 2 + 1)
+  * specified | "argocd-cm" ConfigMap,
+  * `data.timeout.reconciliation`
+    * ⚠️if you set 0 -> disables AUTOMATIC polling⚠️
+      * requirements
+        * configure `ARGOCD_DEFAULT_CACHE_EXPIRATION`
+          * by default, 24h
+          * Reason:🧠OTHERWISE, argocd-repo-server does NOT expire🧠
+      * -> use ANOTHER reconciliation trigger
+      * ❌NOT recommended❌
+        * Reason: 🧠
+          * ArgoCD would trust in OTHER approaches / have MORE dependencies
+          * misconfiguration🧠
+  * [MORE](/docs/operator-manual/examples/argocd-cm.yaml)
+
+* recommendations
+  * if you set Argo CD poll + Git webhook -> set `timeout.reconciliation` = medium values (_Example:_ `15m`, `1h`)
+    * Reason:🧠OTHERWISE it's redundant -- by -- Git webhooks / are ALMOST IMMEDIATLEY🧠
+
+### Git Webhook
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Git Repository (GitHub, GitLab, Bitbucket)                     │
+│  Push event → webhook → Argo CD API Server                      │
+└────────────────────────────┬────────────────────────────────────┘
+                             ↓
+╔═════════════════════════════════════════════════════════════════╗
+║           Application Controller                                ║
+╠═════════════════════════════════════════════════════════════════╣
+║           ┌─────────────────────────────┐                       ║
+║           │ Enqueue Application         │                       ║
+║           └────────────┬────────────────┘                       ║
+║                        ↓                                        ║
+║                     RECONCILE                                   ║
+╚═════════════════════════════════════════════════════════════════╝
+```
+
+* [MORE](webhook.md)
+
+### Manual Refresh (CLI / UI)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  User action:                                                   │
+│  • argocd app get APPNAME --refresh                             │
+│  • argocd app get APPNAME --hard-refresh                        │
+│  • UI: Refresh / Hard Refresh button                            │
+└────────────────────────────┬────────────────────────────────────┘
+                             ↓
+╔═════════════════════════════════════════════════════════════════╗
+║           Application Controller                                ║
+╠═════════════════════════════════════════════════════════════════╣
+║           ┌─────────────────────────────┐                       ║
+║           │ Enqueue Application         │                       ║
+║           └────────────┬────────────────┘                       ║
+║                        ↓                                        ║
+║                     RECONCILE                                   ║
+╚═════════════════════════════════════════════════════════════════╝
+```
+
+## System-Level Configuration
 
 ### -- via -- `ignoreDifferences`
 
@@ -186,9 +330,9 @@
             - /path/to/field
     ```
 
-## Default Configuration
+## default Configuration
 
-* metadata fields / ALWAYS ignored | ALL resources
+* metadata fields / ALWAYS ignored | ALL resources -- via -- `ignoreResourceUpdates` & `ignoreDifferences`
   * `metadata.generation`
   * `metadata.resourceVersion`
   * `metadata.managedFields`
@@ -216,32 +360,3 @@
       kubectl get <resource> -o yaml > /tmp/after.yaml
       diff /tmp/before.yaml /tmp/after.yaml
       ```
-
-## how to check that resource updates are ignored?
-
-* steps
-  * configure the application-controller's log level == `debug`
-  * look for | application-controller's logs: `"Ignoring change of object because none of the watched resource fields have changed"`
-
-## Ignoring updates for untracked resources
-
-* untracked resources
-  * == resources / NOT exist | Git & exist | cluster
-    * _Example:_ `Deployment` | Git, 
-      * creates DEPENDENT `ReplicaSet` & `Pod` | Cluster
-      * DEPENDENT `ReplicaSet` & `Pod` do NOT exist | Git
-  * Argo CD 
-    * ❌do NOT reconcile them ❌
-      * Reason:🧠it does NOT exist | Git🧠
-    * 💡monitors them💡
-      * _Example:_ if DEPENDENT `ReplicaSet` & `Pod` | Cluster change -> trigger a reconcile of whole Application
-      * COMMON PROBLEMS: ⚠️HIGH CPU usage | "argocd-application-controller"⚠️
-  * ⭐️ways to ignore untracked resources updates⭐️
-    * | untracked resources,
-      * you must add `argocd.argoproj.io/ignore-resource-updates=true`
-
-* `argocd.argoproj.io/ignore-resource-updates` annotations
-  * ArgoCD 
-    * ⚠️ONLY apply | application's tracked resources ⚠️
-    * ❌does NOT apply them | tracked' DEPENDENT resources❌
-      * _Example:_ `Deployment` | GIT -> `Deployment`'s DEPENDENT `ReplicaSet` & `Pod` are NOT ignored

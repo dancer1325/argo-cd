@@ -1,5 +1,8 @@
 # `argocd app diff` Command Reference
 
+* ⚠️generated -- from -- source code⚠️
+* 👀see [here](/cmd/argocd/commands/app.go)'s `func NewApplicationDiffCommand(`👀
+
 ## argocd app diff
 
 Perform a diff against the target and live state.

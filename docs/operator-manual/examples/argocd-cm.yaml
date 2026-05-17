@@ -365,15 +365,23 @@ data:
   #       `ARGOCD_DEFAULT_CACHE_EXPIRATION` environment variable
   #   by default,
   #     + ADDITIONAL jitter == 2'
-  # > Note: The argocd-repo-server deployment and the argocd-application-controller statefulset (or deployment, if
-  # configured) must be manually restarted after changing the setting.
+  # steps | modify this value
+  #   1. kubectl patch configmap argocd-cm -n argocd --type merge --patch-file argoCDCMReconciliationPatch.yaml
+  #   2. kubectl -n argocd rollout restart statefulset argocd-application-controller && kubectl -n argocd rollout restart deployment argocd-repo-server
   timeout.reconciliation: 120s
 
-  # With a large number of applications, the periodic refresh for each application can cause a spike in the refresh queue
-  # and can cause a spike in the repo-server component. To avoid this, you can set a jitter to the sync timeout, which will
-  # spread out the refreshes and give time to the repo-server to catch up. The jitter is the maximum duration that can be
-  # added to the sync timeout. So, if the sync timeout is 3 minutes and the jitter is 1 minute, then the actual timeout will
-  # be between 3 and 4 minutes. Disabled when the value is 0, defaults to 1 minute.
+
+  # == MAXIMUM duration / can be added | sync timeout
+  #   == sync timeout == [timeout.reconciliation, timeout.reconciliation + timeout.reconciliation.jitter]
+  #   by default, 1m
+  #   if you set 0  == disable it
+  # allows
+  #   spread out the refreshes
+  # use case
+  #   large number of applications
+  #     Reason: 🧠OTHERWISE, periodic refresh / EACH application can cause
+  #       a spike | refresh queue
+  #       a spike | repo-server component🧠
   timeout.reconciliation.jitter: 60s
 
   # cluster.inClusterEnabled indicates whether to allow in-cluster server address. This is enabled by default.
