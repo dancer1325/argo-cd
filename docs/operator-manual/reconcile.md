@@ -274,20 +274,14 @@
 ╚═════════════════════════════════════════════════════════════════╝
 ```
 
-## System-Level Configuration
-
-### -- via -- `ignoreDifferences`
+## Refresh
 
 * `ignoreDifferences` 
   * allows
     * | calculate sync status, ignore certain fields
-  * by default, 
-    * 👀`ignoreDifferences` customizations -> apply | `ignoreResourceUpdates`👀
-      * Reason:🧠reduce config management -- by -- preventing you to copy duplicated🧠
-      * if you want to disable it `ignoreDifferencesOnResourceUpdates: false`
   * [source code](/pkg/apis/application/v1alpha1/types.go)'s `ResourceIgnoreDifferences`
 
-* -- based on -- scope
+* configure -- based on -- scope
   * global: | "argocd-cm" ConfigMap,
     * `resource.customizations.ignoreDifferences.all`
 
@@ -316,6 +310,10 @@
             managedFieldsManagers:
             - someManagedFieldManager
           ```
+    * by default,
+      * 👀`ignoreDifferences` customizations -> apply | `ignoreResourceUpdates`👀
+        * Reason:🧠reduce config management -- by -- preventing you to copy duplicated🧠
+        * if you want to disable it -> set | "argocd-cm", `resource.compareoptions.ignoreDifferencesOnResourceUpdates: false` 
   * Argo CD Application,
 
     ```yaml

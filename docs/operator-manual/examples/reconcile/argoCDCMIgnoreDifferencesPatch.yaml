@@ -1,0 +1,13 @@
+data:
+  #ignoreDifferences
+  resource.customizations.ignoreDifferences.all: |
+    jsonPointers:
+        - /status
+    jqPathExpressions:
+      - .spec.replicas
+  resource.customizations.ignoreDifferences.apps_Deployment: |
+    jsonPointers:
+        - /status
+    jqPathExpressions:
+      - .spec.replicas
+

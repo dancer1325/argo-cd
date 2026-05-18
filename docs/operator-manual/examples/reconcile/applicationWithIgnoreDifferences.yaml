@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: example.guestbook-with-ignoredifferences
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dancer1325/argocd-example-apps
+    targetRevision: master
+    path: guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: guestbook-with-ignoredifferences
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

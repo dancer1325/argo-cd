@@ -174,14 +174,59 @@ TODO:
   * 's return: ARGOCD_DEFAULT_CACHE_EXPIRATION=12h
 * [source code](/util/cache/cache.go)'s `env.ParseDurationFromEnv("ARGOCD_DEFAULT_CACHE_EXPIRATION", 24*time.Hour, ...)`
   * by default, 24h
-
-#### TODO: check where comes from (1) == live watch, (2) == polling, (3) == refresh
-
 ## Git webhooks
-TODO:
-
+* [here](../webhook)
 ## MANUAL refresh
+* [example.guestbook](https://github.com/dancer1325/argocd-example-apps/tree/master/guestbook)
+* ways
+  * ArgoCD UI OR
+    * https://localhost:8080/applications/argocd/example.guestbook?resource=&rollback=-1 > 
+      * Refresh OR
+      * Refresh dropdown > hard refresh
+  * `argocd app get APPNAME --refresh` OR
+    * `kubectl logs -n argocd argocd-application-controller-0 | grep "example.guestbook"`
+      * check in the logs
+        * "Refreshing app status (hard refresh requested), level (3)"
+  * `argocd app get example.guestbook --hard-refresh`
+    * `kubectl logs -n argocd argocd-application-controller-0 | grep "example.guestbook"`
+      * check in the logs
+        * "Refreshing app status (hard refresh requested), level (3)"
+        * "noCache is true"
+
+# Refresh
+## `ignoreDifferences`
+### allows: | calculate sync status, ignore certain fields
+* [here](#argo-cd-application)
+### configure -- based on -- scope
+#### global: | "argocd-cm" ConfigMap
+##### `resource.customizations.ignoreDifferences.all`
+* [here](argoCDCMIgnoreDifferencesPatch.yaml)
+* `kubectl patch configmap argocd-cm -n argocd --type merge --patch-file  argoCDCMIgnoreDifferencesPatch.yaml`
+* `kubectl -n argocd rollout restart statefulset argocd-application-controller && kubectl -n argocd rollout status statefulset argocd-application-controller`
+* `kubectl patch deployment guestbook-ui-with-ignoreupdates -n guestbook-with-ignoreupdates --subresource=status --type merge --patch-file deploymentStatusPatch.yaml`
+* `kubectl logs -n argocd argocd-application-controller-0 | grep '"application":"example.guestbook-with-ignoreupdates"' | grep "Requesting app refresh.*Deployment"`
+  * 's return: NOTHING
+##### `resource.customizations.ignoreDifferences.<group>_<kind>`
+* [here](argoCDCMIgnoreDifferencesPatch.yaml)
+* `kubectl patch configmap argocd-cm -n argocd --type merge --patch-file  argoCDCMIgnoreDifferencesPatch.yaml`
+* `kubectl -n argocd rollout restart statefulset argocd-application-controller && kubectl -n argocd rollout status statefulset argocd-application-controller`
+* `kubectl patch deployment guestbook-ui-with-ignoreupdates -n guestbook-with-ignoreupdates --subresource=status --type merge --patch-file deploymentStatusPatch.yaml`
+* `kubectl logs -n argocd argocd-application-controller-0 | grep '"application":"example.guestbook-with-ignoreupdates"' | grep "Requesting app refresh.*Deployment"`
+  * 's return: NOTHING
+##### by default, apply | `ignoreResourceUpdates`
 TODO:
+###### if you want to disable it -> set | "argocd-cm", `resource.compareoptions.ignoreDifferencesOnResourceUpdates: false`
+TODO:
+#### Argo CD Application
+* `kubectl apply -f applicationWithIgnoreDifferences.yaml`
+* `argocd app sync example.guestbook-with-ignoredifferences`
+* `kubectl scale deployment guestbook-ui -n guestbook-with-ignoredifferences --replicas=5`
+* `sleep 10 && argocd app get example.guestbook-with-ignoredifferences | grep "Sync Status"`
+  * 's return: Sync Status:        Synced to master
+* `kubectl get deployment guestbook-ui -n guestbook-with-ignoredifferences -o jsonpath='replicas={.spec.replicas}'`
+  * 's return: 5
+* `argocd app diff example.guestbook-with-ignoredifferences`
+  * 's return: NOTHING
 
 # TODO:
 * TODO:
